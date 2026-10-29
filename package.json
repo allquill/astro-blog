@@ -1,7 +1,7 @@
 {
   "name": "astro-blog",
   "private": true,
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Blog platform: static site with Keystatic CMS (website/: Astro + Keystatic), admin app (admin/: React + Vite) and API (server/: NestJS) for likes, shares, mailing list and feedback. This root only orchestrates the three independent pnpm projects.",
   "engines": {
     "node": ">=22"
