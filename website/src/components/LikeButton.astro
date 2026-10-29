@@ -1,0 +1,57 @@
+---
+// Like / unlike. Hidden until the API answers, so a site without the API shows no dead button.
+// The API counts one like per visitor (a salted hash of IP and browser, never the raw address).
+import Icon from './Icon.astro';
+
+interface Props {
+  slug: string;
+}
+const { slug } = Astro.props;
+---
+<button
+  type="button"
+  data-like={slug}
+  aria-pressed="false"
+  hidden
+  class="group inline-flex items-center gap-2 rounded-full px-4 py-2 text-sm font-semibold ring-1 ring-slate-200 transition hover:ring-rose-300 aria-pressed:bg-rose-50 aria-pressed:text-rose-600 aria-pressed:ring-rose-200 dark:ring-white/10 dark:aria-pressed:bg-rose-500/15 dark:aria-pressed:text-rose-300"
+>
+  <Icon name="heart" class="size-4 transition group-aria-pressed:fill-current" />
+  <span data-like-label>Like</span>
+  <span class="tabular-nums" data-like-n></span>
+</button>
+
+<script>
+  import { api } from '../lib/api';
+  import { track } from '../lib/analytics';
+
+  type Stats = { likes: number; liked: boolean };
+
+  for (const button of document.querySelectorAll<HTMLButtonElement>('[data-like]')) {
+    const slug = button.dataset.like!;
+    const n = button.querySelector<HTMLElement>('[data-like-n]')!;
+    const label = button.querySelector<HTMLElement>('[data-like-label]')!;
+    let state: Stats = { likes: 0, liked: false };
+    const show = (s: Stats) => {
+      state = s;
+      button.setAttribute('aria-pressed', String(s.liked));
+      label.textContent = s.liked ? 'Liked' : 'Like';
+      n.textContent = s.likes ? String(s.likes) : '';
+      button.title = `${s.likes} like${s.likes === 1 ? '' : 's'}`;
+      button.hidden = false;
+    };
+
+    void api<Stats>(`/posts/${encodeURIComponent(slug)}/stats`).then((r) => r.ok && show(r));
+
+    button.addEventListener('click', async () => {
+      const want = !state.liked;
+      // Optimistic, then corrected by the server's answer.
+      show({ liked: want, likes: Math.max(0, state.likes + (want ? 1 : -1)) });
+      button.disabled = true;
+      const r = await api<Stats>(`/posts/${encodeURIComponent(slug)}/like`, { method: want ? 'POST' : 'DELETE', body: want ? {} : undefined });
+      button.disabled = false;
+      if (r.ok) show(r);
+      else show({ liked: !want, likes: Math.max(0, state.likes + (want ? -1 : 1)) });
+      if (r.ok && want) track('like', { content_type: 'article', item_id: slug });
+    });
+  }
+</script>

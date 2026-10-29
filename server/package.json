@@ -1,0 +1,63 @@
+{
+  "name": "astro-blog-api",
+  "private": true,
+  "version": "0.1.0",
+  "description": "NestJS API for the blog: likes and share counts, mailing list (double opt-in, digests), reader feedback, and the JSON API behind the admin SPA (TypeORM: SQLite or Postgres).",
+  "engines": {
+    "node": ">=22.12"
+  },
+  "packageManager": "pnpm@11.0.8",
+  "scripts": {
+    "build": "nest build",
+    "start": "node dist/main.js",
+    "start:dev": "nest start --watch",
+    "dev": "nest start --watch",
+    "check": "tsc -p tsconfig.json --noEmit",
+    "openapi": "node dist/cli/openapi.js",
+    "migration:generate": "typeorm-ts-node-commonjs migration:generate -d src/database/data-source.ts",
+    "admin:set-password": "node dist/cli/set-password.js"
+  },
+  "dependencies": {
+    "@nestjs-modules/mailer": "^2.3.7",
+    "@nestjs/common": "^11.2.6",
+    "@nestjs/config": "^4.0.4",
+    "@nestjs/core": "^11.2.6",
+    "@nestjs/jwt": "^11.0.2",
+    "@nestjs/passport": "^11.0.5",
+    "@nestjs/platform-express": "^11.2.6",
+    "@nestjs/swagger": "^11.4.7",
+    "@nestjs/throttler": "^6.7.1",
+    "@nestjs/typeorm": "^11.0.3",
+    "bcrypt": "^6.0.0",
+    "class-transformer": "^0.5.1",
+    "class-validator": "^0.15.1",
+    "cookie-parser": "^1.4.7",
+    "docsify": "^4.13.1",
+    "nodemailer": "^10.0.12",
+    "passport": "^0.7.0",
+    "passport-jwt": "^4.0.1",
+    "pg": "^8.23.0",
+    "prismjs": "^1.30.0",
+    "react": "^19.3.0",
+    "react-dom": "^19.3.0",
+    "reflect-metadata": "^0.2.2",
+    "rxjs": "^7.8.2",
+    "sqlite3": "^6.0.1",
+    "typeorm": "^0.3.31"
+  },
+  "devDependencies": {
+    "@nestjs/cli": "^11.0.24",
+    "@nestjs/schematics": "^11.1.0",
+    "@types/bcrypt": "^6.0.0",
+    "@types/cookie-parser": "^1.4.10",
+    "@types/express": "^5.0.6",
+    "@types/ms": "^2.1.0",
+    "@types/node": "^22.20.4",
+    "@types/nodemailer": "^8.0.2",
+    "@types/passport-jwt": "^4.0.1",
+    "@types/react": "^19.3.0",
+    "@types/react-dom": "^19.3.0",
+    "ts-node": "^10.9.2",
+    "typescript": "~5.9"
+  }
+}

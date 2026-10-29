@@ -1,0 +1,58 @@
+---
+title: A Core Web Vitals checklist you can finish in an afternoon
+excerpt: >-
+  Largest Contentful Paint, Interaction to Next Paint and Cumulative Layout Shift: the dozen fixes that
+  moved our numbers the most, in the order we would do them again.
+publishedDate: 2026-09-10
+author: ada-park
+topics:
+  - web-development
+tags:
+  - Performance
+  - Core Web Vitals
+cover: ../../assets/posts/core-web-vitals.jpg
+coverAlt: Green gradient with the words Web Vitals
+series: Fast sites with Astro
+featured: false
+draft: false
+---
+Each item below is small. Together they took our slowest template from "needs improvement" to "good" on all three metrics.
+
+## Largest Contentful Paint
+
+1. Serve the hero image in a modern format at the right size.
+2. Preload it, and never lazy-load it.
+3. Inline the critical CSS for the first screen.
+
+```html
+<link rel="preload" as="image" href="/hero-1280.webp" imagesrcset="/hero-640.webp 640w, /hero-1280.webp 1280w" imagesizes="100vw" />
+```
+
+## Cumulative Layout Shift
+
+Give every image and embed its dimensions, and reserve space for anything that loads late.
+
+```css
+.embed {
+  aspect-ratio: 16 / 9;
+  width: 100%;
+}
+```
+
+{% callout type="tip" %}
+The video embeds on this blog only load the player after a click, so they cost nothing until then.
+{% /callout %}
+
+## Interaction to Next Paint
+
+Break up long tasks, and move work off the main thread.
+
+```js
+async function processAll(items) {
+  for (const item of items) {
+    process(item);
+    // Let the browser handle input between chunks.
+    await scheduler.yield();
+  }
+}
+```

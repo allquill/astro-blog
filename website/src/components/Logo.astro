@@ -1,0 +1,10 @@
+---
+interface Props {
+  name: string;
+}
+const { name } = Astro.props;
+---
+<a href="/" class="flex items-center gap-2.5 font-semibold text-slate-900 dark:text-white">
+  <img src="/favicon.svg" alt="" width="32" height="32" class="size-8" />
+  <span class="text-lg tracking-tight">{name}</span>
+</a>

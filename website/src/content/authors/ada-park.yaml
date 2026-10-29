@@ -1,0 +1,8 @@
+name: Ada Park
+role: Staff engineer
+bio: Ada works on the web platform team and writes about performance, accessibility and TypeScript.
+links:
+  - network: github
+    url: https://github.com/acme
+  - network: website
+    url: https://blog.acme.example

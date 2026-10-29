@@ -1,0 +1,35 @@
+---
+// The banner at the top of every inner page: the home page hero's soft brand gradient with eyebrow,
+// title and subtitle. Pages put buttons, meta lines etc. in the default slot, badges in `top`, and an
+// eyebrow with an icon in `eyebrow`. The home page and service pages keep their own richer heroes.
+import Icon from './Icon.astro';
+
+interface Props {
+  title: string;
+  eyebrow?: string;
+  subtitle?: string;
+  /** "‹ All posts" style link above the title. */
+  back?: { href: string; label: string };
+  align?: 'left' | 'center';
+}
+
+const { title, eyebrow, subtitle, back, align = 'left' } = Astro.props;
+const center = align === 'center';
+---
+<section class="relative isolate overflow-hidden">
+  <div class="absolute inset-0 -z-10 bg-[radial-gradient(70%_60%_at_70%_0%,theme(--color-brand-500/20%),transparent)] dark:bg-[radial-gradient(70%_60%_at_70%_0%,theme(--color-brand-500/25%),transparent)]" aria-hidden="true"></div>
+  <div class="container-page py-12 sm:py-16">
+    <div class:list={[center && 'mx-auto max-w-2xl text-center']}>
+      {back && (
+        <a href={back.href} class="mb-6 inline-flex items-center gap-1 text-sm font-medium text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white">
+          <Icon name="chevronLeft" class="size-4" /> {back.label}
+        </a>
+      )}
+      {Astro.slots.has('top') && <div class:list={['mb-5 flex flex-wrap items-center gap-2', center && 'justify-center']}><slot name="top" /></div>}
+      {Astro.slots.has('eyebrow') ? <p class="eyebrow"><slot name="eyebrow" /></p> : eyebrow && <p class="eyebrow">{eyebrow}</p>}
+      <h1 class:list={['text-4xl font-semibold tracking-tight text-pretty text-slate-900 sm:text-5xl dark:text-white', (eyebrow || Astro.slots.has('eyebrow')) && 'mt-4']}>{title}</h1>
+      {subtitle && <p class:list={['mt-4 text-lg leading-relaxed text-pretty text-slate-600 dark:text-slate-400', center && 'mx-auto']}>{subtitle}</p>}
+      <slot />
+    </div>
+  </div>
+</section>

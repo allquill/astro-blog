@@ -1,0 +1,32 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PageHero from '../../components/PageHero.astro';
+import SubscribeForm from '../../components/SubscribeForm.astro';
+import Message from '../../components/Message.astro';
+import Icon from '../../components/Icon.astro';
+import { getSettings } from '../../lib/site';
+
+const settings = await getSettings();
+---
+<BaseLayout title="Subscribe" description={settings.subscribeText || `New posts from ${settings.siteName} by e-mail.`}>
+  <PageHero eyebrow="Newsletter" title={settings.subscribeTitle} subtitle={settings.subscribeText} />
+  <section class="container-page pb-24">
+    <div class="space-y-6">
+      <!-- Shown after a no-JS form post (?sent=1 / ?error=1); see the script below. -->
+      <Message tone="success" id="sub-sent" hidden>Almost done: check your inbox and click the link to confirm your subscription.</Message>
+      <Message tone="error" id="sub-error" hidden>That didn't work: please check the e-mail address and try again.</Message>
+      <div class="rounded-3xl bg-white p-6 ring-1 ring-slate-200 sm:p-8 dark:bg-ink-900 dark:ring-white/10">
+        <SubscribeForm variant="full" title="" text="" />
+      </div>
+      <p class="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
+        <Icon name="rss" class="size-4" /> Prefer a feed reader? <a href="/rss.xml" class="font-medium text-brand-700 hover:underline dark:text-brand-400">RSS</a> · <a href="/feed.json" class="font-medium text-brand-700 hover:underline dark:text-brand-400">JSON Feed</a>
+      </p>
+    </div>
+  </section>
+</BaseLayout>
+
+<script>
+  const q = new URLSearchParams(location.search);
+  if (q.get('sent') === '1') document.getElementById('sub-sent')!.hidden = false;
+  if (q.get('error') === '1') document.getElementById('sub-error')!.hidden = false;
+</script>

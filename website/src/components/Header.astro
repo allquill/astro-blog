@@ -1,0 +1,57 @@
+---
+import { getCollection } from 'astro:content';
+import { getSettings } from '../lib/site';
+import Logo from './Logo.astro';
+import ThemeToggle from './ThemeToggle.astro';
+import Icon from './Icon.astro';
+
+const settings = await getSettings();
+const pages = (await getCollection('pages')).filter((p) => p.data.showInHeader).sort((a, b) => a.data.title.localeCompare(b.data.title));
+const path = Astro.url.pathname.replace(/\/$/, '');
+const links = [
+  { label: 'Blog', href: '/blog/' },
+  { label: 'Topics', href: '/topics/' },
+  ...pages.map((p) => ({ label: p.data.title, href: `/${p.id}/` })),
+  ...settings.nav,
+];
+const isActive = (href: string) => path === href.replace(/\/$/, '') || (href !== '/' && path.startsWith(href.replace(/\/$/, '')));
+---
+<header class="sticky top-0 z-40 border-b border-slate-200/70 bg-white/85 backdrop-blur-lg dark:border-white/5 dark:bg-ink-950/85">
+  <nav class="container-page flex h-16 items-center justify-between gap-4" aria-label="Main">
+    <Logo name={settings.siteName} />
+
+    <div class="flex items-center gap-2">
+      <div class="mr-2 hidden items-center gap-1 text-sm font-medium md:flex">
+        {links.map((l) => (
+          <a href={l.href} aria-current={isActive(l.href) ? 'page' : undefined} class:list={['rounded-full px-3 py-2 hover:text-slate-900 dark:hover:text-white', isActive(l.href) ? 'text-slate-900 dark:text-white' : 'text-slate-600 dark:text-slate-300']}>{l.label}</a>
+        ))}
+      </div>
+      <a href="/search/" class="inline-flex size-9 items-center justify-center rounded-full text-slate-600 ring-1 ring-slate-200 hover:text-slate-900 dark:text-slate-300 dark:ring-white/10 dark:hover:text-white" aria-label="Search">
+        <Icon name="search" class="size-4" />
+      </a>
+      <ThemeToggle />
+      <a href="/subscribe/" class="btn-primary hidden sm:inline-flex" data-analytics-location="header">Subscribe</a>
+      <details class="group md:hidden" data-dropdown>
+        <summary class="inline-flex size-9 cursor-pointer list-none items-center justify-center rounded-full ring-1 ring-slate-200 dark:ring-white/10 [&::-webkit-details-marker]:hidden" aria-label="Menu">
+          <Icon name="menu" class="size-5 group-open:hidden" />
+          <Icon name="x" class="hidden size-5 group-open:block" />
+        </summary>
+        <div class="absolute inset-x-0 top-16 max-h-[calc(100dvh-4rem)] overflow-y-auto border-b border-slate-200 bg-white px-4 pt-2 pb-6 shadow-lg dark:border-white/10 dark:bg-ink-900">
+          {links.map((l) => <a href={l.href} class="block rounded-lg px-2 py-2.5 font-medium text-slate-900 dark:text-white">{l.label}</a>)}
+          <a href="/subscribe/" class="btn-primary mt-3 w-full">Subscribe</a>
+        </div>
+      </details>
+    </div>
+  </nav>
+</header>
+
+<script>
+  // Close open dropdowns on outside click or Escape.
+  const dropdowns = [...document.querySelectorAll<HTMLDetailsElement>('[data-dropdown]')];
+  document.addEventListener('click', (e) => {
+    for (const d of dropdowns) if (d.open && !d.contains(e.target as Node)) d.open = false;
+  });
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') for (const d of dropdowns) d.open = false;
+  });
+</script>

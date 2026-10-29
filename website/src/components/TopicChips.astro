@@ -1,0 +1,22 @@
+---
+import type { Topic } from '../lib/site';
+
+interface Props {
+  /** Topics that have at least one post. */
+  topics: Topic[];
+  /** Selected topic id, or undefined for "All". */
+  active?: string;
+}
+const { topics, active } = Astro.props;
+const chip = 'rounded-full px-3.5 py-1.5 text-sm font-medium whitespace-nowrap ring-1 transition';
+const on = 'bg-slate-900 text-white ring-slate-900 dark:bg-white dark:text-slate-900 dark:ring-white';
+const off = 'text-slate-600 ring-slate-200 hover:text-slate-900 dark:text-slate-400 dark:ring-white/10 dark:hover:text-white';
+---
+<nav aria-label="Filter posts by topic" class="-mx-4 flex gap-2 overflow-x-auto px-4 pb-1 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:px-0">
+  <a href="/blog/" class:list={[chip, active ? off : on]} aria-current={active ? undefined : 'page'}>All posts</a>
+  {topics.map((t) => (
+    <a href={`/topics/${t.id}/`} class:list={[chip, active === t.id ? on : off]} aria-current={active === t.id ? 'page' : undefined}>
+      {t.data.name}
+    </a>
+  ))}
+</nav>

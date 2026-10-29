@@ -1,0 +1,24 @@
+siteName: Soham's Blog
+tagline: Notes on building fast, accessible software for the web.
+description: >-
+  Practical write-ups on web development, TypeScript, Astro and running software
+  in production — with code you can copy and videos where they help.
+publisher: Acme Engineering
+email: blog@acme.example
+social:
+  - network: github
+    url: https://github.com/acme
+  - network: bluesky
+    url: https://bsky.app/profile/acme.example
+nav: []
+footerLinks: []
+shareNetworks:
+  - x
+  - linkedin
+  - reddit
+  - hackernews
+  - bluesky
+  - email
+subscribeTitle: Get new posts by e-mail
+subscribeText: One e-mail per new post. Pick your topics, unsubscribe in one click.
+postsPerPage: 12

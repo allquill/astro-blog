@@ -1,0 +1,43 @@
+---
+// A list page's posts (optionally the first one large), with like counts filled in from the API
+// after load. Without the API (or JavaScript) the counts simply stay hidden.
+import PostCard from './PostCard.astro';
+import type { Post, Topic } from '../lib/site';
+
+interface Props {
+  posts: Post[];
+  topics: Topic[];
+  /** Show the first post as the large featured card. */
+  lead?: boolean;
+}
+const { posts, topics, lead = false } = Astro.props;
+const [first, ...rest] = posts;
+---
+{lead && first ? (
+  <>
+    <PostCard post={first} topics={topics} featured />
+    {rest.length > 0 && <div class="mt-8 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">{rest.map((p) => <PostCard post={p} topics={topics} />)}</div>}
+  </>
+) : (
+  <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">{posts.map((p) => <PostCard post={p} topics={topics} />)}</div>
+)}
+
+<script>
+  const slots = [...document.querySelectorAll<HTMLElement>('[data-like-count]')];
+  const slugs = [...new Set(slots.map((s) => s.dataset.likeCount!))];
+  if (slugs.length) {
+    fetch(`/api/public/stats?slugs=${encodeURIComponent(slugs.join(','))}`, { headers: { accept: 'application/json' } })
+      .then((res) => (res.ok ? (res.json() as Promise<{ slug: string; likes: number }[]>) : []))
+      .then((rows) => {
+        const likes = new Map(rows.map((r) => [r.slug, r.likes]));
+        for (const s of slots) {
+          const n = likes.get(s.dataset.likeCount!) ?? 0;
+          if (!n) continue;
+          s.querySelector('span')!.textContent = String(n);
+          s.hidden = false;
+          s.title = `${n} like${n === 1 ? '' : 's'}`;
+        }
+      })
+      .catch(() => {});
+  }
+</script>

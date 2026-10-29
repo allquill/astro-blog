@@ -1,0 +1,61 @@
+---
+import { getCollection } from 'astro:content';
+import { getSettings, topicsWithPosts } from '../lib/site';
+import { SOCIAL_NETWORKS } from '../lib/share';
+import Logo from './Logo.astro';
+import Icon from './Icon.astro';
+import { GA_MEASUREMENT_ID } from 'astro:env/server';
+
+const settings = await getSettings();
+const topics = (await topicsWithPosts()).map((t) => t.topic);
+const pages = (await getCollection('pages')).filter((p) => p.data.showInFooter).sort((a, b) => a.data.title.localeCompare(b.data.title));
+const year = new Date().getFullYear();
+const analytics = import.meta.env.PROD && Boolean(GA_MEASUREMENT_ID);
+const link = 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white';
+---
+<footer class="border-t border-slate-200 bg-slate-50 dark:border-white/5 dark:bg-ink-900" data-analytics-location="footer">
+  <div class="container-page grid gap-10 py-14 sm:grid-cols-2 lg:grid-cols-4">
+    <div class="lg:col-span-2">
+      <Logo name={settings.siteName} />
+      <p class="mt-4 max-w-sm text-sm text-slate-500 dark:text-slate-400">{settings.description}</p>
+      {settings.social.length > 0 && (
+        <ul class="mt-5 flex gap-2" aria-label="Social profiles">
+          {settings.social.map((s) => (
+            <li>
+              <a href={s.url} rel="me noopener" target="_blank" class="inline-flex size-9 items-center justify-center rounded-full text-slate-500 ring-1 ring-slate-200 hover:text-slate-900 dark:text-slate-400 dark:ring-white/10 dark:hover:text-white" aria-label={SOCIAL_NETWORKS[s.network].label}>
+                <Icon name={SOCIAL_NETWORKS[s.network].icon} class="size-4" />
+              </a>
+            </li>
+          ))}
+        </ul>
+      )}
+      <div class="mt-6 flex flex-wrap gap-2">
+        <a href="/subscribe/" class="btn-primary">Subscribe by e-mail</a>
+        <a href="/rss.xml" class="btn-secondary"><Icon name="rss" class="size-4" /> RSS</a>
+      </div>
+    </div>
+    <div>
+      <h2 class="text-sm font-semibold text-slate-900 dark:text-white">Topics</h2>
+      <ul class="mt-4 space-y-3 text-sm">
+        {topics.map((t) => <li><a href={`/topics/${t.id}/`} class={link}>{t.data.name}</a></li>)}
+        <li><a href="/topics/" class={link}>All topics</a></li>
+      </ul>
+    </div>
+    <div>
+      <h2 class="text-sm font-semibold text-slate-900 dark:text-white">Blog</h2>
+      <ul class="mt-4 space-y-3 text-sm">
+        <li><a href="/blog/" class={link}>All posts</a></li>
+        {pages.map((p) => <li><a href={`/${p.id}/`} class={link}>{p.data.title}</a></li>)}
+        <li><a href="/feedback/" class={link}>Send feedback</a></li>
+        {settings.footerLinks.map((l) => <li><a href={l.href} class={link}>{l.label}</a></li>)}
+        {analytics && <li><button type="button" data-consent-open class={link}>Cookie settings</button></li>}
+      </ul>
+    </div>
+  </div>
+  <div class="border-t border-slate-200 dark:border-white/5">
+    <div class="container-page flex flex-col gap-2 py-6 text-xs text-slate-500 sm:flex-row sm:justify-between">
+      <p>© {year} {settings.publisher || settings.siteName}. All rights reserved.</p>
+      {settings.email && <p><a href={`mailto:${settings.email}`} class={link}>{settings.email}</a></p>}
+    </div>
+  </div>
+</footer>

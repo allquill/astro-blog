@@ -1,0 +1,80 @@
+---
+// Share links work without JavaScript (each opens the network's own share page). With JavaScript a
+// "Share…" button uses the device share sheet where there is one, and "Copy link" copies the URL.
+// Clicks are counted by the API (admin → Posts) and sent to GA4 as `share` events.
+import Icon from './Icon.astro';
+import { SHARE_NETWORKS, type ShareNetwork } from '../lib/share';
+
+interface Props {
+  slug: string;
+  title: string;
+  url: string;
+  networks: ShareNetwork[];
+}
+const { slug, title, url, networks } = Astro.props;
+const u = encodeURIComponent(url);
+const t = encodeURIComponent(title);
+const btn = 'inline-flex size-9 items-center justify-center rounded-full text-slate-600 ring-1 ring-slate-200 transition hover:text-slate-900 hover:ring-slate-300 dark:text-slate-300 dark:ring-white/10 dark:hover:text-white';
+---
+<div class="flex flex-wrap items-center gap-2" data-share data-slug={slug} data-url={url} data-title={title}>
+  <span class="mr-1 text-sm font-medium text-slate-700 dark:text-slate-300">Share</span>
+  <button type="button" class:list={[btn, 'w-auto gap-1.5 px-3 text-sm']} data-share-native hidden>
+    <Icon name="share" class="size-4" /> Share…
+  </button>
+  {networks.map((n) => {
+    const net = SHARE_NETWORKS[n];
+    return (
+      <a href={net.url(u, t)} target="_blank" rel="noopener" class={btn} aria-label={`Share on ${net.label}`} title={net.label} data-share-network={n}>
+        <Icon name={net.icon} class="size-4" />
+      </a>
+    );
+  })}
+  <button type="button" class={btn} aria-label="Copy link" title="Copy link" data-share-copy hidden>
+    <Icon name="link" class="size-4" />
+  </button>
+  <span class="text-xs text-slate-500" role="status" data-share-status></span>
+</div>
+
+<script>
+  import { api } from '../lib/api';
+  import { track } from '../lib/analytics';
+
+  for (const bar of document.querySelectorAll<HTMLElement>('[data-share]')) {
+    const { slug, url, title } = bar.dataset as { slug: string; url: string; title: string };
+    const status = bar.querySelector<HTMLElement>('[data-share-status]')!;
+    const count = (network: string) => {
+      void api(`/posts/${encodeURIComponent(slug)}/share`, { body: { network } });
+      track('share', { method: network, content_type: 'article', item_id: slug });
+    };
+
+    for (const a of bar.querySelectorAll<HTMLAnchorElement>('[data-share-network]')) {
+      a.addEventListener('click', () => count(a.dataset.shareNetwork!));
+    }
+
+    const native = bar.querySelector<HTMLButtonElement>('[data-share-native]')!;
+    if (typeof navigator.share === 'function') {
+      native.hidden = false;
+      native.addEventListener('click', async () => {
+        try {
+          await navigator.share({ title, url });
+          count('native');
+        } catch {
+          // cancelled
+        }
+      });
+    }
+
+    const copy = bar.querySelector<HTMLButtonElement>('[data-share-copy]')!;
+    copy.hidden = false;
+    copy.addEventListener('click', async () => {
+      try {
+        await navigator.clipboard.writeText(url);
+        status.textContent = 'Link copied';
+        count('copy');
+      } catch {
+        status.textContent = url;
+      }
+      setTimeout(() => (status.textContent = ''), 2500);
+    });
+  }
+</script>

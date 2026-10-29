@@ -1,0 +1,5 @@
+name: TypeScript
+description: Types that pull their weight, patterns for large codebases, and the tooling around them.
+icon: code
+accent: blue
+order: 2

@@ -1,0 +1,5 @@
+# Settings only: website/ is its own pnpm project (the API in ../server and the admin in ../admin are
+# others; the repo root only orchestrates). pnpm blocks dependency build scripts unless allowed here.
+allowBuilds:
+  esbuild: true
+  sharp: true

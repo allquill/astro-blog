@@ -1,0 +1,28 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PostGrid from '../../components/PostGrid.astro';
+import AuthorCard from '../../components/AuthorCard.astro';
+import { getAuthors, getPosts, getTopics, type Author } from '../../lib/site';
+import { personLd } from '../../lib/seo';
+
+export async function getStaticPaths() {
+  return (await getAuthors()).map((author) => ({ params: { slug: author.id }, props: { author } }));
+}
+
+interface Props {
+  author: Author;
+}
+const { author } = Astro.props;
+const posts = await getPosts({ author: author.id });
+const topics = await getTopics();
+const jsonLd = [{ '@context': 'https://schema.org', '@type': 'ProfilePage', mainEntity: personLd(author, Astro.site) }];
+---
+<BaseLayout title={author.data.name} description={author.data.bio || `Posts by ${author.data.name}.`} jsonLd={jsonLd}>
+  <section class="container-page py-12 sm:py-16">
+    <div><AuthorCard author={author} link={false} /></div>
+  </section>
+  <section class="container-page pb-24">
+    <h1 class="mb-6 text-lg font-semibold text-slate-900 dark:text-white">Posts by {author.data.name}</h1>
+    {posts.length ? <PostGrid posts={posts} topics={topics} /> : <p class="text-slate-500">No posts yet.</p>}
+  </section>
+</BaseLayout>

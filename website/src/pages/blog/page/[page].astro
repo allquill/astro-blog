@@ -1,0 +1,15 @@
+---
+import ListPage from '../../../components/ListPage.astro';
+import { getPosts, getSettings } from '../../../lib/site';
+import { pageCount } from '../../../lib/seo';
+
+export async function getStaticPaths() {
+  const { postsPerPage } = await getSettings();
+  const pages = pageCount((await getPosts()).length, postsPerPage);
+  return Array.from({ length: pages - 1 }, (_, i) => ({ params: { page: String(i + 2) } }));
+}
+
+const settings = await getSettings();
+const posts = await getPosts();
+---
+<ListPage title="All posts" eyebrow="Blog" subtitle={settings.tagline || settings.description} posts={posts} page={Number(Astro.params.page)} base="/blog/" />

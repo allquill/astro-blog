@@ -1,0 +1,98 @@
+---
+// Preferences page from the link in every e-mail (?token=…). With JavaScript the current topics are
+// loaded from the API; without it the form still works (it posts the topics ticked here).
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import PageHero from '../../../components/PageHero.astro';
+import Message from '../../../components/Message.astro';
+import { topicsWithPosts } from '../../../lib/site';
+
+const topics = (await topicsWithPosts()).map((t) => t.topic);
+---
+<BaseLayout title="Your subscription" noindex>
+  <PageHero title="Your subscription" subtitle="Choose what you get, or unsubscribe." />
+  <section class="container-page pb-24">
+    <div class="space-y-4">
+      <Message tone="success" id="m-confirmed" hidden>You're subscribed. Welcome! You can fine-tune your topics below.</Message>
+      <Message tone="success" id="m-saved" hidden>Saved.</Message>
+      <Message tone="info" id="m-unsubscribed" hidden>You're unsubscribed and won't get any more e-mails. Changed your mind? Re-subscribe below.</Message>
+      <Message tone="error" id="m-error" hidden>This link is not valid any more. Use the link in our most recent e-mail.</Message>
+
+      <form method="post" action="/api/public/subscribe/manage" class="rounded-3xl bg-white p-6 ring-1 ring-slate-200 sm:p-8 dark:bg-ink-900 dark:ring-white/10" data-manage>
+        <input type="hidden" name="token" value="" />
+        <p class="text-sm text-slate-500" data-manage-email></p>
+        <div class="mt-4">
+          <label class="field-label" for="m-name">Name</label>
+          <input class="field" id="m-name" name="name" maxlength="120" autocomplete="name" />
+        </div>
+        {topics.length > 0 && (
+          <fieldset class="mt-5">
+            <legend class="field-label">Topics <span class="font-normal text-slate-500">(none ticked = everything)</span></legend>
+            <div class="mt-2 flex flex-wrap gap-2">
+              {topics.map((t) => (
+                <label class="inline-flex cursor-pointer items-center gap-2 rounded-full px-3 py-1.5 text-sm ring-1 ring-slate-200 has-[:checked]:bg-brand-600 has-[:checked]:text-white has-[:checked]:ring-brand-600 dark:ring-white/10">
+                  <input type="checkbox" name="topics" value={t.id} class="sr-only" />
+                  {t.data.name}
+                </label>
+              ))}
+            </div>
+          </fieldset>
+        )}
+        <div class="mt-6 flex flex-wrap gap-3">
+          <button type="submit" name="action" value="update" class="btn-primary" data-when="active">Save preferences</button>
+          <button type="submit" name="action" value="resubscribe" class="btn-primary" data-when="inactive" hidden>Re-subscribe</button>
+          <button type="submit" name="action" value="unsubscribe" class="btn-secondary" data-when="active">Unsubscribe</button>
+        </div>
+      </form>
+    </div>
+  </section>
+</BaseLayout>
+
+<script>
+  import { api } from '../../../lib/api';
+  import { track } from '../../../lib/analytics';
+
+  type Sub = { email: string; name: string; status: string; topics: string[] };
+  const q = new URLSearchParams(location.search);
+  const token = q.get('token') ?? '';
+  const form = document.querySelector<HTMLFormElement>('[data-manage]')!;
+  const show = (id: string, on = true) => (document.getElementById(id)!.hidden = !on);
+  form.querySelector<HTMLInputElement>('input[name="token"]')!.value = token;
+
+  const render = (s: Sub) => {
+    form.querySelector<HTMLElement>('[data-manage-email]')!.textContent = `Subscription for ${s.email}`;
+    form.querySelector<HTMLInputElement>('input[name="name"]')!.value = s.name;
+    for (const box of form.querySelectorAll<HTMLInputElement>('input[name="topics"]')) box.checked = s.topics.includes(box.value);
+    const active = s.status === 'active' || s.status === 'pending';
+    for (const b of form.querySelectorAll<HTMLElement>('[data-when]')) b.hidden = (b.dataset.when === 'active') !== active;
+    show('m-unsubscribed', !active);
+  };
+
+  if (q.get('confirmed') === '1') show('m-confirmed');
+  if (q.get('saved') === 'update' || q.get('saved') === 'resubscribe') show('m-saved');
+  if (q.get('error') === '1') show('m-error');
+
+  if (!token) {
+    form.hidden = true;
+    show('m-error');
+  } else {
+    void api<Sub>(`/subscribe/manage?token=${encodeURIComponent(token)}`).then((r) => {
+      if (r.ok) render(r);
+      else {
+        form.hidden = true;
+        show('m-error');
+      }
+    });
+  }
+
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const action = (e.submitter as HTMLButtonElement | null)?.value ?? 'update';
+    const data = new FormData(form);
+    for (const id of ['m-confirmed', 'm-saved']) show(id, false);
+    const r = await api<Sub>('/subscribe/manage', { body: { token, action, name: data.get('name') ?? '', topics: data.getAll('topics') } });
+    if (!r.ok) return show('m-error');
+    render(r);
+    if (action !== 'unsubscribe') show('m-saved');
+    track(action === 'unsubscribe' ? 'unsubscribe' : 'subscription_update', { method: 'newsletter' });
+  });
+</script>

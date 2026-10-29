@@ -1,0 +1,44 @@
+---
+// The link in the confirm e-mail lands here. Confirming is a button (a POST), so mail scanners that
+// open links can't subscribe anyone; it is also a plain form that works without JavaScript.
+import BaseLayout from '../../../layouts/BaseLayout.astro';
+import PageHero from '../../../components/PageHero.astro';
+import Message from '../../../components/Message.astro';
+---
+<BaseLayout title="Confirm your subscription" noindex>
+  <PageHero title="Confirm your subscription" subtitle="One click and you're on the list." />
+  <section class="container-page pb-24">
+    <div class="space-y-4">
+      <form method="post" action="/api/public/subscribe/confirm" data-confirm>
+        <input type="hidden" name="token" value="" />
+        <button type="submit" class="btn-primary">Yes, subscribe me</button>
+      </form>
+      <Message tone="error" id="confirm-error" hidden>This link is not valid any more. Please subscribe again to get a new one.</Message>
+    </div>
+  </section>
+</BaseLayout>
+
+<script>
+  import { api, failure } from '../../../lib/api';
+  import { track } from '../../../lib/analytics';
+
+  const form = document.querySelector<HTMLFormElement>('[data-confirm]')!;
+  const error = document.getElementById('confirm-error')!;
+  const token = new URLSearchParams(location.search).get('token') ?? '';
+  form.querySelector<HTMLInputElement>('input[name="token"]')!.value = token;
+  if (!token) {
+    form.hidden = true;
+    error.hidden = false;
+  }
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const r = await api<{ manageToken: string }>('/subscribe/confirm', { body: { token } });
+    if (!r.ok) {
+      error.textContent = failure(r);
+      error.hidden = false;
+      return;
+    }
+    track('sign_up_confirmed', { method: 'newsletter' });
+    location.replace(`/subscribe/manage/?token=${encodeURIComponent(r.manageToken)}&confirmed=1`);
+  });
+</script>

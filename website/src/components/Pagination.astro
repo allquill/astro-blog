@@ -1,0 +1,26 @@
+---
+import Icon from './Icon.astro';
+import { pagePath } from '../lib/seo';
+
+interface Props {
+  /** List base path, e.g. /blog/ or /topics/astro/. */
+  base: string;
+  page: number;
+  pages: number;
+}
+const { base, page, pages } = Astro.props;
+const item = 'inline-flex min-w-9 items-center justify-center rounded-full px-3 py-1.5 text-sm font-medium ring-1';
+---
+{pages > 1 && (
+  <nav class="mt-12 flex flex-wrap items-center justify-center gap-2" aria-label="Pages">
+    {page > 1 && <a href={pagePath(base, page - 1)} rel="prev" class:list={[item, 'ring-slate-200 dark:ring-white/10']}><Icon name="chevronLeft" class="size-4" /> Newer</a>}
+    {Array.from({ length: pages }, (_, i) => i + 1).map((n) => (
+      <a
+        href={pagePath(base, n)}
+        aria-current={n === page ? 'page' : undefined}
+        class:list={[item, n === page ? 'bg-slate-900 text-white ring-slate-900 dark:bg-white dark:text-slate-900' : 'ring-slate-200 dark:ring-white/10']}
+      >{n}</a>
+    ))}
+    {page < pages && <a href={pagePath(base, page + 1)} rel="next" class:list={[item, 'ring-slate-200 dark:ring-white/10']}>Older <Icon name="chevronRight" class="size-4" /></a>}
+  </nav>
+)}

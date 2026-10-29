@@ -1,0 +1,40 @@
+---
+import { Image } from 'astro:assets';
+import Icon from './Icon.astro';
+import { SOCIAL_NETWORKS } from '../lib/share';
+import type { Author } from '../lib/site';
+
+interface Props {
+  author: Author;
+  /** Link the name to the author page (off on the author page itself). */
+  link?: boolean;
+}
+const { author, link = true } = Astro.props;
+const a = author.data;
+const initials = a.name.split(/\s+/).map((w) => w[0]).slice(0, 2).join('').toUpperCase();
+---
+<div class="flex items-start gap-4">
+  {a.avatar ? (
+    <Image src={a.avatar} alt="" width={64} height={64} format="webp" class="size-16 shrink-0 rounded-full object-cover" />
+  ) : (
+    <span class="grid size-16 shrink-0 place-items-center rounded-full bg-brand-500/15 text-lg font-semibold text-brand-700 dark:text-brand-300">{initials}</span>
+  )}
+  <div>
+    <p class="font-semibold text-slate-900 dark:text-white">
+      {link ? <a href={`/authors/${author.id}/`} class="hover:underline" rel="author">{a.name}</a> : a.name}
+    </p>
+    {a.role && <p class="text-sm text-slate-500 dark:text-slate-400">{a.role}</p>}
+    {a.bio && <p class="mt-2 text-sm text-slate-600 dark:text-slate-400">{a.bio}</p>}
+    {a.links.length > 0 && (
+      <ul class="mt-3 flex gap-2">
+        {a.links.map((l) => (
+          <li>
+            <a href={l.url} target="_blank" rel="me noopener" class="inline-flex size-8 items-center justify-center rounded-full text-slate-500 ring-1 ring-slate-200 hover:text-slate-900 dark:ring-white/10 dark:hover:text-white" aria-label={`${a.name} on ${SOCIAL_NETWORKS[l.network].label}`}>
+              <Icon name={SOCIAL_NETWORKS[l.network].icon} class="size-4" />
+            </a>
+          </li>
+        ))}
+      </ul>
+    )}
+  </div>
+</div>

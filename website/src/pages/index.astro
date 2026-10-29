@@ -1,0 +1,72 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import PostCard from '../components/PostCard.astro';
+import PostGrid from '../components/PostGrid.astro';
+import SubscribeForm from '../components/SubscribeForm.astro';
+import Icon from '../components/Icon.astro';
+import { accentOf, getHome, getPosts, getSettings, getTopics, topicsWithPosts } from '../lib/site';
+import { blogLd } from '../lib/seo';
+
+const settings = await getSettings();
+const home = await getHome();
+const posts = await getPosts();
+const topics = await getTopics();
+const lead = posts.find((p) => p.data.featured) ?? posts[0];
+const latest = posts.filter((p) => p !== lead).slice(0, 6);
+const browse = await topicsWithPosts();
+---
+<BaseLayout description={settings.description} jsonLd={[blogLd(settings, posts.slice(0, 10), Astro.site, '/')]}>
+  <section class="relative isolate overflow-hidden">
+    <div class="absolute inset-0 -z-10 bg-[radial-gradient(60%_60%_at_80%_0%,theme(--color-brand-500/25%),transparent)]" aria-hidden="true"></div>
+    <div class="container-page grid gap-10 py-16 sm:py-24 lg:grid-cols-[1.2fr_1fr] lg:items-center">
+      <div>
+        {home.eyebrow && <p class="eyebrow">{home.eyebrow}</p>}
+        <h1 class="mt-4 text-4xl font-semibold tracking-tight text-balance text-slate-900 sm:text-6xl dark:text-white">{home.heroTitle}</h1>
+        {home.heroSubtitle && <p class="mt-6 max-w-xl text-lg leading-relaxed text-slate-600 dark:text-slate-400">{home.heroSubtitle}</p>}
+        <div class="mt-8 flex flex-wrap gap-3">
+          <a href="/blog/" class="btn-primary">Read the blog <Icon name="arrowRight" class="size-4" /></a>
+          <a href="/topics/" class="btn-secondary">Browse topics</a>
+        </div>
+      </div>
+      <div class="rounded-3xl bg-white/80 p-6 shadow-xl ring-1 shadow-slate-900/5 ring-slate-200 backdrop-blur sm:p-8 dark:bg-ink-900/80 dark:ring-white/10">
+        <SubscribeForm />
+      </div>
+    </div>
+  </section>
+
+  {lead && (
+    <section class="container-page pb-12">
+      <PostCard post={lead} topics={topics} featured />
+    </section>
+  )}
+
+  {latest.length > 0 && (
+    <section class="container-page pb-16">
+      <div class="mb-6 flex items-end justify-between">
+        <h2 class="section-title">{home.latestTitle}</h2>
+        <a href="/blog/" class="text-sm font-medium text-brand-700 hover:underline dark:text-brand-400">All posts →</a>
+      </div>
+      <PostGrid posts={latest} topics={topics} />
+    </section>
+  )}
+
+  {browse.length > 0 && (
+    <section class="container-page pb-24">
+      <h2 class="section-title">{home.topicsTitle}</h2>
+      <div class="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+        {browse.map(({ topic, posts }) => {
+          const a = accentOf(topic.data.accent);
+          return (
+            <a href={`/topics/${topic.id}/`} class="flex items-center gap-3 rounded-2xl bg-white p-4 ring-1 ring-slate-200 transition hover:ring-brand-500 dark:bg-ink-900 dark:ring-white/10">
+              <span class:list={['inline-flex size-10 shrink-0 items-center justify-center rounded-xl', a.bg, a.text]}><Icon name={topic.data.icon} /></span>
+              <span>
+                <span class="block font-semibold text-slate-900 dark:text-white">{topic.data.name}</span>
+                <span class="text-xs text-slate-500">{posts.length} post{posts.length === 1 ? '' : 's'}</span>
+              </span>
+            </a>
+          );
+        })}
+      </div>
+    </section>
+  )}
+</BaseLayout>

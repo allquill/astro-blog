@@ -1,0 +1,10 @@
+# Settings only. This file also makes server/ its own pnpm root, independent of the site above it.
+# pnpm blocks dependency build scripts unless they are allowed here.
+allowBuilds:
+  bcrypt: true
+  esbuild: true
+  sqlite3: true
+  # Install-time telemetry only.
+  '@scarf/scarf': false
+  # Sponsor message only (opencollective-postinstall); the browser files ship prebuilt.
+  docsify: false

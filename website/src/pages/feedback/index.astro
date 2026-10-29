@@ -1,0 +1,63 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PageHero from '../../components/PageHero.astro';
+import Message from '../../components/Message.astro';
+import { getSettings } from '../../lib/site';
+
+const settings = await getSettings();
+---
+<BaseLayout title="Send feedback" description={`Ideas, corrections or questions for ${settings.siteName}.`}>
+  <PageHero eyebrow="Feedback" title="Tell us what you think" subtitle="A correction, a topic you'd like covered, or a question: every message is read." />
+  <section class="container-page pb-24">
+    <div class="space-y-4">
+      <Message tone="success" id="fb-sent" hidden>Thanks for your feedback!</Message>
+      <Message tone="error" id="fb-error" hidden>That didn't work: please write a message (and check the e-mail address, if you gave one).</Message>
+      <form method="post" action="/api/public/feedback" class="space-y-5 rounded-3xl bg-white p-6 ring-1 ring-slate-200 sm:p-8 dark:bg-ink-900 dark:ring-white/10" data-general-feedback>
+        <div class="hidden" aria-hidden="true"><label>Website <input type="text" name="website" tabindex="-1" autocomplete="off" /></label></div>
+        <div>
+          <label class="field-label" for="g-message">Message</label>
+          <textarea class="field min-h-40" id="g-message" name="message" required maxlength="5000"></textarea>
+        </div>
+        <div class="grid gap-5 sm:grid-cols-2">
+          <div>
+            <label class="field-label" for="g-name">Name <span class="font-normal text-slate-500">(optional)</span></label>
+            <input class="field" id="g-name" name="name" maxlength="120" autocomplete="name" />
+          </div>
+          <div>
+            <label class="field-label" for="g-email">E-mail <span class="font-normal text-slate-500">(if you'd like a reply)</span></label>
+            <input class="field" id="g-email" name="email" type="email" maxlength="254" autocomplete="email" />
+          </div>
+        </div>
+        <button type="submit" class="btn-primary">Send</button>
+        <p class="text-sm" role="status" data-status></p>
+      </form>
+    </div>
+  </section>
+</BaseLayout>
+
+<script>
+  import { api, failure } from '../../lib/api';
+  import { track } from '../../lib/analytics';
+
+  const q = new URLSearchParams(location.search);
+  if (q.get('sent') === '1') document.getElementById('fb-sent')!.hidden = false;
+  if (q.get('error') === '1') document.getElementById('fb-error')!.hidden = false;
+
+  const form = document.querySelector<HTMLFormElement>('[data-general-feedback]')!;
+  form.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const data = new FormData(form);
+    const status = form.querySelector<HTMLElement>('[data-status]')!;
+    const r = await api('/feedback', {
+      body: { message: data.get('message'), name: data.get('name') || undefined, email: data.get('email') || undefined, website: data.get('website') || undefined },
+    });
+    if (!r.ok) {
+      status.className = 'text-sm font-medium text-rose-600 dark:text-rose-400';
+      status.textContent = failure(r);
+      return;
+    }
+    track('feedback', { kind: 'general' });
+    form.hidden = true;
+    document.getElementById('fb-sent')!.hidden = false;
+  });
+</script>

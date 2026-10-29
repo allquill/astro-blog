@@ -1,0 +1,2 @@
+# Settings only — no `packages`. The root just orchestrates; server/, admin/ and website/ are independent
+# pnpm projects, each with its own pnpm-lock.yaml and pnpm-workspace.yaml (see package.json scripts).

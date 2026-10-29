@@ -1,0 +1,75 @@
+---
+// Search runs in the browser over /search.json (built with the site); no server needed.
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PageHero from '../../components/PageHero.astro';
+---
+<BaseLayout title="Search" noindex>
+  <PageHero title="Search" />
+  <section class="container-page pb-24">
+    <div>
+      <form action="/search/" method="get" role="search" data-search>
+        <label class="sr-only" for="q">Search posts</label>
+        <input class="field text-lg" id="q" name="q" type="search" placeholder="Search posts…" autocomplete="off" autofocus />
+      </form>
+      <p class="mt-4 text-sm text-slate-500" role="status" data-search-status></p>
+      <ol class="mt-6 space-y-6" data-search-results></ol>
+      <noscript><p class="mt-4 text-sm text-slate-500">Search needs JavaScript. Browse <a href="/topics/" class="underline">topics</a> instead.</p></noscript>
+    </div>
+  </section>
+</BaseLayout>
+
+<script>
+  import { track } from '../../lib/analytics';
+
+  type Doc = { slug: string; title: string; excerpt: string; date: string; topics: string[]; tags: string[]; text: string };
+  const input = document.querySelector<HTMLInputElement>('#q')!;
+  const status = document.querySelector<HTMLElement>('[data-search-status]')!;
+  const list = document.querySelector<HTMLOListElement>('[data-search-results]')!;
+  let docs: Doc[] | null = null;
+  const load = async () => (docs ??= (await (await fetch('/search.json')).json()) as Doc[]);
+  const norm = (s: string) => s.toLowerCase().normalize('NFKD').replace(/[̀-ͯ]/g, '');
+
+  /** Every word must match somewhere; title and tag hits rank higher than body hits. */
+  function score(d: Doc, words: string[]) {
+    let total = 0;
+    for (const w of words) {
+      const s = (norm(d.title).includes(w) ? 10 : 0) + (norm([...d.topics, ...d.tags].join(' ')).includes(w) ? 5 : 0) + (norm(d.excerpt).includes(w) ? 3 : 0) + (norm(d.text).includes(w) ? 1 : 0);
+      if (!s) return 0;
+      total += s;
+    }
+    return total;
+  }
+
+  async function run(q: string) {
+    const words = norm(q).split(/\s+/).filter(Boolean);
+    list.replaceChildren();
+    if (!words.length) return (status.textContent = '');
+    const hits = (await load()).map((d) => ({ d, s: score(d, words) })).filter((h) => h.s).sort((a, b) => b.s - a.s).slice(0, 30);
+    status.textContent = `${hits.length} result${hits.length === 1 ? '' : 's'} for “${q}”`;
+    for (const { d } of hits) {
+      const li = document.createElement('li');
+      const a = Object.assign(document.createElement('a'), { href: `/blog/${d.slug}/`, className: 'text-lg font-semibold text-slate-900 hover:underline dark:text-white', textContent: d.title });
+      const meta = Object.assign(document.createElement('p'), { className: 'mt-1 text-xs text-slate-500', textContent: [d.date, ...d.topics].join(' · ') });
+      const p = Object.assign(document.createElement('p'), { className: 'mt-1 text-sm text-slate-600 dark:text-slate-400', textContent: d.excerpt });
+      li.append(a, meta, p);
+      list.append(li);
+    }
+  }
+
+  let timer: number | undefined;
+  input.addEventListener('input', () => {
+    clearTimeout(timer);
+    timer = window.setTimeout(() => {
+      const q = input.value.trim();
+      history.replaceState(null, '', q ? `?q=${encodeURIComponent(q)}` : location.pathname);
+      void run(q);
+    }, 150);
+  });
+  input.addEventListener('change', () => input.value.trim() && track('search', { search_term: input.value.trim() }));
+  document.querySelector('[data-search]')!.addEventListener('submit', (e) => e.preventDefault());
+  const initial = new URLSearchParams(location.search).get('q') ?? '';
+  if (initial) {
+    input.value = initial;
+    void run(initial);
+  }
+</script>

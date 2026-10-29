@@ -1,0 +1,38 @@
+{
+  "name": "astro-blog",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Blog platform: static site with Keystatic CMS (website/: Astro + Keystatic), admin app (admin/: React + Vite) and API (server/: NestJS) for likes, shares, mailing list and feedback. This root only orchestrates the three independent pnpm projects.",
+  "engines": {
+    "node": ">=22"
+  },
+  "packageManager": "pnpm@11.0.8",
+  "scripts": {
+    "setup": "pnpm install && pnpm --dir server install && pnpm --dir admin install && pnpm --dir website install",
+    "dev": "concurrently --names server,admin,website --prefix-colors magenta,green,blue \"pnpm:dev:api\" \"pnpm:dev:admin\" \"pnpm:dev:web\"",
+    "dev:api": "pnpm --dir server run start:dev",
+    "dev:admin": "pnpm --dir admin run dev",
+    "dev:web": "pnpm --dir website run dev",
+    "stop": "pnpm --dir website run stop",
+    "build": "pnpm run build:api && pnpm run build:admin && pnpm run build:web",
+    "build:api": "pnpm --dir server run build",
+    "build:admin": "pnpm --dir admin run build",
+    "build:web": "pnpm --dir website run build",
+    "check": "pnpm run check:api && pnpm run check:admin && pnpm run check:web",
+    "check:api": "pnpm --dir server run check",
+    "check:admin": "pnpm --dir admin run check",
+    "check:web": "pnpm --dir website run check",
+    "sdk": "pnpm --dir server run build && pnpm --dir server run openapi ../admin/openapi.json && pnpm --dir admin run sdk",
+    "docker:build": "pnpm run docker:build:api && pnpm run docker:build:admin && pnpm run docker:build:web",
+    "docker:build:api": "docker build -t astro-blog-api --build-context docs=./docs ./server",
+    "docker:build:admin": "docker build -t astro-blog-admin ./admin",
+    "docker:build:web": "docker build -t astro-blog-web ./website",
+    "compose:up": "docker compose -f docker/docker-compose.yml up -d --build",
+    "compose:down": "docker compose -f docker/docker-compose.yml down",
+    "compose:logs": "docker compose -f docker/docker-compose.yml logs -f",
+    "indexnow": "pnpm --dir website run indexnow"
+  },
+  "devDependencies": {
+    "concurrently": "^10.0.5"
+  }
+}

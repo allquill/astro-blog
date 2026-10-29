@@ -1,0 +1,103 @@
+name: Develop build
+
+# Push to develop -> build and push the three Docker images (web, admin, api) tagged :develop.
+# No version bump, no tag, no release.
+#
+# SITE_URL (canonical/OG links) comes from the repository variable
+# SITE_URL_DEVELOP; it can be overridden when run by hand.
+
+on:
+  push:
+    branches:
+      - develop
+  workflow_dispatch:
+    inputs:
+      site_url:
+        description: 'Public URL baked into canonical/OG links (blank = vars.SITE_URL_DEVELOP)'
+        required: false
+        type: string
+        default: ''
+
+concurrency:
+  group: develop-build
+  cancel-in-progress: true
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    env:
+      DOCKER_REGISTRY: ${{ secrets.DOCKER_REGISTRY }}
+      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+      DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+      # Empty on a push event, so the fallback is the repository variable.
+      SITE_URL: ${{ inputs.site_url || vars.SITE_URL_DEVELOP }}
+      # GA4 measurement ID; unset = the image contains no analytics.
+      GA_MEASUREMENT_ID: ${{ vars.GA_MEASUREMENT_ID_DEVELOP }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Read package metadata
+        id: pkg
+        run: |
+          echo "name=$(node -p "require('./package.json').name")" >> "$GITHUB_OUTPUT"
+          echo "version=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
+
+      - name: Display project information
+        run: |
+          echo "Building ${{ steps.pkg.outputs.name }} v${{ steps.pkg.outputs.version }} -> :develop"
+          echo "Site URL: ${SITE_URL:-<placeholder from astro.config.mjs>}"
+          echo "GA measurement ID: ${GA_MEASUREMENT_ID:-<none - analytics disabled>}"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Docker registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.DOCKER_REGISTRY }}
+          username: ${{ env.DOCKERHUB_USERNAME }}
+          password: ${{ env.DOCKERHUB_TOKEN }}
+
+      - name: Build and push website image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./website
+          file: ./website/Dockerfile
+          build-args: |
+            SITE_URL=${{ env.SITE_URL }}
+            GA_MEASUREMENT_ID=${{ env.GA_MEASUREMENT_ID }}
+          push: true
+          tags: ${{ env.DOCKER_REGISTRY }}/${{ steps.pkg.outputs.name }}-web:develop
+          platforms: linux/amd64
+          cache-from: type=gha,scope=web
+          cache-to: type=gha,mode=max,scope=web
+
+      # Admin app (admin/): same tags, image name suffixed with -admin.
+      - name: Build and push admin image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./admin
+          file: ./admin/Dockerfile
+          push: true
+          tags: ${{ env.DOCKER_REGISTRY }}/${{ steps.pkg.outputs.name }}-admin:develop
+          platforms: linux/amd64
+          cache-from: type=gha,scope=admin
+          cache-to: type=gha,mode=max,scope=admin
+
+
+      # API (server/): same tags, image name suffixed with -api.
+      - name: Build and push API image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./server
+          file: ./server/Dockerfile
+          build-contexts: |
+            docs=./docs
+          push: true
+          tags: ${{ env.DOCKER_REGISTRY }}/${{ steps.pkg.outputs.name }}-api:develop
+          platforms: linux/amd64
+          cache-from: type=gha,scope=api
+          cache-to: type=gha,mode=max,scope=api

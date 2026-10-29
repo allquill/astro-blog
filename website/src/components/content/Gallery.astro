@@ -1,0 +1,19 @@
+---
+// Images from Keystatic's gallery block live in public/images/gallery and are served as-is.
+interface Props {
+  images: { src?: string; alt?: string; caption?: string }[];
+  columns?: '2' | '3';
+}
+const { images, columns = '2' } = Astro.props;
+const items = images.filter((i) => i.src);
+---
+<div class:list={['not-prose my-8 grid gap-3', columns === '3' ? 'sm:grid-cols-3' : 'sm:grid-cols-2']}>
+  {items.map((img) => (
+    <figure>
+      <a href={img.src} target="_blank" rel="noopener" class="block overflow-hidden rounded-xl ring-1 ring-slate-900/10 dark:ring-white/10">
+        <img src={img.src} alt={img.alt ?? ''} loading="lazy" decoding="async" class="aspect-[4/3] w-full object-cover transition hover:scale-[1.02]" />
+      </a>
+      {img.caption && <figcaption class="mt-1.5 text-sm text-slate-500 dark:text-slate-400">{img.caption}</figcaption>}
+    </figure>
+  ))}
+</div>

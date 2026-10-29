@@ -1,0 +1,58 @@
+---
+// Analytics consent (Google Consent Mode v2). Rendered only when analytics is active in this build;
+// hidden until the script finds no stored choice, so returning visitors never see it flash.
+import { GA_MEASUREMENT_ID } from 'astro:env/server';
+
+const active = import.meta.env.PROD && Boolean(GA_MEASUREMENT_ID);
+---
+{active && (
+  <div
+    data-consent-banner
+    role="region"
+    aria-label="Cookie consent"
+    hidden
+    class="fixed inset-x-3 bottom-3 z-50 mx-auto max-w-xl rounded-2xl bg-white p-5 shadow-2xl ring-1 ring-slate-900/10 sm:inset-x-6 sm:bottom-6 dark:bg-ink-850 dark:ring-white/10"
+  >
+    <p class="text-sm leading-relaxed text-slate-600 dark:text-slate-300">
+      We use Google Analytics cookies to understand how visitors use this site. Nothing is stored unless you accept.{' '}
+      <a href="/privacy/" class="font-medium text-brand-600 underline-offset-2 hover:underline dark:text-brand-400">Privacy</a>
+    </p>
+    <div class="mt-4 flex flex-wrap justify-end gap-2">
+      <button type="button" data-consent="denied" class="btn-secondary px-4 py-2">Decline</button>
+      <button type="button" data-consent="granted" class="btn-primary px-4 py-2">Accept</button>
+    </div>
+  </div>
+)}
+
+<script>
+  const KEY = 'analytics-consent';
+  const banner = document.querySelector<HTMLElement>('[data-consent-banner]');
+
+  if (banner) {
+    let stored: string | null = null;
+    try {
+      stored = localStorage.getItem(KEY);
+    } catch {}
+    if (stored !== 'granted' && stored !== 'denied') banner.hidden = false;
+
+    const gtag = (window as unknown as { gtag?: (...a: unknown[]) => void }).gtag;
+    banner.querySelectorAll<HTMLButtonElement>('[data-consent]').forEach((b) =>
+      b.addEventListener('click', () => {
+        const choice = b.dataset.consent as 'granted' | 'denied';
+        try {
+          localStorage.setItem(KEY, choice);
+        } catch {}
+        gtag?.('consent', 'update', { analytics_storage: choice });
+        banner.hidden = true;
+      }),
+    );
+
+    // Footer "Cookie settings" reopens the banner.
+    document.querySelectorAll<HTMLElement>('[data-consent-open]').forEach((el) =>
+      el.addEventListener('click', () => {
+        banner.hidden = false;
+        banner.querySelector<HTMLButtonElement>('[data-consent="granted"]')?.focus();
+      }),
+    );
+  }
+</script>

@@ -1,0 +1,118 @@
+# Astro Blog: static website + admin app (both nginx) in front of the NestJS API.
+#
+#   website   nginx :80 (../website) — the public site; proxies /api to `server`       → ${WEBSITE_PORT}
+#   admin     nginx :80 (../admin)   — the staff admin app; proxies /api to `server`   → ${ADMIN_PORT}
+#   server    Node (../server): likes, shares, subscribers, feedback, e-mail. Not published on the host; reached
+#             only through the two nginx containers. Settings: ./.env (see below).
+#   postgres  (optional, profile "postgres") — set DATABASE_TYPE=postgres + DATABASE_* in ./.env
+#   mailpit   (optional, profile "mail") local SMTP catcher for testing e-mails: http://localhost:8025
+#
+# Run from the project root with the pnpm scripts, or from this folder with plain `docker compose`:
+#     pnpm run compose:up                     # = docker compose -f docker/docker-compose.yml up -d --build
+#     cd docker && docker compose --profile mail up -d --build
+#
+# `up --build` builds all three images from this checkout. `up` WITHOUT --build runs whatever image
+# already carries the tag below, e.g. one pulled from the registry (docker compose pull).
+# CI publishes linux/amd64 images; on Apple silicon add `platform: linux/amd64` to run pulled images.
+#
+# Settings: ./.env next to this file, created from the project's single template:
+#     cp ../server/env.example .env          # (from the project root: cp server/env.example docker/.env)
+# It holds the variables used below (ports, tag, DOCKER_VOLUME_FOLDER, …) and the server's own settings
+# (SMTP, JWT_SECRET_KEY, ADMIN_*, SITE_FEED_URL), which reach the container through env_file. SITE_URL and
+# GA_MEASUREMENT_ID are baked into the website at BUILD time.
+#
+# Behind a reverse proxy / cloudflared, publish the website and admin on their own hostnames and set
+# PUBLIC_SITE_URL and ADMIN_URL in ./.env to match (they are used for links in e-mails).
+name: astro-blog
+
+services:
+  website:
+    image: ${AB_REGISTRY:+${AB_REGISTRY}/}astro-blog-web:${AB_TAG:-latest}
+    build:
+      context: ../website
+      args:
+        SITE_URL: ${SITE_URL:-}
+        GA_MEASUREMENT_ID: ${GA_MEASUREMENT_ID:-}
+    restart: unless-stopped
+    ports:
+      - "${BIND_ADDRESS:-127.0.0.1}:${WEBSITE_PORT:-8093}:80"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://127.0.0.1/ || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    depends_on:
+      - server
+
+  admin:
+    image: ${AB_REGISTRY:+${AB_REGISTRY}/}astro-blog-admin:${AB_TAG:-latest}
+    build:
+      context: ../admin
+    restart: unless-stopped
+    ports:
+      - "${BIND_ADDRESS:-127.0.0.1}:${ADMIN_PORT:-8094}:80"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -q --spider http://127.0.0.1/ || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
+    depends_on:
+      - server
+
+  server:
+    image: ${AB_REGISTRY:+${AB_REGISTRY}/}astro-blog-api:${AB_TAG:-latest}
+    build:
+      context: ../server
+      # The project guides, baked into the image for /api/admin/docs/.
+      additional_contexts:
+        docs: ../docs
+    restart: unless-stopped
+    env_file:
+      # ./.env (docker/.env). Optional so `docker compose` works before it exists; the server then
+      # exits with a message listing the missing settings.
+      - path: .env
+        required: false
+    environment:
+      # Wiring owned by this file; overrides .env.
+      PORT: "3002"
+      DATABASE_PATH: /data/astro-blog.db
+      CLIENT_IP_HEADER: ${CLIENT_IP_HEADER:-x-real-ip}
+      # The API reads the site's post list from the website container (override in .env for a CDN).
+      SITE_FEED_URL: ${SITE_FEED_URL:-http://website/feed.json}
+    volumes:
+      # SQLite database, kept on the host in <DOCKER_VOLUME_FOLDER>/server. The default
+      # ./volumes is relative to this folder (docker/volumes). On Linux the folder must be writable by the
+      # container's user, uid 1000 (`sudo chown -R 1000:1000 <folder>`). Back it up.
+      - ${DOCKER_VOLUME_FOLDER:-./volumes}/server:/data
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:3002/api/health >/dev/null || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 15s
+
+  postgres:
+    image: postgres:17-alpine
+    profiles: ["postgres"]
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${DATABASE_USER:-astroblog}
+      POSTGRES_PASSWORD: ${DATABASE_PASSWORD:-astroblog}
+      POSTGRES_DB: ${DATABASE_NAME:-astroblog}
+    volumes:
+      - ${DOCKER_VOLUME_FOLDER:-./volumes}/postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  mailpit:
+    image: axllent/mailpit:latest
+    profiles: ["mail"]
+    restart: unless-stopped
+    ports:
+      - "${BIND_ADDRESS:-127.0.0.1}:8025:8025"
+      - "${BIND_ADDRESS:-127.0.0.1}:1025:1025"

@@ -1,0 +1,51 @@
+---
+title: Cutting CI time in half with GitHub Actions caching
+excerpt: >-
+  Our pipeline spent most of its time downloading the same dependencies. Three cache steps later it
+  finishes in under four minutes.
+publishedDate: 2026-08-27
+author: sam-rivera
+topics:
+  - devops
+  - typescript
+tags:
+  - CI
+  - GitHub Actions
+cover: ../../assets/posts/github-actions-cache.jpg
+coverAlt: Dark slate gradient with the words CI cache
+featured: false
+draft: false
+---
+Before reaching for bigger runners, check what your jobs are actually doing. Ours were mostly waiting on the network.
+
+## Cache the package store
+
+```yaml {% title=".github/workflows/ci.yaml" highlight="9-11" %}
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm run check
+```
+
+## Cache build outputs too
+
+TypeScript's incremental build info is worth caching on its own:
+
+```yaml
+- uses: actions/cache@v4
+  with:
+    path: '**/*.tsbuildinfo'
+    key: tsc-${{ hashFiles('**/tsconfig*.json', 'pnpm-lock.yaml') }}
+```
+
+{% callout type="danger" title="Never cache secrets" %}
+A cache is readable by any workflow on the same branch. Keep `.env` files and credentials out of cached paths.
+{% /callout %}

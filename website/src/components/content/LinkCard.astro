@@ -1,0 +1,27 @@
+---
+import Icon from '../Icon.astro';
+
+interface Props {
+  url: string;
+  title?: string;
+  description?: string;
+}
+const { url, title, description } = Astro.props;
+const external = /^https?:\/\//.test(url) && !url.startsWith(Astro.site?.origin ?? '#');
+let host = '';
+try {
+  host = new URL(url, Astro.site).host;
+} catch {}
+---
+<a
+  href={url}
+  class="not-prose my-6 flex items-center justify-between gap-4 rounded-xl bg-white px-5 py-4 ring-1 ring-slate-200 transition hover:ring-brand-500 dark:bg-white/5 dark:ring-white/10"
+  {...(external ? { target: '_blank', rel: 'noopener' } : {})}
+>
+  <span>
+    <span class="block font-semibold text-slate-900 dark:text-white">{title || url}</span>
+    {description && <span class="mt-0.5 block text-sm text-slate-600 dark:text-slate-400">{description}</span>}
+    {host && <span class="mt-1 block text-xs text-slate-500">{host}</span>}
+  </span>
+  <Icon name={external ? 'link' : 'arrowRight'} class="size-5 shrink-0 text-slate-400" />
+</a>

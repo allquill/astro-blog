@@ -1,0 +1,14 @@
+node_modules/
+dist/
+.astro/
+.env
+.env.*
+.DS_Store
+# API: local database and settings
+data/
+server/.env
+server/data/
+server/dist/
+# docker compose: bind-mounted container data (DOCKER_VOLUME_FOLDER)
+docker/volumes/
+!website/.env.development

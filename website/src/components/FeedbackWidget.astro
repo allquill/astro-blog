@@ -1,0 +1,93 @@
+---
+// "Was this helpful?" at the end of a post. Without JavaScript it is one form (vote + optional
+// message) posted to the API, which redirects back here with ?feedback=1. With JavaScript the vote is
+// sent at once and the message box appears afterwards.
+interface Props {
+  slug: string;
+}
+const { slug } = Astro.props;
+---
+<section id="feedback" class="rounded-2xl bg-slate-50 p-6 ring-1 ring-slate-200 dark:bg-white/5 dark:ring-white/10" data-feedback={slug}>
+  <p class="font-semibold text-slate-900 dark:text-white" data-feedback-thanks-static hidden>Thanks for your feedback!</p>
+  <form method="post" action="/api/public/feedback" data-feedback-form>
+    <input type="hidden" name="postSlug" value={slug} />
+    <div class="hidden" aria-hidden="true"><label>Website <input type="text" name="website" tabindex="-1" autocomplete="off" /></label></div>
+    <fieldset>
+      <legend class="font-semibold text-slate-900 dark:text-white">Was this post helpful?</legend>
+      <div class="mt-3 flex gap-2" data-feedback-votes>
+        <label class="inline-flex cursor-pointer items-center gap-2 rounded-full px-4 py-2 text-sm font-medium ring-1 ring-slate-200 has-[:checked]:bg-emerald-600 has-[:checked]:text-white has-[:checked]:ring-emerald-600 dark:ring-white/10">
+          <input type="radio" name="helpful" value="yes" class="sr-only" /> 👍 Yes
+        </label>
+        <label class="inline-flex cursor-pointer items-center gap-2 rounded-full px-4 py-2 text-sm font-medium ring-1 ring-slate-200 has-[:checked]:bg-amber-500 has-[:checked]:text-white has-[:checked]:ring-amber-500 dark:ring-white/10">
+          <input type="radio" name="helpful" value="no" class="sr-only" /> 👎 Not really
+        </label>
+      </div>
+    </fieldset>
+    <div class="mt-5 space-y-4" data-feedback-more>
+      <div>
+        <label class="field-label" for={`fb-message-${slug}`}>Anything we could improve, or a question? <span class="font-normal text-slate-500">(optional)</span></label>
+        <textarea class="field min-h-24" id={`fb-message-${slug}`} name="message" maxlength="5000"></textarea>
+      </div>
+      <div class="grid gap-4 sm:grid-cols-2">
+        <div>
+          <label class="field-label" for={`fb-name-${slug}`}>Name <span class="font-normal text-slate-500">(optional)</span></label>
+          <input class="field" id={`fb-name-${slug}`} name="name" maxlength="120" autocomplete="name" />
+        </div>
+        <div>
+          <label class="field-label" for={`fb-email-${slug}`}>E-mail <span class="font-normal text-slate-500">(for a reply)</span></label>
+          <input class="field" id={`fb-email-${slug}`} name="email" type="email" maxlength="254" autocomplete="email" />
+        </div>
+      </div>
+      <button type="submit" class="btn-primary">Send feedback</button>
+    </div>
+    <p class="mt-3 text-sm" role="status" data-feedback-status></p>
+  </form>
+</section>
+
+<script>
+  import { api, failure } from '../lib/api';
+  import { track } from '../lib/analytics';
+
+  for (const box of document.querySelectorAll<HTMLElement>('[data-feedback]')) {
+    const slug = box.dataset.feedback!;
+    const form = box.querySelector<HTMLFormElement>('[data-feedback-form]')!;
+    const more = box.querySelector<HTMLElement>('[data-feedback-more]')!;
+    const status = box.querySelector<HTMLElement>('[data-feedback-status]')!;
+    const say = (text: string, ok = true) => {
+      status.className = `mt-3 text-sm font-medium ${ok ? 'text-emerald-700 dark:text-emerald-400' : 'text-rose-600 dark:text-rose-400'}`;
+      status.textContent = text;
+    };
+    // Back from a no-JS post.
+    if (new URLSearchParams(location.search).get('feedback') === '1') {
+      form.hidden = true;
+      box.querySelector<HTMLElement>('[data-feedback-thanks-static]')!.hidden = false;
+      continue;
+    }
+
+    let voteId: number | null = null;
+    more.hidden = true;
+    for (const radio of form.querySelectorAll<HTMLInputElement>('input[name="helpful"]')) {
+      radio.addEventListener('change', async () => {
+        const helpful = radio.value === 'yes';
+        more.hidden = false;
+        say(helpful ? 'Thanks! Anything to add?' : 'Thanks. What was missing?');
+        const r = await api<{ id: number | null }>('/feedback', { body: { postSlug: slug, helpful } });
+        voteId = r.ok ? r.id : null;
+        track('post_feedback', { helpful, item_id: slug });
+      });
+    }
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const data = new FormData(form);
+      const message = String(data.get('message') ?? '').trim();
+      if (!message) return say('Please write a message, or just leave your vote.', false);
+      const fields = { message, name: data.get('name') || undefined, email: data.get('email') || undefined };
+      const r = voteId
+        ? await api(`/feedback/${voteId}/message`, { body: fields })
+        : await api('/feedback', { body: { ...fields, postSlug: slug, website: data.get('website') || undefined } });
+      if (!r.ok) return say(failure(r), false);
+      form.replaceChildren(Object.assign(document.createElement('p'), { className: 'font-semibold text-slate-900 dark:text-white', textContent: 'Thanks for your feedback!' }));
+    });
+  }
+</script>

@@ -1,0 +1,63 @@
+---
+import { Image } from 'astro:assets';
+import Icon from './Icon.astro';
+import { accentOf, formatDate, readingTime, topicsOf, type Post, type Topic } from '../lib/site';
+
+interface Props {
+  post: Post;
+  /** All topics, used to resolve the post's references to names/accents. */
+  topics: Topic[];
+  /** Large horizontal layout for the featured post. */
+  featured?: boolean;
+}
+const { post, topics, featured = false } = Astro.props;
+const { title, excerpt, publishedDate, cover, draft } = post.data;
+const related = topicsOf(post, topics);
+const lead = related[0];
+const a = accentOf(lead?.data.accent ?? 'teal');
+const href = `/blog/${post.id}/`;
+---
+<article
+  class:list={[
+    'group relative flex overflow-hidden rounded-3xl bg-white ring-1 ring-slate-200 transition hover:shadow-xl hover:shadow-slate-900/5 dark:bg-ink-900 dark:ring-white/10 dark:hover:ring-white/20',
+    featured ? 'flex-col lg:flex-row' : 'flex-col',
+  ]}
+>
+  <a href={href} tabindex="-1" aria-hidden="true" class:list={['relative block shrink-0 overflow-hidden', featured ? 'aspect-[16/9] lg:aspect-auto lg:w-3/5' : 'aspect-[16/9]']}>
+    {cover ? (
+      <Image
+        src={cover}
+        alt=""
+        widths={featured ? [640, 960, 1280] : [400, 640, 800]}
+        sizes={featured ? '(min-width: 1024px) 720px, 100vw' : '(min-width: 1024px) 400px, (min-width: 640px) 50vw, 100vw'}
+        format="webp"
+        quality={75}
+        class="h-full w-full object-cover transition duration-500 group-hover:scale-[1.02]"
+      />
+    ) : (
+      <div class:list={['grid h-full min-h-40 w-full place-items-center bg-gradient-to-br to-transparent', a.glow]}>
+        <span class:list={['inline-flex size-14 items-center justify-center rounded-2xl ring-1', a.bg, a.text, a.ring]}>
+          <Icon name={lead?.data.icon ?? 'book'} class="size-7" />
+        </span>
+      </div>
+    )}
+  </a>
+  <div class:list={['flex flex-1 flex-col', featured ? 'p-6 sm:p-10 lg:justify-center' : 'p-6']}>
+    <div class="relative z-10 flex flex-wrap items-center gap-2">
+      {draft && <span class="rounded-full bg-amber-500/15 px-2 py-0.5 text-xs font-semibold text-amber-700 dark:text-amber-300">Draft</span>}
+      {related.map((t) => {
+        const ta = accentOf(t.data.accent);
+        return <a href={`/topics/${t.id}/`} class:list={['rounded-full px-2.5 py-0.5 text-xs font-medium hover:opacity-80', ta.bg, ta.text]}>{t.data.name}</a>;
+      })}
+    </div>
+    <h3 class:list={['mt-4 font-semibold tracking-tight text-balance text-slate-900 dark:text-white', featured ? 'text-2xl sm:text-3xl' : 'text-lg']}>
+      <a href={href} class="after:absolute after:inset-0">{title}</a>
+    </h3>
+    {excerpt && <p class:list={['mt-3 leading-relaxed text-slate-600 dark:text-slate-400', featured ? 'text-base' : 'line-clamp-3 text-sm']}>{excerpt}</p>}
+    <p class="mt-auto flex items-center gap-1 pt-5 text-xs text-slate-500 dark:text-slate-400">
+      <time datetime={publishedDate.toISOString()}>{formatDate(publishedDate)}</time>
+      <span aria-hidden="true"> · </span>{readingTime(post.body)} min read
+      <span class="ml-auto inline-flex items-center gap-1" data-like-count={post.id} hidden><Icon name="heart" class="size-3.5" /><span></span></span>
+    </p>
+  </div>
+</article>

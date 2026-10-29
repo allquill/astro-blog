@@ -1,0 +1,22 @@
+---
+import Icon from '../Icon.astro';
+
+interface Props {
+  type?: 'note' | 'tip' | 'warning' | 'danger';
+  title?: string;
+}
+const { type = 'note', title = '' } = Astro.props;
+const STYLES = {
+  note: { icon: 'info', box: 'bg-sky-50 ring-sky-200 dark:bg-sky-950/40 dark:ring-sky-900', text: 'text-sky-700 dark:text-sky-300', label: 'Note' },
+  tip: { icon: 'lightbulb', box: 'bg-emerald-50 ring-emerald-200 dark:bg-emerald-950/40 dark:ring-emerald-900', text: 'text-emerald-700 dark:text-emerald-300', label: 'Tip' },
+  warning: { icon: 'alert', box: 'bg-amber-50 ring-amber-200 dark:bg-amber-950/40 dark:ring-amber-900', text: 'text-amber-700 dark:text-amber-300', label: 'Warning' },
+  danger: { icon: 'alert', box: 'bg-rose-50 ring-rose-200 dark:bg-rose-950/40 dark:ring-rose-900', text: 'text-rose-700 dark:text-rose-300', label: 'Danger' },
+} as const;
+const s = STYLES[type] ?? STYLES.note;
+---
+<aside class:list={['callout my-6 rounded-xl px-5 py-4 ring-1', s.box]} role="note">
+  <p class:list={['m-0! flex items-center gap-2 text-sm font-semibold', s.text]}>
+    <Icon name={s.icon} class="size-4" /> {title || s.label}
+  </p>
+  <div class="mt-1 text-[0.95em] [&>*:first-child]:mt-1 [&>*:last-child]:mb-0"><slot /></div>
+</aside>

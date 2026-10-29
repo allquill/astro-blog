@@ -1,0 +1,22 @@
+---
+import Icon from './Icon.astro';
+---
+<button
+  type="button"
+  data-theme-toggle
+  class="inline-flex size-9 items-center justify-center rounded-full text-slate-500 ring-1 ring-slate-200 transition hover:text-slate-900 dark:text-slate-400 dark:ring-white/10 dark:hover:text-white"
+  aria-label="Toggle dark mode"
+>
+  <Icon name="moon" class="size-4.5 dark:hidden" />
+  <Icon name="sun" class="hidden size-4.5 dark:block" />
+</button>
+
+<script>
+  import { setMode } from '../lib/theme';
+
+  for (const btn of document.querySelectorAll<HTMLButtonElement>('[data-theme-toggle]')) {
+    btn.addEventListener('click', () => {
+      setMode(document.documentElement.classList.contains('dark') ? 'light' : 'dark', 'header');
+    });
+  }
+</script>

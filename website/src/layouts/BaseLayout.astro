@@ -1,0 +1,125 @@
+---
+import '../styles/global.css';
+import { getImage } from 'astro:assets';
+import type { ImageMetadata } from 'astro';
+import { getSettings } from '../lib/site';
+import { publisherLd, websiteLd } from '../lib/seo';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import JsonLd from '../components/JsonLd.astro';
+import Analytics from '../components/Analytics.astro';
+import ConsentBanner from '../components/ConsentBanner.astro';
+
+interface Props {
+  title?: string;
+  description?: string;
+  /** Share image; defaults to the logo. */
+  ogImage?: ImageMetadata | null;
+  ogImageAlt?: string;
+  ogType?: 'website' | 'article';
+  /** Extra Open Graph article metadata for blog posts. */
+  article?: { publishedTime: Date; modifiedTime?: Date; author: string; section?: string; tags: string[] };
+  /** Page-specific schema.org objects; the publisher and WebSite are always added. */
+  jsonLd?: object[];
+  /** Path of this page's plain-Markdown twin, advertised to AI agents. */
+  markdownPath?: string;
+  noindex?: boolean;
+  /** Canonical URL when the content was first published elsewhere. */
+  canonicalUrl?: string | null;
+  /** Extra feeds for this page (e.g. a topic's RSS). */
+  feeds?: { title: string; href: string }[];
+}
+const settings = await getSettings();
+const {
+  title,
+  description = settings.description,
+  ogType = 'website',
+  article,
+  jsonLd = [],
+  markdownPath,
+  noindex = false,
+  canonicalUrl,
+  feeds = [],
+} = Astro.props;
+const fullTitle = title ? `${title} · ${settings.siteName}` : settings.siteName;
+const canonical = canonicalUrl ? new URL(canonicalUrl) : new URL(Astro.url.pathname, Astro.site);
+const ogSource = Astro.props.ogImage;
+const og = ogSource ? await getImage({ src: ogSource, width: 1200, format: 'jpeg', quality: 80 }) : null;
+const ogWidth = og ? Number(og.attributes.width ?? 1200) : 512;
+const ogHeight = og && ogSource ? Math.round((ogWidth / ogSource.width) * ogSource.height) : 512;
+const ogUrl = og ? new URL(og.src, Astro.site).toString() : new URL('/logo.png', Astro.site).toString();
+const ogAlt = Astro.props.ogImageAlt ?? (title ? `${title} – ${settings.siteName}` : settings.siteName);
+const robots = noindex ? 'noindex, follow' : 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1';
+const schema = [publisherLd(settings, Astro.site), websiteLd(settings, Astro.site), ...jsonLd];
+---
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{fullTitle}</title>
+    <meta name="description" content={description} />
+    <meta name="robots" content={robots} />
+    <link rel="canonical" href={canonical} />
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="/logo.png" />
+    <link rel="sitemap" type="application/xml" href="/sitemap.xml" />
+    <link rel="alternate" type="application/rss+xml" title={settings.siteName} href="/rss.xml" />
+    <link rel="alternate" type="application/feed+json" title={settings.siteName} href="/feed.json" />
+    {feeds.map((f) => <link rel="alternate" type="application/rss+xml" title={f.title} href={f.href} />)}
+    {markdownPath && <link rel="alternate" type="text/markdown" title="Markdown version" href={markdownPath} />}
+    <link rel="help" type="text/plain" title="llms.txt" href="/llms.txt" />
+    <meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#06100f" media="(prefers-color-scheme: dark)" />
+    <meta property="og:site_name" content={settings.siteName} />
+    <meta property="og:locale" content="en_US" />
+    <meta property="og:type" content={ogType} />
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:url" content={canonical} />
+    <meta property="og:image" content={ogUrl} />
+    <meta property="og:image:width" content={String(ogWidth)} />
+    <meta property="og:image:height" content={String(ogHeight)} />
+    <meta property="og:image:alt" content={ogAlt} />
+    {article && (
+      <>
+        <meta property="article:published_time" content={article.publishedTime.toISOString()} />
+        {article.modifiedTime && <meta property="article:modified_time" content={article.modifiedTime.toISOString()} />}
+        <meta property="article:author" content={article.author} />
+        {article.section && <meta property="article:section" content={article.section} />}
+        {article.tags.map((t) => <meta property="article:tag" content={t} />)}
+      </>
+    )}
+    <meta name="twitter:card" content={og ? 'summary_large_image' : 'summary'} />
+    <meta name="twitter:title" content={fullTitle} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content={ogUrl} />
+    <meta name="twitter:image:alt" content={ogAlt} />
+    {!noindex && <JsonLd data={schema} />}
+    <Analytics />
+    <!-- Apply the saved (or system) theme before first paint to avoid a flash. -->
+    <script is:inline>
+      (() => {
+        let saved = null;
+        try { saved = localStorage.getItem('theme'); } catch {}
+        const mq = matchMedia('(prefers-color-scheme: dark)');
+        const apply = (dark) => document.documentElement.classList.toggle('dark', dark);
+        apply(saved ? saved === 'dark' : mq.matches);
+        mq.addEventListener('change', (e) => {
+          let s = null;
+          try { s = localStorage.getItem('theme'); } catch {}
+          if (!s) apply(e.matches);
+        });
+      })();
+    </script>
+  </head>
+  <body class="flex min-h-dvh flex-col overflow-x-clip">
+    <a href="#main" class="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:rounded-full focus:bg-brand-600 focus:px-4 focus:py-2 focus:text-white">Skip to content</a>
+    <Header />
+    <main id="main" class="flex-1">
+      <slot />
+    </main>
+    <Footer />
+    <ConsentBanner />
+  </body>
+</html>

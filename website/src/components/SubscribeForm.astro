@@ -1,0 +1,90 @@
+---
+// The mailing-list form. A plain form post to the API works without JavaScript (answered with a
+// redirect to /subscribe/?sent=1); with JavaScript it submits in place. Double opt-in: the API
+// e-mails a confirm link and says the same thing whether or not the address was already listed.
+import { getSettings, topicsWithPosts } from '../lib/site';
+
+interface Props {
+  /** compact = one line (email + button), for the end of a post; full = with name and topics. */
+  variant?: 'compact' | 'full';
+  /** Topic ids ticked to start with (e.g. the post's topics). */
+  preselect?: string[];
+  title?: string;
+  text?: string;
+}
+const settings = await getSettings();
+const { variant = 'compact', preselect = [], title = settings.subscribeTitle, text = settings.subscribeText } = Astro.props;
+const topics = (await topicsWithPosts()).map((t) => t.topic);
+const uid = Math.random().toString(36).slice(2, 8);
+---
+<form method="post" action="/api/public/subscribe" class="subscribe-form" data-subscribe>
+  {title && <h2 class="text-xl font-semibold tracking-tight text-slate-900 dark:text-white">{title}</h2>}
+  {text && <p class="mt-1 text-sm text-slate-600 dark:text-slate-400">{text}</p>}
+  <input type="hidden" name="source" value={Astro.url.pathname} />
+  <!-- Honeypot: hidden from people, filled in by bots. -->
+  <div class="hidden" aria-hidden="true"><label>Website <input type="text" name="website" tabindex="-1" autocomplete="off" /></label></div>
+  {variant === 'full' && (
+    <div class="mt-5">
+      <label class="field-label" for={`sub-name-${uid}`}>Name <span class="font-normal text-slate-500">(optional)</span></label>
+      <input class="field" id={`sub-name-${uid}`} name="name" autocomplete="name" maxlength="120" />
+    </div>
+  )}
+  <div class:list={['mt-4', variant === 'compact' && 'flex flex-col gap-2 sm:flex-row']}>
+    <label class:list={[variant === 'compact' ? 'sr-only' : 'field-label']} for={`sub-email-${uid}`}>E-mail address</label>
+    <input class:list={['field', variant === 'compact' && 'mt-0! sm:flex-1']} id={`sub-email-${uid}`} name="email" type="email" required autocomplete="email" placeholder="you@example.com" maxlength="254" />
+    {variant === 'compact' && <button type="submit" class="btn-primary shrink-0">Subscribe</button>}
+  </div>
+  {variant === 'full' && topics.length > 0 && (
+    <fieldset class="mt-5">
+      <legend class="field-label">Topics <span class="font-normal text-slate-500">(none ticked = everything)</span></legend>
+      <div class="mt-2 flex flex-wrap gap-2">
+        {topics.map((t) => (
+          <label class="inline-flex cursor-pointer items-center gap-2 rounded-full px-3 py-1.5 text-sm ring-1 ring-slate-200 has-[:checked]:bg-brand-600 has-[:checked]:text-white has-[:checked]:ring-brand-600 dark:ring-white/10">
+            <input type="checkbox" name="topics" value={t.id} checked={preselect.includes(t.id)} class="sr-only" />
+            {t.data.name}
+          </label>
+        ))}
+      </div>
+    </fieldset>
+  )}
+  {variant === 'compact' && preselect.map((t) => <input type="hidden" name="topics" value={t} />)}
+  {variant === 'full' && <button type="submit" class="btn-primary mt-6">Subscribe</button>}
+  <p class="mt-3 text-sm" role="status" data-subscribe-status></p>
+  <p class="mt-2 text-xs text-slate-500 dark:text-slate-400">We'll send a link to confirm. No spam; unsubscribe any time.</p>
+</form>
+
+<script>
+  import { api, failure } from '../lib/api';
+  import { track } from '../lib/analytics';
+
+  for (const form of document.querySelectorAll<HTMLFormElement>('[data-subscribe]')) {
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const status = form.querySelector<HTMLElement>('[data-subscribe-status]')!;
+      const button = form.querySelector<HTMLButtonElement>('button[type="submit"]')!;
+      const data = new FormData(form);
+      button.disabled = true;
+      status.className = 'mt-3 text-sm text-slate-500';
+      status.textContent = 'Sending…';
+      const r = await api<{ message: string }>('/subscribe', {
+        body: {
+          email: data.get('email'),
+          name: data.get('name') || undefined,
+          topics: data.getAll('topics'),
+          source: data.get('source'),
+          website: data.get('website') || undefined,
+        },
+      });
+      button.disabled = false;
+      if (r.ok) {
+        status.className = 'mt-3 text-sm font-medium text-emerald-700 dark:text-emerald-400';
+        status.textContent = r.message;
+        form.querySelector<HTMLInputElement>('input[name="email"]')!.value = '';
+        track('sign_up', { method: 'newsletter', location: location.pathname });
+      } else {
+        status.className = 'mt-3 text-sm font-medium text-rose-600 dark:text-rose-400';
+        status.textContent = failure(r);
+      }
+    });
+  }
+</script>

@@ -1,0 +1,21 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PageHero from '../../components/PageHero.astro';
+import PostGrid from '../../components/PostGrid.astro';
+import { getTags, getTopics, type Post } from '../../lib/site';
+
+export async function getStaticPaths() {
+  return (await getTags()).map((t) => ({ params: { tag: t.slug }, props: { name: t.name, posts: t.posts } }));
+}
+
+interface Props {
+  name: string;
+  posts: Post[];
+}
+const { name, posts } = Astro.props;
+const topics = await getTopics();
+---
+<BaseLayout title={`#${name}`} description={`Posts tagged ${name}.`}>
+  <PageHero eyebrow="Tag" title={`#${name}`} subtitle={`${posts.length} post${posts.length === 1 ? '' : 's'}`} back={{ href: '/topics/', label: 'All topics and tags' }} />
+  <section class="container-page pt-4 pb-24"><PostGrid posts={posts} topics={topics} /></section>
+</BaseLayout>

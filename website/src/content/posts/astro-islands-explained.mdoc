@@ -1,0 +1,62 @@
+---
+title: Astro islands, explained with a real page
+excerpt: >-
+  Ship HTML by default and hydrate only the interactive bits. Here is how islands work, when to reach
+  for client:visible, and what it did to our bundle size.
+publishedDate: 2026-10-20
+author: ada-park
+topics:
+  - web-development
+tags:
+  - Astro
+  - Performance
+  - JavaScript
+cover: ../../assets/posts/astro-islands.jpg
+coverAlt: Abstract teal and blue gradient with the word Islands
+series: Fast sites with Astro
+featured: true
+draft: false
+---
+Most of a blog page is text. It doesn't need a JavaScript framework, and yet a typical single-page app ships one for every visitor. **Islands** flip the default: the page is static HTML, and only the components that need interactivity are hydrated.
+
+![A page split into static regions and one interactive island](../../assets/posts/astro-islands-explained/islands-diagram.png)
+
+## The mental model
+
+Think of the page as an ocean of HTML with a few islands of JavaScript. Each island is independent: it loads its own code, on its own schedule.
+
+```astro {% title="src/pages/index.astro" highlight="2,7" %}
+---
+import Search from '../components/Search.tsx';
+const posts = await getPosts();
+---
+<Layout>
+  <PostList posts={posts} />
+  <Search client:visible />
+</Layout>
+```
+
+{% callout type="tip" title="Pick the laziest directive that works" %}
+`client:visible` waits until the component scrolls into view. For a search box in the footer, that often means it never loads at all.
+{% /callout %}
+
+## Directives at a glance
+
+| Directive | Loads when | Good for |
+| --- | --- | --- |
+| `client:load` | Immediately | Above-the-fold controls |
+| `client:idle` | The browser is idle | Non-critical widgets |
+| `client:visible` | It scrolls into view | Comments, search, embeds |
+| `client:media` | A media query matches | Mobile-only menus |
+
+## Watch it in action
+
+{% video provider="vimeo" id="76979871" title="Video walkthrough" /%}
+
+## What we measured
+
+After moving our post pages to islands, JavaScript on a typical article dropped from 182 kB to 9 kB.
+
+{% gallery images=[{src: "/images/gallery/lighthouse-before.png", alt: "Lighthouse score 61 before", caption: "Before: 61"}, {src: "/images/gallery/lighthouse-after.png", alt: "Lighthouse score 98 after", caption: "After: 98"}] columns="2" /%}
+
+{% linkcard url="https://docs.astro.build/en/concepts/islands/" title="Astro docs: Islands architecture" description="The official explanation, with every directive." /%}

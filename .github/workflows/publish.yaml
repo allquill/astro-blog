@@ -1,0 +1,227 @@
+name: Publish (main)
+
+# Push to main -> verify -> build and push the three Docker images tagged :<version> and
+# :latest -> only then push the version-bump commit + tag and cut the Release.
+#
+# Ordering matters: the bump is created LOCALLY on the runner (skip-push) so that a
+# failure anywhere in the image build/push leaves main and the tags untouched and the
+# run is safe to retry. Nothing leaves the runner until the image is in the registry.
+#
+# The site bakes SITE_URL into its canonical/OG links at BUILD TIME, so it must be
+# chosen here. Defaults to the repository variable SITE_URL on an automatic push;
+# when that is unset too, astro.config.mjs falls back to a placeholder.
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+    inputs:
+      site_url:
+        description: 'Public URL baked into canonical/OG links (blank = vars.SITE_URL)'
+        required: false
+        type: string
+        default: ''
+
+concurrency:
+  group: publish-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    # This workflow pushes its own version-bump commit back to main. Without this
+    # guard that push would re-trigger the workflow and bump again, forever.
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (!contains(github.event.head_commit.message, '[skip ci]') &&
+       !contains(github.event.head_commit.message, 'version bump to'))
+    permissions:
+      contents: write
+      packages: write
+    env:
+      DOCKER_REGISTRY: ${{ secrets.DOCKER_REGISTRY }}
+      DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+      DOCKERHUB_TOKEN: ${{ secrets.DOCKERHUB_TOKEN }}
+      # Empty on a push event, so the fallback is the repository variable.
+      SITE_URL: ${{ inputs.site_url || vars.SITE_URL }}
+      # GA4 measurement ID; unset = the image contains no analytics.
+      GA_MEASUREMENT_ID: ${{ vars.GA_MEASUREMENT_ID }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      # Version comes from "packageManager" in package.json.
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          # Astro 7 needs Node 22.12+.
+          node-version: 22
+          cache: pnpm
+          cache-dependency-path: |
+            pnpm-lock.yaml
+            website/pnpm-lock.yaml
+            admin/pnpm-lock.yaml
+            server/pnpm-lock.yaml
+
+      # Four independent pnpm projects: the root (orchestration only), website/, admin/ and server/.
+      - name: Install dependencies
+        run: |
+          pnpm install --frozen-lockfile
+          pnpm --dir website install --frozen-lockfile
+          pnpm --dir admin install --frozen-lockfile
+          pnpm --dir server install --frozen-lockfile
+
+      # ---- Gate: nothing is tagged or released until the check passes ----
+      # `astro check` type-checks the site AND validates every content file
+      # (services, posts, pages, areas, settings) against the schema, so a bad
+      # CMS edit blocks the release here.
+      - name: Type-check and validate content
+        run: pnpm run check:web
+
+      - name: Type-check the API
+        run: pnpm run check:api
+
+      # tsc + eslint (0 warnings) for the admin app.
+      - name: Type-check and lint the admin app
+        run: pnpm run check:admin
+
+      # ---- Version bump: LOCAL ONLY ----
+      # skip-push keeps the bump commit and the tag on the runner. They are pushed
+      # further down, after the image is in the registry, so a registry outage or a
+      # failed docker push cannot leave main bumped with no image to match.
+      - name: Bump version and create tag (local)
+        id: version_bump
+        uses: phips28/gh-action-bump-version@v10.1.1
+        with:
+          tag-prefix: 'v'
+          skip-push: 'true'
+          # The action does a plain substring match on the pushed commit messages,
+          # so the defaults ('feat,minor' / 'BREAKING CHANGE,major') fire on
+          # ordinary words: "Added auditing feature" made v1.0.4 -> v1.1.0. Only
+          # an explicit Conventional Commit type or [minor]/[major] tag bumps
+          # above patch.
+          minor-wording: 'feat:,feat(,[minor]'
+          major-wording: 'BREAKING CHANGE,[major]'
+          default: patch
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # Read AFTER the bump so the image carries the newly released version.
+      - name: Read package metadata
+        id: pkg
+        run: |
+          echo "name=$(node -p "require('./package.json').name")" >> "$GITHUB_OUTPUT"
+          echo "version=$(node -p "require('./package.json').version")" >> "$GITHUB_OUTPUT"
+
+      - name: Display project information
+        run: |
+          echo "Publishing ${{ steps.pkg.outputs.name }} v${{ steps.pkg.outputs.version }}"
+          echo "Site URL: ${SITE_URL:-<placeholder from astro.config.mjs>}"
+          echo "GA measurement ID: ${GA_MEASUREMENT_ID:-<none - analytics disabled>}"
+
+      # Written before the image is built on purpose: from the Docker push onwards
+      # the run has side effects, so a failure in here must stop the run while it
+      # is still safe to retry. Built from commits rather than pull requests
+      # because main is pushed to directly, which is why generate_release_notes
+      # produced an empty body.
+      - name: Write release notes
+        run: |
+          node .github/scripts/release-notes.mjs > "$RUNNER_TEMP/release-notes.md"
+          cat "$RUNNER_TEMP/release-notes.md" >> "$GITHUB_STEP_SUMMARY"
+
+      # ---- Image ----
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Log in to Docker registry
+        uses: docker/login-action@v3
+        with:
+          registry: ${{ env.DOCKER_REGISTRY }}
+          username: ${{ env.DOCKERHUB_USERNAME }}
+          password: ${{ env.DOCKERHUB_TOKEN }}
+
+      - name: Build and push website image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./website
+          file: ./website/Dockerfile
+          build-args: |
+            SITE_URL=${{ env.SITE_URL }}
+            GA_MEASUREMENT_ID=${{ env.GA_MEASUREMENT_ID }}
+          push: true
+          tags: |
+            ${{ env.DOCKER_REGISTRY }}/${{ steps.pkg.outputs.name }}-web:${{ steps.pkg.outputs.version }}
+            ${{ env.DOCKER_REGISTRY }}/${{ steps.pkg.outputs.name }}-web:latest
+          platforms: linux/amd64
+          cache-from: type=gha,scope=web
+          cache-to: type=gha,mode=max,scope=web
+
+      # Admin app (admin/): same tags, image name suffixed with -admin.
+      - name: Build and push admin image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./admin
+          file: ./admin/Dockerfile
+          push: true
+          tags: |
+            ${{ env.DOCKER_REGISTRY }}/${{ steps.pkg.outputs.name }}-admin:${{ steps.pkg.outputs.version }}
+            ${{ env.DOCKER_REGISTRY }}/${{ steps.pkg.outputs.name }}-admin:latest
+          platforms: linux/amd64
+          cache-from: type=gha,scope=admin
+          cache-to: type=gha,mode=max,scope=admin
+
+      # API (server/): same tags, image name suffixed with -api.
+      - name: Build and push API image
+        uses: docker/build-push-action@v5
+        with:
+          context: ./server
+          file: ./server/Dockerfile
+          build-contexts: |
+            docs=./docs
+          push: true
+          tags: |
+            ${{ env.DOCKER_REGISTRY }}/${{ steps.pkg.outputs.name }}-api:${{ steps.pkg.outputs.version }}
+            ${{ env.DOCKER_REGISTRY }}/${{ steps.pkg.outputs.name }}-api:latest
+          platforms: linux/amd64
+          cache-from: type=gha,scope=api
+          cache-to: type=gha,mode=max,scope=api
+
+      # ---- Publish the bump ----
+      # Reached ONLY once the image is in the registry. Until this step runs, the
+      # bump commit and the tag exist only on the runner, so a failed image build
+      # or push leaves main and the remote tag list completely untouched.
+      #
+      # --atomic with both refspecs makes the remote accept the commit AND the tag
+      # or neither, so there is no half-pushed state (a bumped main with no tag, or
+      # a tag with no commit). It also fails loudly rather than silently if the tag
+      # already exists remotely or another push has landed on the branch meanwhile.
+      - name: Push version bump and tag
+        run: |
+          set -euo pipefail
+          TAG='${{ steps.version_bump.outputs.newTag }}'
+          if [ -z "$TAG" ]; then
+            echo "::error::version bump produced no tag name - refusing to push"
+            exit 1
+          fi
+          git rev-parse -q --verify "refs/tags/$TAG" >/dev/null
+          git push --atomic origin \
+            "HEAD:refs/heads/${{ github.ref_name }}" \
+            "refs/tags/$TAG"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # Cut the Release last, so a published Release always has a pullable image.
+      - name: Create GitHub Release
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.version_bump.outputs.newTag }}
+          name: Release ${{ steps.version_bump.outputs.newTag }}
+          body_path: ${{ runner.temp }}/release-notes.md
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

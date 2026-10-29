@@ -1,0 +1,191 @@
+---
+import { Image, getImage } from 'astro:assets';
+import { render } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PostCard from '../../components/PostCard.astro';
+import Icon from '../../components/Icon.astro';
+import Toc from '../../components/Toc.astro';
+import AuthorCard from '../../components/AuthorCard.astro';
+import ShareBar from '../../components/ShareBar.astro';
+import LikeButton from '../../components/LikeButton.astro';
+import FeedbackWidget from '../../components/FeedbackWidget.astro';
+import SubscribeForm from '../../components/SubscribeForm.astro';
+import { accentOf, authorOf, formatDate, getPosts, getSettings, getTopics, readingTime, seriesOf, tagSlug, topicsOf, type Post } from '../../lib/site';
+import { abs, blogPostingLd, breadcrumbLd, postMarkdownPath, postModified, videoEmbeds } from '../../lib/seo';
+
+export async function getStaticPaths() {
+  const posts = await getPosts();
+  return posts.map((post, i) => ({ params: { slug: post.id }, props: { post, newer: posts[i - 1] ?? null, older: posts[i + 1] ?? null } }));
+}
+
+interface Props {
+  post: Post;
+  newer: Post | null;
+  older: Post | null;
+}
+const { post, newer, older } = Astro.props;
+const { Content, headings } = await render(post);
+const d = post.data;
+const settings = await getSettings();
+const topics = await getTopics();
+const related = topicsOf(post, topics);
+const author = await authorOf(post);
+const series = await seriesOf(post);
+const ids = new Set(related.map((t) => t.id));
+
+// Up to 3 other posts sharing a topic, newest first; fall back to the latest posts.
+const others = (await getPosts()).filter((p) => p.id !== post.id);
+const same = others.filter((p) => p.data.topics.some((r) => ids.has(r.id)));
+const more = [...same, ...others.filter((p) => !same.includes(p))].slice(0, 3);
+
+const url = abs(`/blog/${post.id}/`, Astro.site);
+const coverUrl = d.cover ? new URL((await getImage({ src: d.cover, width: 1200, format: 'jpeg', quality: 80 })).src, Astro.site).toString() : undefined;
+const modified = postModified(post);
+const jsonLd = [
+  blogPostingLd(post, author, related, Astro.site, coverUrl, videoEmbeds(post.body)),
+  breadcrumbLd([{ name: 'Home', path: '/' }, { name: 'Blog', path: '/blog/' }, { name: d.title, path: `/blog/${post.id}/` }], Astro.site),
+];
+---
+<BaseLayout
+  title={d.title}
+  description={d.excerpt}
+  ogImage={d.cover}
+  ogImageAlt={d.coverAlt || d.title}
+  ogType="article"
+  article={{ publishedTime: d.publishedDate, modifiedTime: d.updatedDate, author: author.data.name, section: related[0]?.data.name, tags: d.tags }}
+  jsonLd={jsonLd}
+  markdownPath={postMarkdownPath(post)}
+  noindex={d.draft}
+  canonicalUrl={d.canonicalUrl}
+>
+  <article>
+    <header class="relative isolate overflow-hidden">
+      <div class="absolute inset-0 -z-10 bg-[radial-gradient(70%_60%_at_70%_0%,theme(--color-brand-500/20%),transparent)]" aria-hidden="true"></div>
+      <div class="container-page py-12 sm:py-16">
+        <!-- Same grid as the body below, so the title lines up with the text when the contents column shows. -->
+        <div class="grid gap-10 xl:grid-cols-[1fr_14rem]">
+        <div class="min-w-0">
+          <a href="/blog/" class="mb-6 inline-flex items-center gap-1 text-sm font-medium text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white">
+            <Icon name="chevronLeft" class="size-4" /> All posts
+          </a>
+          <div class="mb-5 flex flex-wrap items-center gap-2">
+            {d.draft && <span class="rounded-full bg-amber-500/15 px-2 py-0.5 text-xs font-semibold text-amber-700 dark:text-amber-300">Draft – not published</span>}
+            {related.map((t) => {
+              const a = accentOf(t.data.accent);
+              return (
+                <a href={`/topics/${t.id}/`} class:list={['inline-flex items-center gap-1.5 rounded-full px-2.5 py-1 text-xs font-medium hover:opacity-80', a.bg, a.text]}>
+                  <Icon name={t.data.icon} class="size-3.5" />{t.data.name}
+                </a>
+              );
+            })}
+          </div>
+          <h1 class="text-4xl font-semibold tracking-tight text-pretty text-slate-900 sm:text-5xl dark:text-white">{d.title}</h1>
+          {d.excerpt && <p class="mt-4 text-lg leading-relaxed text-pretty text-slate-600 dark:text-slate-400">{d.excerpt}</p>}
+          <p class="mt-6 text-sm text-slate-500 dark:text-slate-400">
+            <a href={`/authors/${author.id}/`} rel="author" class="font-medium text-slate-700 hover:underline dark:text-slate-300">{author.data.name}</a>
+            <span aria-hidden="true"> · </span><time datetime={d.publishedDate.toISOString()}>{formatDate(d.publishedDate)}</time>
+            {d.updatedDate && <><span aria-hidden="true"> · </span>Updated <time datetime={modified.toISOString()}>{formatDate(modified)}</time></>}
+            <span aria-hidden="true"> · </span>{readingTime(post.body)} min read
+          </p>
+        </div>
+        </div>
+      </div>
+    </header>
+
+    <div class="container-page pt-4 pb-12 sm:pb-16">
+      <div class="grid gap-10 xl:grid-cols-[1fr_14rem]">
+        <div class="min-w-0">
+          {d.cover && (
+            <div class="mb-12 overflow-hidden rounded-2xl ring-1 ring-slate-900/10 dark:ring-white/10">
+              <Image src={d.cover} alt={d.coverAlt} widths={[640, 960, 1280, 1920]} sizes="(min-width: 1280px) 952px, 100vw" format="webp" quality={80} loading="eager" class="block h-auto w-full" />
+            </div>
+          )}
+          {series.length > 1 && (
+            <nav aria-label="Series" class="mb-10 rounded-2xl bg-slate-50 p-5 text-sm ring-1 ring-slate-200 dark:bg-white/5 dark:ring-white/10">
+              <p class="font-semibold text-slate-900 dark:text-white">Series: {d.series}</p>
+              <ol class="mt-2 list-decimal space-y-1 pl-5">
+                {series.map((p) => (
+                  <li>{p.id === post.id ? <span class="font-medium text-slate-900 dark:text-white" aria-current="page">{p.data.title}</span> : <a href={`/blog/${p.id}/`} class="text-brand-700 hover:underline dark:text-brand-400">{p.data.title}</a>}</li>
+                ))}
+              </ol>
+            </nav>
+          )}
+          <div class="prose prose-slate prose-lg max-w-none dark:prose-invert prose-headings:scroll-mt-24 prose-headings:font-semibold prose-a:text-brand-700 prose-code:before:content-none prose-code:after:content-none prose-img:rounded-xl dark:prose-a:text-brand-400">
+            <Content />
+          </div>
+
+          <div class="mt-12 space-y-8">
+            {d.tags.length > 0 && (
+              <ul class="flex flex-wrap gap-2" aria-label="Tags">
+                {d.tags.map((t) => <li><a href={`/tags/${tagSlug(t)}/`} class="rounded-full bg-slate-100 px-3 py-1 text-xs text-slate-600 hover:text-slate-900 dark:bg-white/5 dark:text-slate-400 dark:hover:text-white">#{t}</a></li>)}
+              </ul>
+            )}
+            <div class="flex flex-wrap items-center justify-between gap-4 border-y border-slate-200 py-5 dark:border-white/10">
+              <LikeButton slug={post.id} />
+              <ShareBar slug={post.id} title={d.title} url={url} networks={settings.shareNetworks} />
+            </div>
+            <FeedbackWidget slug={post.id} />
+            <div class="rounded-2xl p-6 ring-1 ring-slate-200 dark:ring-white/10">
+              <AuthorCard author={author} />
+            </div>
+            <div class="rounded-2xl bg-brand-600/5 p-6 ring-1 ring-brand-600/20 dark:bg-brand-400/10 dark:ring-brand-400/20">
+              <SubscribeForm preselect={related.map((t) => t.id)} />
+            </div>
+            {(newer || older) && (
+              <nav class="grid gap-4 sm:grid-cols-2" aria-label="More posts">
+                {older ? (
+                  <a href={`/blog/${older.id}/`} rel="prev" class="rounded-2xl p-5 ring-1 ring-slate-200 hover:ring-brand-500 dark:ring-white/10">
+                    <span class="text-xs text-slate-500">← Older</span>
+                    <span class="mt-1 block font-semibold text-slate-900 dark:text-white">{older.data.title}</span>
+                  </a>
+                ) : <span />}
+                {newer && (
+                  <a href={`/blog/${newer.id}/`} rel="next" class="rounded-2xl p-5 text-right ring-1 ring-slate-200 hover:ring-brand-500 dark:ring-white/10">
+                    <span class="text-xs text-slate-500">Newer →</span>
+                    <span class="mt-1 block font-semibold text-slate-900 dark:text-white">{newer.data.title}</span>
+                  </a>
+                )}
+              </nav>
+            )}
+          </div>
+        </div>
+        <aside class="hidden xl:block">
+          <div class="sticky top-24"><Toc headings={headings} /></div>
+        </aside>
+      </div>
+    </div>
+  </article>
+
+  {more.length > 0 && (
+    <section class="container-page pb-24">
+      <h2 class="text-lg font-semibold text-slate-900 dark:text-white">Keep reading</h2>
+      <div class="mt-6 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+        {more.map((p) => <PostCard post={p} topics={topics} />)}
+      </div>
+    </section>
+  )}
+</BaseLayout>
+
+<script>
+  import { track } from '../../lib/analytics';
+
+  // How far readers get: GA4 `scroll` at 50% and 90% of the article.
+  const article = document.querySelector('article');
+  if (article) {
+    const sent = new Set<number>();
+    addEventListener(
+      'scroll',
+      () => {
+        const r = article.getBoundingClientRect();
+        const read = (innerHeight - r.top) / r.height;
+        for (const mark of [50, 90]) {
+          if (read * 100 >= mark && !sent.has(mark)) {
+            sent.add(mark);
+            track('scroll', { percent_scrolled: mark, page_path: location.pathname });
+          }
+        }
+      },
+      { passive: true },
+    );
+  }
+</script>

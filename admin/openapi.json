@@ -1,0 +1,3629 @@
+{
+  "openapi": "3.0.0",
+  "paths": {
+    "/api/health": {
+      "get": {
+        "operationId": "HealthController_health",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "ok": true
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "health"
+        ]
+      }
+    },
+    "/api/admin/settings": {
+      "get": {
+        "operationId": "SettingsController_get",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SettingsDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in"
+          },
+          "403": {
+            "description": "Signed in, but the role may not do this"
+          }
+        },
+        "security": [
+          {
+            "sp_admin": []
+          }
+        ],
+        "tags": [
+          "settings"
+        ]
+      },
+      "put": {
+        "operationId": "SettingsController_update",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSettingsDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SettingsDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in"
+          },
+          "403": {
+            "description": "Signed in, but the role may not do this"
+          }
+        },
+        "security": [
+          {
+            "sp_admin": []
+          }
+        ],
+        "tags": [
+          "settings"
+        ]
+      }
+    },
+    "/api/auth/login": {
+      "post": {
+        "operationId": "AuthController_login",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MeDto"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Too many attempts; try again in 15 minutes"
+          }
+        },
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/auth/logout": {
+      "post": {
+        "operationId": "AuthController_logout",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OkDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/auth/me": {
+      "get": {
+        "operationId": "AuthController_me",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MeDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in"
+          },
+          "403": {
+            "description": "Signed in, but the role may not do this"
+          }
+        },
+        "security": [
+          {
+            "sp_admin": []
+          }
+        ],
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/auth/password": {
+      "post": {
+        "operationId": "AuthController_changePassword",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ChangePasswordDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OkDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in"
+          },
+          "403": {
+            "description": "Signed in, but the role may not do this"
+          }
+        },
+        "security": [
+          {
+            "sp_admin": []
+          }
+        ],
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/auth/invite": {
+      "get": {
+        "operationId": "AuthController_inviteInfo",
+        "parameters": [
+          {
+            "name": "token",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/InviteInfoDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "auth"
+        ]
+      },
+      "post": {
+        "operationId": "AuthController_acceptInvite",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AcceptInviteDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MeDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "auth"
+        ]
+      }
+    },
+    "/api/admin/users/assignable": {
+      "get": {
+        "operationId": "UsersController_assignable",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AssignableUserDto"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in"
+          },
+          "403": {
+            "description": "Signed in, but the role may not do this"
+          }
+        },
+        "security": [
+          {
+            "sp_admin": []
+          }
+        ],
+        "tags": [
+          "users"
+        ]
+      }
+    },
+    "/api/admin/users": {
+      "get": {
+        "operationId": "UsersController_list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/UserDto"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in"
+          },
+          "403": {
+            "description": "Signed in, but the role may not do this"
+          }
+        },
+        "security": [
+          {
+            "sp_admin": []
+          }
+        ],
+        "tags": [
+          "users"
+        ]
+      },
+      "post": {
+        "operationId": "UsersController_invite",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InviteUserDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserLinkDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in"
+          },
+          "403": {
+            "description": "Signed in, but the role may not do this"
+          }
+        },
+        "security": [
+          {
+            "sp_admin": []
+          }
+        ],
+        "tags": [
+          "users"
+        ]
+      }
+    },
+    "/api/admin/users/{id}": {
+      "patch": {
+        "operationId": "UsersController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateUserDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in"
+          },
+          "403": {
+            "description": "Signed in, but the role may not do this"
+          }
+        },
+        "security": [
+          {
+            "sp_admin": []
+          }
+        ],
+        "tags": [
+          "users"
+        ]
+      },
+      "delete": {
+        "operationId": "UsersController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OkDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in"
+          },
+          "403": {
+            "description": "Signed in, but the role may not do this"
+          }
+        },
+        "security": [
+          {
+            "sp_admin": []
+          }
+        ],
+        "tags": [
+          "users"
+        ]
+      }
+    },
+    "/api/admin/users/{id}/link": {
+      "post": {
+        "operationId": "UsersController_link",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserLinkDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in"
+          },
+          "403": {
+            "description": "Signed in, but the role may not do this"
+          }
+        },
+        "security": [
+          {
+            "sp_admin": []
+          }
+        ],
+        "tags": [
+          "users"
+        ]
+      }
+    },
+    "/api/public/stats": {
+      "get": {
+        "operationId": "EngagementController_counts",
+        "parameters": [
+          {
+            "name": "slugs",
+            "required": true,
+            "in": "query",
+            "description": "Comma-separated post slugs (up to 100)",
+            "schema": {}
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PostCountsDto"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Like and share counts for several posts (list pages)",
+        "tags": [
+          "public"
+        ]
+      }
+    },
+    "/api/public/posts/{slug}/stats": {
+      "get": {
+        "operationId": "EngagementController_stats",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PostStatsDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "public"
+        ]
+      }
+    },
+    "/api/public/posts/{slug}/like": {
+      "post": {
+        "operationId": "EngagementController_like",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PostStatsDto"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "ok": false,
+                    "error": "Too many requests."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "public"
+        ]
+      },
+      "delete": {
+        "operationId": "EngagementController_unlike",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PostStatsDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "public"
+        ]
+      }
+    },
+    "/api/public/posts/{slug}/share": {
+      "post": {
+        "operationId": "EngagementController_share",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ShareDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PostStatsDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Count a share-button click (the share itself happens on the network)",
+        "tags": [
+          "public"
+        ]
+      }
+    },
+    "/api/public/subscribe": {
+      "post": {
+        "operationId": "PublicSubscribeController_subscribe",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SubscribeDto"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/SubscribeDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubscribeResultDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "ok": false,
+                    "errors": {
+                      "email": "Please enter a valid e-mail address"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "ok": false,
+                    "error": "Too many requests."
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Subscribe (double opt-in): e-mails a confirm link. The answer never says whether the address was already on the list.",
+        "tags": [
+          "public"
+        ]
+      }
+    },
+    "/api/public/subscribe/confirm": {
+      "post": {
+        "operationId": "PublicSubscribeController_confirm",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TokenDto"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/TokenDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ConfirmResultDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Confirm a subscription with the token from the e-mail (a POST, so link scanners cannot confirm it)",
+        "tags": [
+          "public"
+        ]
+      }
+    },
+    "/api/public/subscribe/manage": {
+      "get": {
+        "operationId": "PublicSubscribeController_subscription",
+        "parameters": [
+          {
+            "name": "token",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubscriptionDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "public"
+        ]
+      },
+      "post": {
+        "operationId": "PublicSubscribeController_manage",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ManageSubscriptionDto"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/ManageSubscriptionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubscriptionDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Change topics or name, unsubscribe or re-subscribe",
+        "tags": [
+          "public"
+        ]
+      }
+    },
+    "/api/public/unsubscribe": {
+      "post": {
+        "operationId": "PublicSubscribeController_oneClick",
+        "parameters": [
+          {
+            "name": "token",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OkDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "public"
+        ]
+      }
+    },
+    "/api/admin/subscribers": {
+      "get": {
+        "operationId": "AdminSubscribersController_list",
+        "parameters": [
+          {
+            "name": "q",
+            "required": false,
+            "in": "query",
+            "description": "Search e-mail and name",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "pending",
+                "active",
+                "unsubscribed",
+                "bounced"
+              ]
+            }
+          },
+          {
+            "name": "topic",
+            "required": false,
+            "in": "query",
+            "description": "Topic slug (subscribers to all topics match too)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "maximum": 200,
+              "default": 50,
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubscriberPageDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in"
+          },
+          "403": {
+            "description": "Signed in, but the role may not do this"
+          }
+        },
+        "security": [
+          {
+            "sp_admin": []
+          }
+        ],
+        "tags": [
+          "subscribers"
+        ]
+      }
+    },
+    "/api/admin/subscribers/counts": {
+      "get": {
+        "operationId": "AdminSubscribersController_counts",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubscriberCountsDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in"
+          },
+          "403": {
+            "description": "Signed in, but the role may not do this"
+          }
+        },
+        "security": [
+          {
+            "sp_admin": []
+          }
+        ],
+        "tags": [
+          "subscribers"
+        ]
+      }
+    },
+    "/api/admin/subscribers/export.csv": {
+      "get": {
+        "operationId": "AdminSubscribersController_csv",
+        "parameters": [
+          {
+            "name": "q",
+            "required": false,
+            "in": "query",
+            "description": "Search e-mail and name",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "pending",
+                "active",
+                "unsubscribed",
+                "bounced"
+              ]
+            }
+          },
+          {
+            "name": "topic",
+            "required": false,
+            "in": "query",
+            "description": "Topic slug (subscribers to all topics match too)",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "text/csv": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in"
+          },
+          "403": {
+            "description": "Signed in, but the role may not do this"
+          }
+        },
+        "security": [
+          {
+            "sp_admin": []
+          }
+        ],
+        "tags": [
+          "subscribers"
+        ]
+      }
+    },
+    "/api/admin/subscribers/import": {
+      "post": {
+        "operationId": "AdminSubscribersController_import",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ImportSubscribersDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportResultDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in"
+          },
+          "403": {
+            "description": "Signed in, but the role may not do this"
+          }
+        },
+        "security": [
+          {
+            "sp_admin": []
+          }
+        ],
+        "tags": [
+          "subscribers"
+        ]
+      }
+    },
+    "/api/admin/subscribers/{id}": {
+      "patch": {
+        "operationId": "AdminSubscribersController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSubscriberDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SubscriberDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in"
+          },
+          "403": {
+            "description": "Signed in, but the role may not do this"
+          }
+        },
+        "security": [
+          {
+            "sp_admin": []
+          }
+        ],
+        "tags": [
+          "subscribers"
+        ]
+      },
+      "delete": {
+        "operationId": "AdminSubscribersController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OkDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in"
+          },
+          "403": {
+            "description": "Signed in, but the role may not do this"
+          }
+        },
+        "security": [
+          {
+            "sp_admin": []
+          }
+        ],
+        "tags": [
+          "subscribers"
+        ]
+      }
+    },
+    "/api/admin/subscribers/{id}/resend-confirm": {
+      "post": {
+        "operationId": "AdminSubscribersController_resend",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OkDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in"
+          },
+          "403": {
+            "description": "Signed in, but the role may not do this"
+          }
+        },
+        "security": [
+          {
+            "sp_admin": []
+          }
+        ],
+        "tags": [
+          "subscribers"
+        ]
+      }
+    },
+    "/api/public/feedback": {
+      "post": {
+        "operationId": "PublicFeedbackController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateFeedbackDto"
+              }
+            },
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateFeedbackDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreateFeedbackResultDto"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "example": {
+                    "ok": false,
+                    "errors": {
+                      "message": "Please write a message"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "A \"was this helpful?\" vote and/or a message, about a post or the blog in general",
+        "tags": [
+          "public"
+        ]
+      }
+    },
+    "/api/public/feedback/{id}/message": {
+      "post": {
+        "operationId": "PublicFeedbackController_attach",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FeedbackMessageDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OkDto"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Add a message to the vote this visitor just sent",
+        "tags": [
+          "public"
+        ]
+      }
+    },
+    "/api/admin/feedback": {
+      "get": {
+        "operationId": "AdminFeedbackController_list",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "maximum": 200,
+              "default": 50,
+              "type": "number"
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "description": "Default: everything but archived and spam",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "new",
+                "read",
+                "archived",
+                "spam"
+              ]
+            }
+          },
+          {
+            "name": "kind",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "post",
+                "general"
+              ]
+            }
+          },
+          {
+            "name": "post",
+            "required": false,
+            "in": "query",
+            "description": "Post slug",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "q",
+            "required": false,
+            "in": "query",
+            "description": "Search message, name and e-mail",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "withMessage",
+            "required": false,
+            "in": "query",
+            "description": "Only feedback with a message (not bare votes)",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FeedbackPageDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in"
+          },
+          "403": {
+            "description": "Signed in, but the role may not do this"
+          }
+        },
+        "security": [
+          {
+            "sp_admin": []
+          }
+        ],
+        "tags": [
+          "feedback"
+        ]
+      }
+    },
+    "/api/admin/feedback/counts": {
+      "get": {
+        "operationId": "AdminFeedbackController_counts",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FeedbackCountsDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in"
+          },
+          "403": {
+            "description": "Signed in, but the role may not do this"
+          }
+        },
+        "security": [
+          {
+            "sp_admin": []
+          }
+        ],
+        "tags": [
+          "feedback"
+        ]
+      }
+    },
+    "/api/admin/feedback/{id}": {
+      "get": {
+        "operationId": "AdminFeedbackController_get",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FeedbackDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in"
+          },
+          "403": {
+            "description": "Signed in, but the role may not do this"
+          }
+        },
+        "security": [
+          {
+            "sp_admin": []
+          }
+        ],
+        "tags": [
+          "feedback"
+        ]
+      },
+      "patch": {
+        "operationId": "AdminFeedbackController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateFeedbackDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FeedbackDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in"
+          },
+          "403": {
+            "description": "Signed in, but the role may not do this"
+          }
+        },
+        "security": [
+          {
+            "sp_admin": []
+          }
+        ],
+        "tags": [
+          "feedback"
+        ]
+      },
+      "delete": {
+        "operationId": "AdminFeedbackController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OkDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in"
+          },
+          "403": {
+            "description": "Signed in, but the role may not do this"
+          }
+        },
+        "security": [
+          {
+            "sp_admin": []
+          }
+        ],
+        "tags": [
+          "feedback"
+        ]
+      }
+    },
+    "/api/admin/feedback/{id}/reply": {
+      "post": {
+        "operationId": "AdminFeedbackController_reply",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReplyFeedbackDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FeedbackDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in"
+          },
+          "403": {
+            "description": "Signed in, but the role may not do this"
+          }
+        },
+        "security": [
+          {
+            "sp_admin": []
+          }
+        ],
+        "tags": [
+          "feedback"
+        ]
+      }
+    },
+    "/api/admin/digests": {
+      "get": {
+        "operationId": "DigestsController_list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DigestDto"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in"
+          },
+          "403": {
+            "description": "Signed in, but the role may not do this"
+          }
+        },
+        "security": [
+          {
+            "sp_admin": []
+          }
+        ],
+        "tags": [
+          "digests"
+        ]
+      },
+      "post": {
+        "operationId": "DigestsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateDigestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DigestDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in"
+          },
+          "403": {
+            "description": "Signed in, but the role may not do this"
+          }
+        },
+        "security": [
+          {
+            "sp_admin": []
+          }
+        ],
+        "tags": [
+          "digests"
+        ]
+      }
+    },
+    "/api/admin/digests/audience": {
+      "get": {
+        "operationId": "DigestsController_audience",
+        "parameters": [
+          {
+            "name": "post",
+            "required": true,
+            "in": "query",
+            "description": "Post slug",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AudienceDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in"
+          },
+          "403": {
+            "description": "Signed in, but the role may not do this"
+          }
+        },
+        "security": [
+          {
+            "sp_admin": []
+          }
+        ],
+        "tags": [
+          "digests"
+        ]
+      }
+    },
+    "/api/admin/digests/{id}": {
+      "get": {
+        "operationId": "DigestsController_get",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DigestDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in"
+          },
+          "403": {
+            "description": "Signed in, but the role may not do this"
+          }
+        },
+        "security": [
+          {
+            "sp_admin": []
+          }
+        ],
+        "tags": [
+          "digests"
+        ]
+      },
+      "patch": {
+        "operationId": "DigestsController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateDigestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DigestDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in"
+          },
+          "403": {
+            "description": "Signed in, but the role may not do this"
+          }
+        },
+        "security": [
+          {
+            "sp_admin": []
+          }
+        ],
+        "tags": [
+          "digests"
+        ]
+      },
+      "delete": {
+        "operationId": "DigestsController_remove",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OkDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in"
+          },
+          "403": {
+            "description": "Signed in, but the role may not do this"
+          }
+        },
+        "security": [
+          {
+            "sp_admin": []
+          }
+        ],
+        "tags": [
+          "digests"
+        ]
+      }
+    },
+    "/api/admin/digests/{id}/preview": {
+      "get": {
+        "operationId": "DigestsController_preview",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DigestPreviewDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in"
+          },
+          "403": {
+            "description": "Signed in, but the role may not do this"
+          }
+        },
+        "security": [
+          {
+            "sp_admin": []
+          }
+        ],
+        "tags": [
+          "digests"
+        ]
+      }
+    },
+    "/api/admin/digests/{id}/test": {
+      "post": {
+        "operationId": "DigestsController_test",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TestDigestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OkDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in"
+          },
+          "403": {
+            "description": "Signed in, but the role may not do this"
+          }
+        },
+        "security": [
+          {
+            "sp_admin": []
+          }
+        ],
+        "tags": [
+          "digests"
+        ]
+      }
+    },
+    "/api/admin/digests/{id}/send": {
+      "post": {
+        "operationId": "DigestsController_send",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DigestDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in"
+          },
+          "403": {
+            "description": "Signed in, but the role may not do this"
+          }
+        },
+        "security": [
+          {
+            "sp_admin": []
+          }
+        ],
+        "tags": [
+          "digests"
+        ]
+      }
+    },
+    "/api/admin/digests/{id}/deliveries": {
+      "get": {
+        "operationId": "DigestsController_deliveries",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "maximum": 200,
+              "default": 50,
+              "type": "number"
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "pending",
+                "sent",
+                "failed"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DeliveryPageDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in"
+          },
+          "403": {
+            "description": "Signed in, but the role may not do this"
+          }
+        },
+        "security": [
+          {
+            "sp_admin": []
+          }
+        ],
+        "tags": [
+          "digests"
+        ]
+      }
+    },
+    "/api/admin/dashboard": {
+      "get": {
+        "operationId": "DashboardController_get",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DashboardDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in"
+          },
+          "403": {
+            "description": "Signed in, but the role may not do this"
+          }
+        },
+        "security": [
+          {
+            "sp_admin": []
+          }
+        ],
+        "tags": [
+          "dashboard"
+        ]
+      }
+    },
+    "/api/admin/posts": {
+      "get": {
+        "operationId": "DashboardController_posts",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminPostsDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in"
+          },
+          "403": {
+            "description": "Signed in, but the role may not do this"
+          }
+        },
+        "security": [
+          {
+            "sp_admin": []
+          }
+        ],
+        "tags": [
+          "dashboard"
+        ]
+      }
+    }
+  },
+  "info": {
+    "title": "Astro Blog API",
+    "description": "Public endpoints used by the website (likes, shares, subscribe, feedback) and the admin API used by the admin app (cookie sp_admin, set by POST /api/auth/login).",
+    "version": "0.1.0",
+    "contact": {}
+  },
+  "tags": [],
+  "servers": [],
+  "components": {
+    "securitySchemes": {
+      "cookie": {
+        "type": "apiKey",
+        "in": "cookie",
+        "name": "sp_admin"
+      }
+    },
+    "schemas": {
+      "SettingsDto": {
+        "type": "object",
+        "properties": {
+          "blogName": {
+            "type": "string",
+            "description": "Blog name used in e-mail subjects and signatures"
+          },
+          "notifyTo": {
+            "description": "Who is e-mailed about new feedback (and new subscribers, when on)",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "notifyOnFeedback": {
+            "type": "boolean",
+            "description": "E-mail the notify list when feedback with a message arrives"
+          },
+          "notifyOnSubscribe": {
+            "type": "boolean",
+            "description": "E-mail the notify list when someone confirms a subscription"
+          },
+          "acknowledgeFeedback": {
+            "type": "boolean",
+            "description": "Thank readers who leave an e-mail address with their feedback"
+          },
+          "sendWelcome": {
+            "type": "boolean",
+            "description": "Send a welcome e-mail once a subscription is confirmed"
+          },
+          "signature": {
+            "type": "string",
+            "description": "Appended to every e-mail to readers"
+          },
+          "digestFooter": {
+            "type": "string",
+            "description": "Shown at the bottom of every digest, above the unsubscribe link (e.g. your postal address)"
+          }
+        },
+        "required": [
+          "blogName",
+          "notifyTo",
+          "notifyOnFeedback",
+          "notifyOnSubscribe",
+          "acknowledgeFeedback",
+          "sendWelcome",
+          "signature",
+          "digestFooter"
+        ]
+      },
+      "UpdateSettingsDto": {
+        "type": "object",
+        "properties": {
+          "blogName": {
+            "type": "string",
+            "description": "Blog name used in e-mail subjects and signatures"
+          },
+          "notifyTo": {
+            "description": "Who is e-mailed about new feedback (and new subscribers, when on)",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "notifyOnFeedback": {
+            "type": "boolean",
+            "description": "E-mail the notify list when feedback with a message arrives"
+          },
+          "notifyOnSubscribe": {
+            "type": "boolean",
+            "description": "E-mail the notify list when someone confirms a subscription"
+          },
+          "acknowledgeFeedback": {
+            "type": "boolean",
+            "description": "Thank readers who leave an e-mail address with their feedback"
+          },
+          "sendWelcome": {
+            "type": "boolean",
+            "description": "Send a welcome e-mail once a subscription is confirmed"
+          },
+          "signature": {
+            "type": "string",
+            "description": "Appended to every e-mail to readers"
+          },
+          "digestFooter": {
+            "type": "string",
+            "description": "Shown at the bottom of every digest, above the unsubscribe link (e.g. your postal address)"
+          }
+        }
+      },
+      "LoginDto": {
+        "type": "object",
+        "properties": {
+          "username": {
+            "type": "string"
+          },
+          "password": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "username",
+          "password"
+        ]
+      },
+      "MeDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number"
+          },
+          "username": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "admin",
+              "staff"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "username",
+          "role"
+        ]
+      },
+      "OkDto": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "example": true
+          }
+        },
+        "required": [
+          "ok"
+        ]
+      },
+      "ChangePasswordDto": {
+        "type": "object",
+        "properties": {
+          "current": {
+            "type": "string"
+          },
+          "password": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "current",
+          "password"
+        ]
+      },
+      "InviteInfoDto": {
+        "type": "object",
+        "properties": {
+          "username": {
+            "type": "string"
+          },
+          "reset": {
+            "type": "boolean",
+            "description": "true = password reset for an existing user; false = first-time invite"
+          },
+          "minLength": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "username",
+          "reset",
+          "minLength"
+        ]
+      },
+      "AcceptInviteDto": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string"
+          },
+          "password": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "token",
+          "password"
+        ]
+      },
+      "AssignableUserDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number"
+          },
+          "username": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "admin",
+              "staff"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "username",
+          "role"
+        ]
+      },
+      "UserDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number"
+          },
+          "username": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string",
+            "nullable": true
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "admin",
+              "staff"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "active",
+              "invited",
+              "invite expired",
+              "disabled"
+            ]
+          },
+          "lastLoginAt": {
+            "type": "number",
+            "nullable": true,
+            "description": "Epoch ms"
+          },
+          "inviteExpiresAt": {
+            "type": "number",
+            "nullable": true,
+            "description": "Epoch ms"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "username",
+          "role",
+          "status",
+          "createdAt"
+        ]
+      },
+      "InviteUserDto": {
+        "type": "object",
+        "properties": {
+          "username": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "admin",
+              "staff"
+            ]
+          }
+        },
+        "required": [
+          "username",
+          "email",
+          "role"
+        ]
+      },
+      "UserLinkDto": {
+        "type": "object",
+        "properties": {
+          "user": {
+            "$ref": "#/components/schemas/UserDto"
+          },
+          "link": {
+            "type": "string",
+            "description": "The invite / reset link, to copy if the e-mail did not arrive"
+          },
+          "mailError": {
+            "type": "string",
+            "nullable": true,
+            "description": "Why the e-mail could not be sent"
+          }
+        },
+        "required": [
+          "user",
+          "link"
+        ]
+      },
+      "UpdateUserDto": {
+        "type": "object",
+        "properties": {
+          "role": {
+            "type": "string",
+            "enum": [
+              "admin",
+              "staff"
+            ]
+          },
+          "disabled": {
+            "type": "boolean"
+          }
+        }
+      },
+      "PostCountsDto": {
+        "type": "object",
+        "properties": {
+          "slug": {
+            "type": "string"
+          },
+          "likes": {
+            "type": "number"
+          },
+          "shares": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "slug",
+          "likes",
+          "shares"
+        ]
+      },
+      "PostStatsDto": {
+        "type": "object",
+        "properties": {
+          "slug": {
+            "type": "string"
+          },
+          "likes": {
+            "type": "number"
+          },
+          "shares": {
+            "type": "number"
+          },
+          "liked": {
+            "type": "boolean",
+            "description": "Whether this visitor has liked the post"
+          },
+          "ok": {
+            "type": "boolean",
+            "example": true
+          }
+        },
+        "required": [
+          "slug",
+          "likes",
+          "shares",
+          "liked",
+          "ok"
+        ]
+      },
+      "ShareDto": {
+        "type": "object",
+        "properties": {
+          "network": {
+            "type": "string",
+            "enum": [
+              "x",
+              "linkedin",
+              "facebook",
+              "reddit",
+              "hackernews",
+              "bluesky",
+              "mastodon",
+              "whatsapp",
+              "email",
+              "copy",
+              "native"
+            ]
+          }
+        },
+        "required": [
+          "network"
+        ]
+      },
+      "SubscribeDto": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "topics": {
+            "description": "Topic slugs; empty = all topics",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "source": {
+            "type": "string",
+            "description": "Page the form was on"
+          },
+          "website": {
+            "type": "string",
+            "description": "Honeypot: must stay empty"
+          }
+        },
+        "required": [
+          "email"
+        ]
+      },
+      "SubscribeResultDto": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "example": true
+          },
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "ok",
+          "message"
+        ]
+      },
+      "TokenDto": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "token"
+        ]
+      },
+      "ConfirmResultDto": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "example": true
+          },
+          "manageToken": {
+            "type": "string",
+            "description": "Token for the manage-preferences page"
+          }
+        },
+        "required": [
+          "ok",
+          "manageToken"
+        ]
+      },
+      "TopicOptionDto": {
+        "type": "object",
+        "properties": {
+          "slug": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "slug",
+          "name"
+        ]
+      },
+      "SubscriptionDto": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "example": true
+          },
+          "email": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "active",
+              "unsubscribed",
+              "bounced"
+            ]
+          },
+          "topics": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "allTopics": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TopicOptionDto"
+            }
+          }
+        },
+        "required": [
+          "ok",
+          "email",
+          "name",
+          "status",
+          "topics",
+          "allTopics"
+        ]
+      },
+      "ManageSubscriptionDto": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string"
+          },
+          "action": {
+            "type": "string",
+            "enum": [
+              "update",
+              "unsubscribe",
+              "resubscribe"
+            ]
+          },
+          "topics": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "token",
+          "action"
+        ]
+      },
+      "SubscriberDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number"
+          },
+          "email": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "active",
+              "unsubscribed",
+              "bounced"
+            ]
+          },
+          "topics": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "source": {
+            "type": "string"
+          },
+          "confirmedAt": {
+            "type": "number",
+            "nullable": true
+          },
+          "unsubscribedAt": {
+            "type": "number",
+            "nullable": true
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "email",
+          "name",
+          "status",
+          "topics",
+          "source",
+          "confirmedAt",
+          "unsubscribedAt",
+          "createdAt"
+        ]
+      },
+      "SubscriberPageDto": {
+        "type": "object",
+        "properties": {
+          "total": {
+            "type": "number"
+          },
+          "page": {
+            "type": "number"
+          },
+          "pageSize": {
+            "type": "number"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SubscriberDto"
+            }
+          }
+        },
+        "required": [
+          "total",
+          "page",
+          "pageSize",
+          "data"
+        ]
+      },
+      "SubscriberCountsDto": {
+        "type": "object",
+        "properties": {
+          "pending": {
+            "type": "number"
+          },
+          "active": {
+            "type": "number"
+          },
+          "unsubscribed": {
+            "type": "number"
+          },
+          "bounced": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "pending",
+          "active",
+          "unsubscribed",
+          "bounced"
+        ]
+      },
+      "ImportSubscribersDto": {
+        "type": "object",
+        "properties": {
+          "csv": {
+            "type": "string",
+            "description": "CSV text with an \"email\" column (and optionally \"name\", \"topics\" separated by \";\")"
+          },
+          "consented": {
+            "type": "boolean",
+            "description": "true = add as active (you already hold their consent); false = add as pending and send each a confirm e-mail"
+          }
+        },
+        "required": [
+          "csv",
+          "consented"
+        ]
+      },
+      "ImportResultDto": {
+        "type": "object",
+        "properties": {
+          "added": {
+            "type": "number"
+          },
+          "skipped": {
+            "type": "number"
+          },
+          "invalid": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "added",
+          "skipped",
+          "invalid"
+        ]
+      },
+      "UpdateSubscriberDto": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "active",
+              "unsubscribed",
+              "bounced"
+            ]
+          },
+          "topics": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "name": {
+            "type": "string"
+          }
+        }
+      },
+      "CreateFeedbackDto": {
+        "type": "object",
+        "properties": {
+          "postSlug": {
+            "type": "string",
+            "description": "Slug of the post the feedback is about; empty = general feedback"
+          },
+          "helpful": {
+            "type": "boolean",
+            "description": "Answer to \"Was this helpful?\""
+          },
+          "name": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string",
+            "description": "Only needed for a reply"
+          },
+          "message": {
+            "type": "string"
+          },
+          "website": {
+            "type": "string",
+            "description": "Honeypot: must stay empty"
+          }
+        }
+      },
+      "CreateFeedbackResultDto": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "example": true
+          },
+          "id": {
+            "type": "number",
+            "description": "Id to attach a message to a vote just sent",
+            "nullable": true
+          }
+        },
+        "required": [
+          "ok",
+          "id"
+        ]
+      },
+      "FeedbackMessageDto": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
+        ]
+      },
+      "FeedbackDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "post",
+              "general"
+            ]
+          },
+          "postSlug": {
+            "type": "string",
+            "nullable": true
+          },
+          "helpful": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "name": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "new",
+              "read",
+              "archived",
+              "spam"
+            ]
+          },
+          "reply": {
+            "type": "string"
+          },
+          "repliedAt": {
+            "type": "number",
+            "nullable": true
+          },
+          "repliedBy": {
+            "type": "string"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "postTitle": {
+            "type": "string",
+            "description": "Title of the post, from the site feed",
+            "nullable": true
+          },
+          "postUrl": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "postSlug",
+          "helpful",
+          "name",
+          "email",
+          "message",
+          "status",
+          "reply",
+          "repliedAt",
+          "repliedBy",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "FeedbackPageDto": {
+        "type": "object",
+        "properties": {
+          "total": {
+            "type": "number"
+          },
+          "page": {
+            "type": "number"
+          },
+          "pageSize": {
+            "type": "number"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FeedbackDto"
+            }
+          }
+        },
+        "required": [
+          "total",
+          "page",
+          "pageSize",
+          "data"
+        ]
+      },
+      "FeedbackCountsDto": {
+        "type": "object",
+        "properties": {
+          "new": {
+            "type": "number"
+          },
+          "total": {
+            "type": "number"
+          },
+          "helpful": {
+            "type": "number"
+          },
+          "notHelpful": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "new",
+          "total",
+          "helpful",
+          "notHelpful"
+        ]
+      },
+      "UpdateFeedbackDto": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "new",
+              "read",
+              "archived",
+              "spam"
+            ]
+          }
+        },
+        "required": [
+          "status"
+        ]
+      },
+      "ReplyFeedbackDto": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "message"
+        ]
+      },
+      "FeedPostDto": {
+        "type": "object",
+        "properties": {
+          "slug": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "summary": {
+            "type": "string"
+          },
+          "image": {
+            "type": "string",
+            "nullable": true
+          },
+          "publishedAt": {
+            "type": "string"
+          },
+          "author": {
+            "type": "string"
+          },
+          "topics": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "slug",
+          "url",
+          "title",
+          "summary",
+          "image",
+          "publishedAt",
+          "author",
+          "topics",
+          "tags"
+        ]
+      },
+      "DigestDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number"
+          },
+          "postSlug": {
+            "type": "string"
+          },
+          "subject": {
+            "type": "string"
+          },
+          "intro": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "draft",
+              "sending",
+              "sent",
+              "failed"
+            ]
+          },
+          "recipients": {
+            "type": "number"
+          },
+          "sentCount": {
+            "type": "number"
+          },
+          "failedCount": {
+            "type": "number"
+          },
+          "createdBy": {
+            "type": "string"
+          },
+          "startedAt": {
+            "type": "number",
+            "nullable": true
+          },
+          "finishedAt": {
+            "type": "number",
+            "nullable": true
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "post": {
+            "nullable": true,
+            "description": "The post as the site feed (or the send snapshot) describes it",
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/FeedPostDto"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "postSlug",
+          "subject",
+          "intro",
+          "status",
+          "recipients",
+          "sentCount",
+          "failedCount",
+          "createdBy",
+          "startedAt",
+          "finishedAt",
+          "createdAt",
+          "updatedAt",
+          "post"
+        ]
+      },
+      "AudienceDto": {
+        "type": "object",
+        "properties": {
+          "audience": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "audience"
+        ]
+      },
+      "CreateDigestDto": {
+        "type": "object",
+        "properties": {
+          "postSlug": {
+            "type": "string"
+          },
+          "subject": {
+            "type": "string",
+            "description": "Defaults to \"New post: <title>\""
+          },
+          "intro": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "postSlug"
+        ]
+      },
+      "UpdateDigestDto": {
+        "type": "object",
+        "properties": {
+          "subject": {
+            "type": "string"
+          },
+          "intro": {
+            "type": "string"
+          }
+        }
+      },
+      "DigestPreviewDto": {
+        "type": "object",
+        "properties": {
+          "subject": {
+            "type": "string"
+          },
+          "html": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          },
+          "audience": {
+            "type": "number",
+            "description": "Active subscribers whose topics match the post"
+          }
+        },
+        "required": [
+          "subject",
+          "html",
+          "text",
+          "audience"
+        ]
+      },
+      "TestDigestDto": {
+        "type": "object",
+        "properties": {
+          "to": {
+            "type": "string",
+            "description": "Defaults to your own account e-mail"
+          }
+        }
+      },
+      "DigestDelivery": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number"
+          },
+          "digestId": {
+            "type": "number"
+          },
+          "subscriberId": {
+            "type": "number"
+          },
+          "email": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "pending",
+              "sent",
+              "failed"
+            ]
+          },
+          "error": {
+            "type": "string"
+          },
+          "sentAt": {
+            "type": "number",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "digestId",
+          "subscriberId",
+          "email",
+          "status",
+          "error",
+          "sentAt"
+        ]
+      },
+      "DeliveryPageDto": {
+        "type": "object",
+        "properties": {
+          "total": {
+            "type": "number"
+          },
+          "page": {
+            "type": "number"
+          },
+          "pageSize": {
+            "type": "number"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DigestDelivery"
+            }
+          }
+        },
+        "required": [
+          "total",
+          "page",
+          "pageSize",
+          "data"
+        ]
+      },
+      "CountDto": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "count": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "key",
+          "count"
+        ]
+      },
+      "TopPostDto": {
+        "type": "object",
+        "properties": {
+          "slug": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "likes": {
+            "type": "number"
+          },
+          "shares": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "slug",
+          "title",
+          "likes",
+          "shares"
+        ]
+      },
+      "DashboardDto": {
+        "type": "object",
+        "properties": {
+          "posts": {
+            "type": "number",
+            "description": "Published posts in the site feed"
+          },
+          "feedUnavailable": {
+            "type": "boolean",
+            "description": "True when the API could not read the site feed (titles are missing)"
+          },
+          "likes": {
+            "type": "number"
+          },
+          "shares": {
+            "type": "number"
+          },
+          "subscribers": {
+            "$ref": "#/components/schemas/SubscriberCountsDto"
+          },
+          "feedback": {
+            "$ref": "#/components/schemas/FeedbackCountsDto"
+          },
+          "subscribersPerWeek": {
+            "description": "Confirmed subscriptions per week, last 12 weeks (key = Monday, YYYY-MM-DD)",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CountDto"
+            }
+          },
+          "likesPerDay": {
+            "description": "Likes per day, last 30 days",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CountDto"
+            }
+          },
+          "feedbackPerDay": {
+            "description": "Feedback per day, last 30 days",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CountDto"
+            }
+          },
+          "sharesByNetwork": {
+            "description": "Share clicks by network, all time",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/CountDto"
+            }
+          },
+          "topPosts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TopPostDto"
+            }
+          }
+        },
+        "required": [
+          "posts",
+          "feedUnavailable",
+          "likes",
+          "shares",
+          "subscribers",
+          "feedback",
+          "subscribersPerWeek",
+          "likesPerDay",
+          "feedbackPerDay",
+          "sharesByNetwork",
+          "topPosts"
+        ]
+      },
+      "AdminPostDto": {
+        "type": "object",
+        "properties": {
+          "slug": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          },
+          "publishedAt": {
+            "type": "string"
+          },
+          "author": {
+            "type": "string"
+          },
+          "topics": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "likes": {
+            "type": "number"
+          },
+          "shares": {
+            "type": "number"
+          },
+          "helpful": {
+            "type": "number"
+          },
+          "notHelpful": {
+            "type": "number"
+          },
+          "messages": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "slug",
+          "title",
+          "url",
+          "publishedAt",
+          "author",
+          "topics",
+          "likes",
+          "shares",
+          "helpful",
+          "notHelpful",
+          "messages"
+        ]
+      },
+      "AdminTopicDto": {
+        "type": "object",
+        "properties": {
+          "slug": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "posts": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "slug",
+          "name",
+          "posts"
+        ]
+      },
+      "AdminPostsDto": {
+        "type": "object",
+        "properties": {
+          "feedUnavailable": {
+            "type": "boolean"
+          },
+          "feedUrl": {
+            "type": "string"
+          },
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminPostDto"
+            }
+          },
+          "topics": {
+            "description": "Topics from the site feed",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminTopicDto"
+            }
+          }
+        },
+        "required": [
+          "feedUnavailable",
+          "feedUrl",
+          "data",
+          "topics"
+        ]
+      }
+    }
+  }
+}

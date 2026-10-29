@@ -1,0 +1,39 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PageHero from '../../components/PageHero.astro';
+import Icon from '../../components/Icon.astro';
+import { accentOf, getTags, topicsWithPosts } from '../../lib/site';
+import { breadcrumbLd } from '../../lib/seo';
+
+const topics = await topicsWithPosts();
+const tags = await getTags();
+---
+<BaseLayout title="Topics" description="Every topic and tag on the blog." jsonLd={[breadcrumbLd([{ name: 'Home', path: '/' }, { name: 'Topics', path: '/topics/' }], Astro.site)]}>
+  <PageHero eyebrow="Browse" title="Topics" subtitle="Pick a subject, or follow it by e-mail or RSS." />
+  <section class="container-page pt-4 pb-16">
+    <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+      {topics.map(({ topic, posts }) => {
+        const a = accentOf(topic.data.accent);
+        return (
+          <div class="group relative rounded-3xl bg-white p-6 ring-1 ring-slate-200 transition hover:shadow-xl hover:shadow-slate-900/5 dark:bg-ink-900 dark:ring-white/10">
+            <span class:list={['inline-flex size-11 items-center justify-center rounded-xl ring-1', a.bg, a.text, a.ring]}><Icon name={topic.data.icon} class="size-6" /></span>
+            <h2 class="mt-4 text-lg font-semibold text-slate-900 dark:text-white"><a href={`/topics/${topic.id}/`} class="after:absolute after:inset-0">{topic.data.name}</a></h2>
+            {topic.data.description && <p class="mt-2 text-sm text-slate-600 dark:text-slate-400">{topic.data.description}</p>}
+            <p class="mt-4 flex items-center justify-between text-xs text-slate-500">
+              {posts.length} post{posts.length === 1 ? '' : 's'}
+              <a href={`/topics/${topic.id}/rss.xml`} class="relative z-10 inline-flex items-center gap-1 hover:text-slate-900 dark:hover:text-white"><Icon name="rss" class="size-3.5" /> RSS</a>
+            </p>
+          </div>
+        );
+      })}
+    </div>
+  </section>
+  {tags.length > 0 && (
+    <section class="container-page pb-24">
+      <h2 class="text-lg font-semibold text-slate-900 dark:text-white">Tags</h2>
+      <ul class="mt-4 flex flex-wrap gap-2">
+        {tags.map((t) => <li><a href={`/tags/${t.slug}/`} class="rounded-full bg-slate-100 px-3 py-1 text-sm text-slate-600 hover:text-slate-900 dark:bg-white/5 dark:text-slate-400 dark:hover:text-white">#{t.name} <span class="text-xs text-slate-400">{t.posts.length}</span></a></li>)}
+      </ul>
+    </section>
+  )}
+</BaseLayout>

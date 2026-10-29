@@ -1,0 +1,63 @@
+---
+// YouTube / Vimeo embeds load nothing from those sites until the reader clicks play (privacy and
+// speed); without JavaScript the poster is a plain link to the video. `file` is a native <video>.
+import Icon from '../Icon.astro';
+
+interface Props {
+  provider: 'youtube' | 'vimeo' | 'file';
+  id: string;
+  title?: string;
+  start?: number;
+}
+const { provider, title = '', start = 0 } = Astro.props;
+
+/** Accept a bare ID or any common link form. */
+function videoId(raw: string) {
+  const s = raw.trim();
+  if (provider === 'youtube') return /(?:youtu\.be\/|v=|embed\/|shorts\/)([\w-]{11})/.exec(s)?.[1] ?? s;
+  if (provider === 'vimeo') return /vimeo\.com\/(?:video\/)?(\d+)/.exec(s)?.[1] ?? s;
+  return s;
+}
+const id = videoId(Astro.props.id);
+const label = title || 'Play video';
+const t = start > 0 ? start : 0;
+const embed =
+  provider === 'youtube'
+    ? `https://www.youtube-nocookie.com/embed/${id}?autoplay=1&rel=0${t ? `&start=${t}` : ''}`
+    : `https://player.vimeo.com/video/${id}?autoplay=1&dnt=1${t ? `#t=${t}s` : ''}`;
+const watch = provider === 'youtube' ? `https://www.youtube.com/watch?v=${id}${t ? `&t=${t}s` : ''}` : `https://vimeo.com/${id}`;
+const poster = provider === 'youtube' ? `https://i.ytimg.com/vi/${id}/hqdefault.jpg` : null;
+---
+<figure class="not-prose my-8">
+  {provider === 'file' ? (
+    <video src={id} controls preload="metadata" class="aspect-video w-full rounded-xl bg-black" aria-label={title || undefined}></video>
+  ) : (
+    <div class="relative aspect-video overflow-hidden rounded-xl bg-slate-900 ring-1 ring-slate-900/10 dark:ring-white/10" data-video data-src={embed} data-title={label}>
+      <a href={watch} target="_blank" rel="noopener" class="group absolute inset-0 grid place-items-center" data-video-play>
+        {poster && <img src={poster} alt="" loading="lazy" decoding="async" class="absolute inset-0 h-full w-full object-cover opacity-80 transition group-hover:opacity-100" />}
+        <span class="relative inline-flex items-center gap-2 rounded-full bg-white/95 px-5 py-3 text-sm font-semibold text-slate-900 shadow-lg">
+          <Icon name="play" class="size-4" /> {label}
+        </span>
+      </a>
+    </div>
+  )}
+  {title && <figcaption class="mt-2 text-center text-sm text-slate-500 dark:text-slate-400">{title}</figcaption>}
+</figure>
+
+<script>
+  import { track } from '../../lib/analytics';
+
+  for (const box of document.querySelectorAll<HTMLElement>('[data-video]')) {
+    box.querySelector('[data-video-play]')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      const frame = document.createElement('iframe');
+      frame.src = box.dataset.src!;
+      frame.title = box.dataset.title ?? 'Video';
+      frame.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; fullscreen';
+      frame.allowFullscreen = true;
+      frame.className = 'absolute inset-0 h-full w-full';
+      box.replaceChildren(frame);
+      track('video_start', { video_url: box.dataset.src!, location: location.pathname });
+    });
+  }
+</script>

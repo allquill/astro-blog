@@ -1,0 +1,49 @@
+---
+// One page of a post list (/blog/, /topics/<id>/, and their /page/<n>/ follow-ups).
+import BaseLayout from '../layouts/BaseLayout.astro';
+import PageHero from './PageHero.astro';
+import PostGrid from './PostGrid.astro';
+import TopicChips from './TopicChips.astro';
+import Pagination from './Pagination.astro';
+import SubscribeForm from './SubscribeForm.astro';
+import { getSettings, getTopics, topicsWithPosts, type Post } from '../lib/site';
+import { blogLd, pageCount } from '../lib/seo';
+
+interface Props {
+  title: string;
+  eyebrow?: string;
+  subtitle?: string;
+  /** Every post of the list; this page shows its slice. */
+  posts: Post[];
+  page: number;
+  /** List path without the /page/<n>/ suffix. */
+  base: string;
+  activeTopic?: string;
+  feeds?: { title: string; href: string }[];
+  /** Topic ids to pre-tick in the subscribe box. */
+  subscribeTopics?: string[];
+}
+const { title, eyebrow, subtitle, posts, page, base, activeTopic, feeds, subscribeTopics = [] } = Astro.props;
+const settings = await getSettings();
+const topics = await getTopics();
+const chips = (await topicsWithPosts()).map((t) => t.topic);
+const per = settings.postsPerPage;
+const pages = pageCount(posts.length, per);
+const slice = posts.slice((page - 1) * per, page * per);
+const pageTitle = page > 1 ? `${title} (page ${page})` : title;
+---
+<BaseLayout title={pageTitle} description={subtitle} jsonLd={[blogLd(settings, slice, Astro.site, base, title)]} feeds={feeds}>
+  <PageHero eyebrow={eyebrow} title={title} subtitle={subtitle} />
+  <section class="container-page pt-4 pb-16 sm:pb-20">
+    {chips.length > 1 && <TopicChips topics={chips} active={activeTopic} />}
+    <div class="mt-10">
+      {slice.length ? <PostGrid posts={slice} topics={topics} lead={page === 1 && !activeTopic} /> : <p class="text-slate-500 dark:text-slate-400">No posts yet — check back soon.</p>}
+    </div>
+    <Pagination base={base} page={page} pages={pages} />
+  </section>
+  <section class="container-page pb-24">
+    <div class="rounded-3xl bg-slate-50 p-8 ring-1 ring-slate-200 dark:bg-white/5 dark:ring-white/10">
+      <SubscribeForm preselect={subscribeTopics} />
+    </div>
+  </section>
+</BaseLayout>

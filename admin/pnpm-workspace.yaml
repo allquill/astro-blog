@@ -1,0 +1,5 @@
+# Settings only. This file also makes admin/ its own pnpm root, independent of the rest of the repo.
+# pnpm blocks dependency build scripts unless they are allowed here.
+allowBuilds:
+  esbuild: true
+  '@tailwindcss/oxide': true

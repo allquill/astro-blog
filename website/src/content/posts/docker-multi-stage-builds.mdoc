@@ -1,0 +1,53 @@
+---
+title: Smaller Node images with multi-stage Docker builds
+excerpt: >-
+  Build with the full toolchain, run with almost nothing. A walk through the Dockerfile we use for
+  every Node service, and why the final image is 140 MB instead of 1.2 GB.
+publishedDate: 2026-09-24
+author: sam-rivera
+topics:
+  - devops
+tags:
+  - Docker
+  - Node.js
+cover: ../../assets/posts/docker-multi-stage.jpg
+coverAlt: Amber and rose gradient with the words Multi-stage
+series: ''
+featured: false
+draft: false
+---
+A Node image that carries compilers, dev dependencies and source maps into production is slow to pull and has a large attack surface. Multi-stage builds fix both.
+
+## The Dockerfile
+
+```dockerfile {% title="Dockerfile" highlight="10-12" %}
+# syntax=docker/dockerfile:1
+FROM node:22-alpine AS build
+WORKDIR /app
+RUN corepack enable
+COPY package.json pnpm-lock.yaml ./
+RUN pnpm install --frozen-lockfile
+COPY . .
+RUN pnpm run build && pnpm prune --prod
+
+FROM node:22-alpine
+WORKDIR /app
+COPY --from=build /app/node_modules ./node_modules
+COPY --from=build /app/dist ./dist
+USER node
+CMD ["node", "dist/main.js"]
+```
+
+{% callout type="warning" title="Native modules" %}
+Packages such as `bcrypt` or `sqlite3` compile against the build stage's libc. Keep both stages on the same base image (here `alpine`), or they will fail to load at runtime.
+{% /callout %}
+
+## Checking the result
+
+```bash
+docker build -t api .
+docker image ls api --format '{{.Repository}} {{.Size}}'
+# api 141MB
+```
+
+{% linkcard url="https://docs.docker.com/build/building/multi-stage/" title="Docker docs: Multi-stage builds" /%}

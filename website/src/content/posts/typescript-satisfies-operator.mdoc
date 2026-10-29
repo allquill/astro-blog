@@ -1,0 +1,69 @@
+---
+title: 'TypeScript''s satisfies operator: the type check that keeps your literals'
+excerpt: >-
+  Annotations widen, assertions lie. satisfies checks a value against a type and keeps its precise
+  inferred type, which is exactly what config objects want.
+publishedDate: 2026-10-08
+author: ada-park
+topics:
+  - typescript
+tags:
+  - TypeScript
+  - Patterns
+cover: ../../assets/posts/typescript-satisfies.jpg
+coverAlt: Blue to violet gradient with the word satisfies
+featured: false
+draft: false
+---
+You have a map of routes and you want two things: TypeScript should reject typos, **and** it should remember exactly which keys exist. A type annotation gives you the first and loses the second.
+
+## The problem with annotations
+
+```ts {% highlight="5" %}
+type Route = { path: string; auth: boolean };
+
+const routes: Record<string, Route> = {
+  home: { path: '/', auth: false },
+  admin: { path: '/admin', auth: true },
+};
+
+routes.admn; // no error: every string key is allowed
+```
+
+## satisfies to the rescue
+
+```ts {% highlight="4" %}
+const routes = {
+  home: { path: '/', auth: false },
+  admin: { path: '/admin', auth: true },
+} satisfies Record<string, Route>;
+
+routes.admn; // error: Property 'admn' does not exist
+```
+
+{% callout type="note" %}
+`satisfies` never changes the type of the expression. It only checks it. That is why it pairs so well with `as const`.
+{% /callout %}
+
+## A pattern we use everywhere
+
+```ts
+export const FLAGS = {
+  newEditor: { default: false, owner: 'ada' },
+  fastSearch: { default: true, owner: 'sam' },
+} as const satisfies Record<string, { default: boolean; owner: string }>;
+
+export type Flag = keyof typeof FLAGS; // 'newEditor' | 'fastSearch'
+```
+
+The same trick works in Python with `TypedDict` and a checker, if you were wondering:
+
+```python
+from typing import TypedDict
+
+class Route(TypedDict):
+    path: str
+    auth: bool
+
+ROUTES: dict[str, Route] = {"home": {"path": "/", "auth": False}}
+```

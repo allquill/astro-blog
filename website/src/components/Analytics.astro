@@ -1,0 +1,46 @@
+---
+// Google Analytics 4 via gtag.js — no Google Tag Manager container. Emitted only when the build
+// has a GA_MEASUREMENT_ID and this is a production build, so `astro dev` never reports traffic.
+// Consent Mode v2: analytics storage is denied until the visitor accepts in ConsentBanner.astro.
+import { GA_MEASUREMENT_ID } from 'astro:env/server';
+
+const id = import.meta.env.PROD && GA_MEASUREMENT_ID ? GA_MEASUREMENT_ID : undefined;
+---
+{id && (
+  <>
+    <script is:inline define:vars={{ id }}>
+      window.dataLayer = window.dataLayer || [];
+      window.gtag = function gtag() {
+        window.dataLayer.push(arguments);
+      };
+      let consent = null;
+      try {
+        consent = localStorage.getItem('analytics-consent');
+      } catch {}
+      window.gtag('consent', 'default', {
+        analytics_storage: consent === 'granted' ? 'granted' : 'denied',
+        ad_storage: 'denied',
+        ad_user_data: 'denied',
+        ad_personalization: 'denied',
+        wait_for_update: 500,
+      });
+      window.gtag('js', new Date());
+      window.gtag('config', id);
+    </script>
+    <script is:inline async src={`https://www.googletagmanager.com/gtag/js?id=${id}`}></script>
+  </>
+)}
+
+<script>
+  import { track } from '../lib/analytics';
+
+  // Links to other sites → GA4 `click` (outbound) with where on the page they were.
+  document.addEventListener('click', (e) => {
+    const link = (e.target as Element | null)?.closest?.('a[href]') as HTMLAnchorElement | null;
+    if (!link || link.closest('[data-share]')) return;
+    if (link.href.startsWith('mailto:')) return track('contact', { method: 'email' });
+    if (link.host === location.host || !/^https?:/.test(link.href)) return;
+    const where = link.closest<HTMLElement>('[data-analytics-location]')?.dataset.analyticsLocation ?? (link.closest('article') ? 'article' : 'page');
+    track('click', { outbound: true, link_domain: link.host, link_url: link.href, link_location: where });
+  });
+</script>

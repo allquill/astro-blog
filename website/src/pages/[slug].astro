@@ -1,0 +1,24 @@
+---
+import { getCollection, render, type CollectionEntry } from 'astro:content';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import PageHero from '../components/PageHero.astro';
+
+export async function getStaticPaths() {
+  const pages = await getCollection('pages');
+  return pages.map((page) => ({ params: { slug: page.id }, props: { page } }));
+}
+
+interface Props {
+  page: CollectionEntry<'pages'>;
+}
+const { page } = Astro.props;
+const { Content } = await render(page);
+---
+<BaseLayout title={page.data.title} description={page.data.description}>
+  <PageHero title={page.data.title} subtitle={page.data.description || undefined} />
+  <article class="container-page pt-4 pb-16 sm:pb-24">
+    <div class="prose prose-slate prose-lg max-w-none dark:prose-invert prose-headings:font-semibold prose-a:text-brand-700 prose-code:before:content-none prose-code:after:content-none dark:prose-a:text-brand-400">
+      <Content />
+    </div>
+  </article>
+</BaseLayout>
