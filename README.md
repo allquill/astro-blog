@@ -100,5 +100,7 @@ serves `docs/` with docsify at `/api/admin/docs/`, behind the admin sign-in, so 
 | `pnpm run build` | Build all three (the website build also runs the sitemap guard) |
 | `pnpm run sdk` | Rebuild the API, dump its OpenAPI document to `admin/openapi.json` and regenerate `admin/src/sdk` |
 | `pnpm run docker:build` | Build the three images |
-| `pnpm run compose:up` / `compose:down` / `compose:logs` | Docker Compose (`docker/docker-compose.yml`) from this checkout |
+| `pnpm run compose:up` | Docker Compose with the prebuilt images from the registry (`docker/docker-compose.yml`: pull, then start) |
+| `pnpm run compose:build` | Docker Compose, building the three images from this checkout (`docker/docker-compose-build.yml`) |
+| `pnpm run compose:down` / `compose:logs` | Stop, or follow the logs of, either one (they share one project) |
 | `pnpm --dir server run admin:set-password <user>` | Create an admin, or reset a password (lock-out recovery) |

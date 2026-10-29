@@ -27,7 +27,8 @@
     "docker:build:api": "docker build -t astro-blog-api --build-context docs=./docs ./server",
     "docker:build:admin": "docker build -t astro-blog-admin ./admin",
     "docker:build:web": "docker build -t astro-blog-web ./website",
-    "compose:up": "docker compose -f docker/docker-compose.yml up -d --build",
+    "compose:up": "docker compose -f docker/docker-compose.yml pull --ignore-buildable && docker compose -f docker/docker-compose.yml up -d",
+    "compose:build": "docker compose -f docker/docker-compose-build.yml up -d --build",
     "compose:down": "docker compose -f docker/docker-compose.yml down",
     "compose:logs": "docker compose -f docker/docker-compose.yml logs -f",
     "indexnow": "pnpm --dir website run indexnow"

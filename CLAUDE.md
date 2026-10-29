@@ -73,7 +73,12 @@ After touching entities, migrations or module wiring, **boot the API** and look 
 
 ## Local environment
 
-- `server/.env` comes from `server/env.example`. It is the single template, also used for `docker/.env`.
+- `server/.env` comes from `server/env.example` (local development). `docker/.env` comes from
+  `docker/env.example`, which repeats the API settings plus the compose ones: a new API setting goes in
+  both templates.
+- `docker/docker-compose.yml` runs prebuilt images; `docker/docker-compose-build.yml` builds them, taking
+  every service from the first through `extends` and adding only `build` and a local image name. Change
+  ports, volumes or healthchecks in `docker-compose.yml` only.
 - `website/.env.development` points `SITE_URL` at `http://localhost:4322`, so links in the feed and
   e-mails work locally.
 - Mailpit on `:1025` / `:8025` catches e-mail.

@@ -43,7 +43,8 @@ pnpm run dev       # API :3002, admin :5175, website :4322
 ```
 astro-blog/
   package.json            orchestration scripts + release version
-  docker/                 docker-compose.yml (website, admin, server; optional postgres, mailpit)
+  docker/                 docker-compose.yml (prebuilt images), docker-compose-build.yml (builds them),
+                          env.example (website, admin, server; optional postgres, cloudflared, mailpit)
   docs/
   server/                 NestJS API
     src/auth/             admin users, JWT cookie, @Staff() guard, invites

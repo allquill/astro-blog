@@ -1,0 +1,55 @@
+# Astro Blog — BUILDS the three images from this checkout, then runs them.
+#
+# Every service is the one in docker-compose.yml (ports, networks, healthchecks, volumes, profiles: see
+# the notes there); this file only adds how to build the images and names them locally, so a build never
+# overwrites a registry tag. Same project name, so it shares containers and data with docker-compose.yml.
+#
+# Run from this folder:
+#     cp env.example .env                     # once; then fill it in
+#     docker compose -f docker-compose-build.yml up -d --build
+#     docker compose -f docker-compose-build.yml --profile mail up -d --build
+# or from the project root: pnpm run compose:build
+#
+# SITE_URL and GA_MEASUREMENT_ID from .env are baked into the website image here, at build time.
+name: astro-blog
+
+services:
+  website:
+    extends: { file: docker-compose.yml, service: website }
+    image: astro-blog-web:${AB_BUILD_TAG:-local}
+    build:
+      context: ../website
+      args:
+        SITE_URL: ${SITE_URL:-}
+        GA_MEASUREMENT_ID: ${GA_MEASUREMENT_ID:-}
+
+  admin:
+    extends: { file: docker-compose.yml, service: admin }
+    image: astro-blog-admin:${AB_BUILD_TAG:-local}
+    build:
+      context: ../admin
+
+  server:
+    extends: { file: docker-compose.yml, service: server }
+    image: astro-blog-api:${AB_BUILD_TAG:-local}
+    build:
+      context: ../server
+      # The project guides, baked into the image for /api/admin/docs/.
+      additional_contexts:
+        docs: ../docs
+
+  # Optional services, unchanged (enable with --profile postgres / cloudflare / mail).
+  postgres:
+    extends: { file: docker-compose.yml, service: postgres }
+  cloudflared:
+    extends: { file: docker-compose.yml, service: cloudflared }
+  mailpit:
+    extends: { file: docker-compose.yml, service: mailpit }
+
+# `extends` brings each service's network list, not these definitions: keep them identical to
+# docker-compose.yml.
+networks:
+  frontend:
+  backend:
+    internal: true
+  egress:

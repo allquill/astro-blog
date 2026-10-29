@@ -1,25 +1,33 @@
-# Astro Blog: static website + admin app (both nginx) in front of the NestJS API.
+# Astro Blog: static website + admin app (both nginx) in front of the NestJS API — PREBUILT images.
 #
-#   website   nginx :80 (../website) — the public site; proxies /api to `server`       → ${WEBSITE_PORT}
-#   admin     nginx :80 (../admin)   — the staff admin app; proxies /api to `server`   → ${ADMIN_PORT}
-#   server    Node (../server): likes, shares, subscribers, feedback, e-mail. Not published on the host; reached
-#             only through the two nginx containers. Settings: ./.env (see below).
-#   postgres  (optional, profile "postgres") — set DATABASE_TYPE=postgres + DATABASE_* in ./.env
-#   mailpit   (optional, profile "mail") local SMTP catcher for testing e-mails: http://localhost:8025
+#   website      nginx :80 — the public site; proxies /api to `server`                    → ${WEBSITE_PORT}
+#   admin        nginx :80 — the staff admin app; proxies /api to `server`                → ${ADMIN_PORT}
+#   server       Node: likes, shares, subscribers, feedback, e-mail, the staff docs. Not published on the host;
+#                reached only through the two nginx containers. Settings: ./.env (see below).
+#   postgres     (optional, profile "postgres") — set DATABASE_TYPE=postgres + DATABASE_* in ./.env
+#   cloudflared  (optional, profile "cloudflare") — Cloudflare Tunnel; set CLOUDFLARE_TUNNEL_TOKEN in ./.env
+#   mailpit      (optional, profile "mail") local SMTP catcher for testing e-mails: http://localhost:8025
 #
-# Run from the project root with the pnpm scripts, or from this folder with plain `docker compose`:
-#     pnpm run compose:up                     # = docker compose -f docker/docker-compose.yml up -d --build
-#     cd docker && docker compose --profile mail up -d --build
+# Networks — only the website and admin (and mailpit's inbox, when on) are published on the host:
+#   frontend  website, admin, cloudflared, mailpit   host ports and the tunnel; the API is NOT on it
+#   backend   website, admin, server, postgres, mailpit   internal (no internet): /api, the database, SMTP
+#   egress    server                                  outbound only (SMTP provider); nothing reaches in
+# So cloudflared or anything published can reach only the two nginx containers, never the API or
+# the database, and postgres has no internet access at all.
 #
-# `up --build` builds all three images from this checkout. `up` WITHOUT --build runs whatever image
-# already carries the tag below, e.g. one pulled from the registry (docker compose pull).
-# CI publishes linux/amd64 images; on Apple silicon add `platform: linux/amd64` to run pulled images.
+# Two compose files, same services, same project name (so they share containers and data):
+#   docker-compose.yml        THIS file: runs the images CI pushed to ${AB_REGISTRY}, tag ${AB_TAG}
+#   docker-compose-build.yml  builds the three images from this checkout instead (pnpm run compose:build)
 #
-# Settings: ./.env next to this file, created from the project's single template:
-#     cp ../server/env.example .env          # (from the project root: cp server/env.example docker/.env)
-# It holds the variables used below (ports, tag, DOCKER_VOLUME_FOLDER, …) and the server's own settings
-# (SMTP, JWT_SECRET_KEY, ADMIN_*, SITE_FEED_URL), which reach the container through env_file. SITE_URL and
-# GA_MEASUREMENT_ID are baked into the website at BUILD time.
+# Run from this folder:
+#     cp env.example .env                     # once; then fill it in
+#     docker compose pull && docker compose up -d
+#     docker compose --profile postgres --profile cloudflare up -d    # with optional services
+# or from the project root: pnpm run compose:up / compose:down / compose:logs
+#
+# Website build settings (SITE_URL, GA_MEASUREMENT_ID) are baked into the pulled image by CI; changing
+# them in .env has no effect here. CI publishes linux/amd64 images; on Apple silicon Docker runs them
+# under emulation (or set `platform: linux/amd64` per service to silence the warning).
 #
 # Behind a reverse proxy / cloudflared, publish the website and admin on their own hostnames and set
 # PUBLIC_SITE_URL and ADMIN_URL in ./.env to match (they are used for links in e-mails).
@@ -28,11 +36,7 @@ name: astro-blog
 services:
   website:
     image: ${AB_REGISTRY:+${AB_REGISTRY}/}astro-blog-web:${AB_TAG:-latest}
-    build:
-      context: ../website
-      args:
-        SITE_URL: ${SITE_URL:-}
-        GA_MEASUREMENT_ID: ${GA_MEASUREMENT_ID:-}
+    platform: linux/amd64
     restart: unless-stopped
     ports:
       - "${BIND_ADDRESS:-127.0.0.1}:${WEBSITE_PORT:-8093}:80"
@@ -42,13 +46,13 @@ services:
       timeout: 5s
       retries: 3
       start_period: 10s
+    networks: [frontend, backend]
     depends_on:
       - server
 
   admin:
     image: ${AB_REGISTRY:+${AB_REGISTRY}/}astro-blog-admin:${AB_TAG:-latest}
-    build:
-      context: ../admin
+    platform: linux/amd64
     restart: unless-stopped
     ports:
       - "${BIND_ADDRESS:-127.0.0.1}:${ADMIN_PORT:-8094}:80"
@@ -58,20 +62,17 @@ services:
       timeout: 5s
       retries: 3
       start_period: 10s
+    networks: [frontend, backend]
     depends_on:
       - server
 
   server:
     image: ${AB_REGISTRY:+${AB_REGISTRY}/}astro-blog-api:${AB_TAG:-latest}
-    build:
-      context: ../server
-      # The project guides, baked into the image for /api/admin/docs/.
-      additional_contexts:
-        docs: ../docs
+    platform: linux/amd64
     restart: unless-stopped
     env_file:
-      # ./.env (docker/.env). Optional so `docker compose` works before it exists; the server then
-      # exits with a message listing the missing settings.
+      # ./.env (docker/.env, from env.example). Optional so `docker compose` works before it exists; the
+      # server then exits with a message listing the missing settings.
       - path: .env
         required: false
     environment:
@@ -86,6 +87,15 @@ services:
       # ./volumes is relative to this folder (docker/volumes). On Linux the folder must be writable by the
       # container's user, uid 1000 (`sudo chown -R 1000:1000 <folder>`). Back it up.
       - ${DOCKER_VOLUME_FOLDER:-./volumes}/server:/data
+    # backend: reached by the nginx containers, reaches postgres / mailpit and the website's feed.json.
+    # egress: outbound to the SMTP provider. No host ports.
+    networks: [backend, egress]
+    depends_on:
+      # Only when the "postgres" profile is on: wait until it accepts connections, so the first start
+      # doesn't fail its migrations. Without the profile this is skipped (SQLite).
+      postgres:
+        condition: service_healthy
+        required: false
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:3002/api/health >/dev/null || exit 1"]
       interval: 30s
@@ -103,16 +113,39 @@ services:
       POSTGRES_DB: ${DATABASE_NAME:-astroblog}
     volumes:
       - ${DOCKER_VOLUME_FOLDER:-./volumes}/postgres:/var/lib/postgresql/data
+    networks: [backend]
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
       interval: 10s
       timeout: 5s
       retries: 5
 
+  # Cloudflare Tunnel: publishes the site and the admin without opening host ports. In the Cloudflare
+  # dashboard, route the public hostname to http://website:80 and the admin hostname to http://admin:80.
+  cloudflared:
+    image: cloudflare/cloudflared:${CLOUDFLARED_VERSION:-2026.10.3}
+    profiles: ["cloudflare"]
+    restart: unless-stopped
+    command: ["tunnel", "--no-autoupdate", "run"]
+    environment:
+      TUNNEL_TOKEN: ${CLOUDFLARE_TUNNEL_TOKEN:-}
+    # frontend only: it can reach website and admin, not the API or the database.
+    networks: [frontend]
+    depends_on:
+      - website
+      - admin
+
   mailpit:
     image: axllent/mailpit:latest
     profiles: ["mail"]
     restart: unless-stopped
+    # Only the inbox is published; the API sends to mailpit:1025 over the backend network.
     ports:
-      - "${BIND_ADDRESS:-127.0.0.1}:8025:8025"
-      - "${BIND_ADDRESS:-127.0.0.1}:1025:1025"
+      - "${BIND_ADDRESS:-127.0.0.1}:${MAILPIT_PORT:-8025}:8025"
+    networks: [frontend, backend]
+
+networks:
+  frontend:
+  backend:
+    internal: true
+  egress:

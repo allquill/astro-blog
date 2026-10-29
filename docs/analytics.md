@@ -54,15 +54,16 @@ The build log prints `GA measurement ID: …` (or `<none - analytics disabled>`)
 ID went into an image. After setting a variable, run the workflow again: images built earlier don't
 change.
 
-**Docker Compose building from this checkout.** Set it in `docker/.env`, then rebuild the website:
+**Docker Compose building from this checkout** (`docker-compose-build.yml`). Set it in `docker/.env`,
+then rebuild the website:
 
 ```bash
 GA_MEASUREMENT_ID=G-XXXXXXXXXX        # in docker/.env
-pnpm run compose:up                   # runs `up -d --build`, so the website is rebuilt with the ID
+pnpm run compose:build                # runs `up -d --build`, so the website is rebuilt with the ID
 ```
 
-A plain `docker compose up -d` with pulled images ignores this value, because the ID is part of the
-image. Set the CI variable instead.
+The prebuilt images (`docker-compose.yml`, `pnpm run compose:up`) ignore this value, because the ID is
+part of the image. Set the CI variable instead.
 
 **A local production build**, to try it before deploying:
 

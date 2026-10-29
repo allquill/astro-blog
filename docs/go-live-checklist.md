@@ -8,7 +8,7 @@
   `src/assets/`, `public/images/gallery/`, `public/logo.png`, `public/favicon.svg`).
 - [ ] **Pages:** rewrite about, privacy and terms. Privacy matters most: you store subscriber e-mails and
   feedback (see [Engagement → Privacy notes](engagement.md#privacy-notes)).
-- [ ] `docker/.env`:
+- [ ] `docker/.env` (from `docker/env.example`):
   - `JWT_SECRET_KEY` from `openssl rand -hex 32`
   - `ADMIN_PASSWORD`
   - `PUBLIC_SITE_URL`, `ADMIN_URL`
