@@ -92,6 +92,9 @@ const jsonLd = [
             {d.updatedDate && <><span aria-hidden="true"> · </span>Updated <time datetime={modified.toISOString()}>{formatDate(modified)}</time></>}
             <span aria-hidden="true"> · </span>{readingTime(post.body)} min read
           </p>
+          <div class="mt-5">
+            <ShareBar slug={post.id} title={d.title} url={url} networks={settings.shareNetworks} />
+          </div>
           {repo && (
             <a href={repo.toString()} target="_blank" rel="noopener nofollow" class="btn-secondary mt-6">
               <Icon name={codeHostIcon(repo)} class="size-4" /> View the code on {codeHostName(repo)}
@@ -164,11 +167,8 @@ const jsonLd = [
           </div>
         </div>
         <aside class="hidden xl:block">
-          <!-- Contents, then sharing; scrolls on its own when the contents list is longer than the screen. -->
-          <div class="sticky top-24 -mx-2 max-h-[calc(100vh-7rem)] space-y-8 overflow-y-auto px-2 pb-4">
-            <Toc headings={headings} />
-            <ShareBar variant="sidebar" slug={post.id} title={d.title} url={url} networks={settings.shareNetworks} />
-          </div>
+          <!-- Scrolls on its own when the contents list is longer than the screen. -->
+          <div class="sticky top-24 -mx-2 max-h-[calc(100vh-7rem)] overflow-y-auto px-2 pb-4"><Toc headings={headings} /></div>
         </aside>
       </div>
     </div>

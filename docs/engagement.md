@@ -31,8 +31,8 @@ on the same host.
 - Which networks appear: admin → Site → Share buttons.
 - Each click is counted per network (`POST /api/public/posts/:slug/share`) and sent to GA4 as `share`.
   This counts **clicks**, not completed shares.
-- On wide screens (1280px and up) the post's right column repeats the share buttons below **On this
-  page**. Clicks in either bar count the same way.
+- A post shows the share buttons twice: in the header under the date, and again at the end of the
+  post. Clicks in either bar count the same way.
 - Also on wide screens, the post header shows a **QR code** of the post's URL beside the title, for
   opening it on a phone. It is brand teal with the site's mark in the middle (error correction level H,
   so the code still scans with the centre covered). It is drawn on the server as inline SVG
