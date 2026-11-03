@@ -58,7 +58,7 @@ export function SettingsPage() {
     <>
       <PageHeader
         title="Settings"
-        subtitle="E-mail behaviour. The site's look, navigation and share buttons are edited in Keystatic (Settings)."
+        subtitle="E-mail behaviour. The site's name, navigation and share buttons are under Site."
       />
       {!isAdmin && <div className="mb-4"><Notice>Only admins can change settings.</Notice></div>}
       <ErrorBox error={settings.error} />

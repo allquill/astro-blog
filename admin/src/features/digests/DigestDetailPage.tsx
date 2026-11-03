@@ -167,7 +167,7 @@ export function DigestDetailPage() {
               <>
                 <Badge tone={DIGEST_TONE[d.status]}>{d.status}</Badge>
                 {isAdmin && d.status !== 'sending' && (
-                  <button type="button" className="btn-ghost text-rose-600" onClick={() => confirm('Delete this e-mail and its delivery records?') && remove.mutate()}>
+                  <button type="button" className="btn-danger-ghost" onClick={() => confirm('Delete this e-mail and its delivery records?') && remove.mutate()}>
                     <Trash2 className="size-4" /> Delete
                   </button>
                 )}

@@ -8,15 +8,15 @@ subscribers and feedback. Traffic numbers are in GA4.
 
 ## How it works
 
-- **One setting, baked in at build time:** `GA_MEASUREMENT_ID` (`G-…`). It is read when the website is
-  built (`website/astro.config.mjs`), not when nginx serves it, so **changing it means rebuilding the
-  website image.**
+- **One setting, read at start-up:** `GA_MEASUREMENT_ID` (`G-…`), an environment variable of the
+  site's `web` container (`astro:env` in `website/astro.config.mjs`). Changing it means **restarting
+  `web`**, not rebuilding.
 - **No ID, no analytics.** Without the ID the pages contain no Google code, no consent banner and no
   *Cookie settings* link.
 - **Production builds only.** `astro dev` (`pnpm run dev`) never loads GA, even with the ID set, so
   writing posts locally doesn't add traffic.
 - **The ID is checked.** A value that doesn't start with `G-` (an old `UA-…` ID, for example) stops the
-  build with `The following constraints for GA_MEASUREMENT_ID are not met: startsWith`.
+  site from starting, with `The following constraints for GA_MEASUREMENT_ID are not met: startsWith`.
 - **Consent first.** Every page starts with analytics storage *denied* and all ad signals denied for
   good (`components/Analytics.astro`). The banner (`components/ConsentBanner.astro`) appears until
   the visitor chooses:
@@ -31,45 +31,30 @@ subscribers and feedback. Traffic numbers are in GA4.
 1. In [Google Analytics](https://analytics.google.com), go to **Admin → Create → Property**. Set the
    time zone and currency, then finish the business details.
 2. **Data collection and modification → Data streams → Add stream → Web.** Enter the blog's public
-   URL (the same as `SITE_URL`) and a stream name.
+   URL (the same as `PUBLIC_SITE_URL`) and a stream name.
 3. Copy the stream's **Measurement ID** (`G-XXXXXXXXXX`). That is the only value the site needs. You
    don't need the "Google tag" snippet GA offers: the site already includes it.
 
-**Use a separate property, or at least a separate stream, for the develop build**, so test traffic
-never mixes with real readers. CI already keeps the two IDs apart (see step 2).
+**Use a separate property, or at least a separate stream, for the develop environment**, so test
+traffic never mixes with real readers.
 
-## 2. Give the ID to the build
+## 2. Give the ID to the site
 
-Pick the route you deploy with.
-
-**CI images (the usual way).** In the GitHub repository, go to **Settings → Secrets and variables →
-Actions → Variables**. These are variables, not secrets: the ID is public in every page anyway.
-
-| Variable | Used by |
-|---|---|
-| `GA_MEASUREMENT_ID` | `publish.yaml` (push to `main`): the `:<version>` and `:latest` images |
-| `GA_MEASUREMENT_ID_DEVELOP` | `develop.yaml` and `manual.yaml`: the `:develop` and `:manual` images |
-
-The build log prints `GA measurement ID: …` (or `<none - analytics disabled>`), so you can check which
-ID went into an image. After setting a variable, run the workflow again: images built earlier don't
-change.
-
-**Docker Compose building from this checkout** (`docker-compose-build.yml`). Set it in `docker/.env`,
-then rebuild the website:
+Set it in `docker/.env` and restart the site's server (both compose files pass it to `web`):
 
 ```bash
 GA_MEASUREMENT_ID=G-XXXXXXXXXX        # in docker/.env
-pnpm run compose:build                # runs `up -d --build`, so the website is rebuilt with the ID
+cd docker && docker compose up -d web # recreates `web` with the new value
 ```
 
-The prebuilt images (`docker-compose.yml`, `pnpm run compose:up`) ignore this value, because the ID is
-part of the image. Set the CI variable instead.
+Each environment has its own `docker/.env`, so develop and production keep their own IDs. Nothing is
+part of the image: the same image works with any ID, or none.
 
-**A local production build**, to try it before deploying:
+**Locally**, to try it before deploying:
 
 ```bash
-GA_MEASUREMENT_ID=G-XXXXXXXXXX pnpm --dir website run build
-pnpm --dir website run preview        # http://localhost:4322
+pnpm --dir website run build
+GA_MEASUREMENT_ID=G-XXXXXXXXXX node website/dist/server/entry.mjs   # http://localhost:4321, with the API on :3002
 ```
 
 ## 3. Adjust the stream's settings
@@ -155,7 +140,7 @@ Use a browser profile **without an ad or tracking blocker**: uBlock Origin, Brav
 strict mode and many privacy extensions block `googletagmanager.com` and `google-analytics.com`.
 
 1. **The tag is in the page.** View the source of any page and look for
-   `googletagmanager.com/gtag/js?id=G-…` with your ID. If it's missing, the build had no ID, or it is
+   `googletagmanager.com/gtag/js?id=G-…` with your ID. If it's missing, `web` has no ID, or it is
    a dev server (step 2).
 2. **The banner appears** on the first visit. Click **Accept**. (To see it again later, use *Cookie
    settings* in the footer, or clear the site's data.)
@@ -176,10 +161,10 @@ strict mode and many privacy extensions block `googletagmanager.com` and `google
 
 | Symptom | Cause |
 |---|---|
-| No `gtag/js` in the page source | Built without `GA_MEASUREMENT_ID`, it's `astro dev`, or the image predates the variable. Rebuild |
+| No `gtag/js` in the page source | `web` runs without `GA_MEASUREMENT_ID` (check `docker compose exec web env`), or it's `astro dev`. Set it and restart `web` |
 | Tag present, no `collect` requests | A blocker in this browser. Try a clean profile |
 | Only `gcs=G100` hits, nothing in Realtime | Consent wasn't accepted. Accept in the banner, or reopen it via *Cookie settings* |
-| Hits sent, but to a different property | `tid=` shows the ID that was baked in: the develop ID in a develop image, or an old one. Check the CI variable and the build log line |
+| Hits sent, but to a different property | `tid=` shows the ID in use: another environment's, or an old one. Check `GA_MEASUREMENT_ID` in that environment's `docker/.env` |
 | Page views jump while typing a search | *Page changes based on browser history events* is still on (step 3) |
 | Scrolls or outbound clicks counted twice | The matching Enhanced measurement switch is still on (step 3) |
 | A parameter isn't in reports | It isn't registered as a custom dimension, or it was registered after the data arrived (step 4) |

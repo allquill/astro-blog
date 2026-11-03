@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { ThrottlerModule } from '@nestjs/throttler';
 import { AuthModule } from './auth/auth.module';
+import { ContentModule } from './content/content.module';
 import { THROTTLERS } from './common/ip-throttler.guard';
 import { AppConfigModule } from './config/app-config.service';
 import { validate } from './config/env.validation';
@@ -33,6 +34,7 @@ import { SubscribersModule } from './subscribers/subscribers.module';
     SubscribersModule,
     FeedbackModule,
     DigestsModule,
+    ContentModule,
     DashboardModule,
     DocsModule,
   ],

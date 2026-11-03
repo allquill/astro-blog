@@ -1,9 +1,10 @@
-import type { APIContext } from 'astro';
+import { siteUrl } from '../lib/content';
 import { getPosts, getTopics, topicsOf } from '../lib/site';
 import { cleanBody } from '../lib/seo';
 
 // The client-side search index for /search/: titles, excerpts, topics, tags and the start of each body.
-export async function GET({ site }: APIContext) {
+export async function GET() {
+  const site = siteUrl;
   const topics = await getTopics();
   const posts = (await getPosts()).map((p) => ({
     slug: p.id,

@@ -1,30 +1,36 @@
 # astro-blog
 
-An end-to-end **blog platform**. Authors write posts in a CMS, with topics, highlighted code, videos,
-images, galleries, callouts and link cards. Readers can like and share posts, subscribe to new-post
-e-mails and send feedback. Staff run the mailing list and the feedback inbox from an admin app.
+An end-to-end **blog platform**. Authors write posts in the admin app, with topics, highlighted code
+(pasted or fetched from GitHub), videos, images, galleries, callouts and link cards, and publish them
+with one click: no commit, no build. Readers can like and share posts, subscribe to new-post e-mails
+and send feedback. Staff run the mailing list and the feedback inbox from the same admin app.
 
-It is built like `../service-portal`: an Astro + Keystatic static site, a React admin app and a NestJS
-API. The repository holds three independent pnpm projects:
+It is built like `../service-portal`: an Astro site, a React admin app and a NestJS API, but the content
+lives in the API's database and the site is rendered on request. The repository holds three
+independent pnpm projects:
 
-| Folder | What it is | Image |
+| Folder | What it is | Images |
 |---|---|---|
-| `website/` | Astro 7 static site + Keystatic CMS (dev only): posts, topics, tags, authors, pages, search, RSS/JSON feeds, and the like/share/subscribe/feedback widgets | `astro-blog-web` (nginx) |
-| `admin/` | React 19 + Vite admin SPA: dashboard, posts and their numbers, subscribers, feedback inbox, new-post e-mails, users, settings | `astro-blog-admin` (nginx) |
-| `server/` | NestJS 11 API + TypeORM (SQLite or Postgres): likes, share counts, mailing list, feedback, digests, admin auth | `astro-blog-api` |
+| `website/` | Astro 7 site, rendered on request (`@astrojs/node`) from the API's content: posts, topics, tags, authors, pages, search, RSS/JSON feeds, and the like/share/subscribe/feedback widgets | `astro-blog-web` (nginx front door) + `astro-blog-web-ssr` (Node) |
+| `admin/` | React 19 + Vite admin SPA: the post editor, topics, authors, pages, images, site settings, import/export, dashboard, subscribers, feedback inbox, new-post e-mails, users, settings | `astro-blog-admin` (nginx) |
+| `server/` | NestJS 11 API + TypeORM (SQLite or Postgres): the content and uploaded images, likes, share counts, mailing list, feedback, digests, admin auth | `astro-blog-api` |
 
 The root `package.json` only orchestrates them. It also holds the release version that CI bumps.
 
 ## What it does
 
-- **Writing.** Posts, topics, authors and pages are files edited in Keystatic (`/keystatic` under
-  `pnpm run dev`, or a hosted Keystatic in GitHub mode). The editor has:
-  - code blocks with a language, an optional title and highlighted lines, rendered with Shiki
-    (light and dark themes) and a copy button
-  - images, optimised to responsive WebP
+- **Writing.** Posts, topics, authors, pages and site settings are edited in the admin and stored in
+  the database (SQLite or Postgres). **Publish** shows a post on the site within seconds. The editor has:
+  - code blocks with a language, a title, highlighted lines and a **"View on GitHub" source link**;
+    the code can be pasted or **fetched from a GitHub/GitLab/Bitbucket link** (with a line range).
+    Rendered with Shiki (light and dark themes) and a copy button
+  - an image library with uploads, served as responsive WebP
   - blocks for **video** (YouTube/Vimeo, loaded only on click, or a file), **gallery**, **callout** and
     **link card**
-  - drafts, featured posts, series, tags, cover images and canonical URLs
+  - drafts that save themselves, signed previews, scheduled posts, featured posts, series, tags, cover
+    images and canonical URLs
+  - **import and export** of single posts or the whole blog as Markdown + images (a `.zip`), with a
+    dry run first
 - **Reading.** Pages include the home page, the blog with pagination, topic, tag and author pages, a post
   page with a table of contents, reading time, series navigation, related posts and newer/older links,
   plus client-side search. Feeds: RSS for the site and for each topic, JSON Feed, sitemap, `llms.txt`
@@ -50,8 +56,8 @@ The root `package.json` only orchestrates them. It also holds the release versio
   `share`, `like`, `sign_up`, `search`, `scroll`, `video_start` and `copy_code` (see
   [Analytics](docs/analytics.md)).
 
-The site stays fully static: everything works without the API except the widgets, which hide or fall
-back to plain form posts.
+The site renders from an in-memory copy of the published content and asks the API every few seconds
+whether it changed, so it keeps serving pages if the API restarts.
 
 ## Quick start
 
@@ -67,13 +73,12 @@ pnpm run dev                             # API :3002, admin :5175, website :4322
 | Address | What it is |
 |---|---|
 | http://localhost:4322 | The blog |
-| http://localhost:4322/keystatic | The CMS |
-| http://localhost:5175 | The admin. Log in as `admin` with your `ADMIN_PASSWORD` |
+| http://localhost:5175 | The admin, where content is written. Log in as `admin` with your `ADMIN_PASSWORD` |
 | http://localhost:5175/docs | These guides (docsify), for signed-in staff only |
 | http://localhost:3002/api/docs | Swagger |
 
-The API creates its SQLite database (`server/data/`) and runs its migrations on first start. It learns
-which posts and topics exist from the website's `/feed.json` (`SITE_FEED_URL`).
+The API creates its SQLite database (`server/data/`) and runs its migrations on first start. The blog
+starts empty; load the sample posts with `pnpm run content:import -- seed/content.zip`.
 
 ## Documentation
 
@@ -83,9 +88,10 @@ serves `docs/` with docsify at `/api/admin/docs/`, behind the admin sign-in, so 
 | Guide | Covers |
 |---|---|
 | [Getting started](docs/getting-started.md) | Setup, the tour, project layout, how the pieces talk |
-| [Content guide](docs/content-guide.md) | Keystatic: posts, code blocks, videos, galleries, topics, authors, pages, settings; GitHub mode |
+| [Content guide](docs/content-guide.md) | The admin editor: posts, code blocks (from GitHub), images, videos, galleries, topics, authors, pages, site settings; import and export |
+| [Step by step](docs/content-how-to.md) | Walkthroughs: add a post or a page, a code snippet (pasted or from GitHub), a video, images and galleries, callouts and link cards |
 | [Engagement](docs/engagement.md) | Likes, shares, feedback, the mailing list, new-post e-mails, privacy |
-| [Analytics](docs/analytics.md) | Setting up GA4 so tracking works: property, build ID, stream settings, events, checking it |
+| [Analytics](docs/analytics.md) | Setting up GA4 so tracking works: property, measurement ID, stream settings, events, checking it |
 | [Development](docs/development.md) | Architecture, adding an API endpoint, the generated admin client, migrations, checks |
 | [Build and deploy](docs/build-and-deploy.md) | Images, Docker Compose, Postgres, hostnames, CI/CD and releases |
 | [Go-live checklist](docs/go-live-checklist.md) | Before and after the first production deploy |
@@ -96,11 +102,12 @@ serves `docs/` with docsify at `/api/admin/docs/`, behind the admin sign-in, so 
 |---|---|
 | `pnpm run setup` | Install all four projects |
 | `pnpm run dev` | API + admin + website together. `dev:api`, `dev:admin` and `dev:web` start one |
-| `pnpm run check` | Type-check the API; type-check and lint the admin (0 warnings); `astro check` the site (validates all content) |
-| `pnpm run build` | Build all three (the website build also runs the sitemap guard) |
+| `pnpm run check` | Type-check the API; type-check and lint the admin (0 warnings); `astro check` the site |
+| `pnpm run build` | Build all three |
 | `pnpm run sdk` | Rebuild the API, dump its OpenAPI document to `admin/openapi.json` and regenerate `admin/src/sdk` |
-| `pnpm run docker:build` | Build the three images |
+| `pnpm run docker:build` | Build the four images |
+| `pnpm run content:import -- <zip\|md\|folder>` / `content:export -- <out.zip>` | Import or export content from the command line (paths relative to `server/`; see the content guide) |
 | `pnpm run compose:up` | Docker Compose with the prebuilt images from the registry (`docker/docker-compose.yml`: pull, then start) |
-| `pnpm run compose:build` | Docker Compose, building the three images from this checkout (`docker/docker-compose-build.yml`) |
+| `pnpm run compose:build` | Docker Compose, building the four images from this checkout (`docker/docker-compose-build.yml`) |
 | `pnpm run compose:down` / `compose:logs` | Stop, or follow the logs of, either one (they share one project) |
 | `pnpm --dir server run admin:set-password <user>` | Create an admin, or reset a password (lock-out recovery) |

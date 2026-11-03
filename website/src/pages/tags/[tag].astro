@@ -2,17 +2,11 @@
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import PageHero from '../../components/PageHero.astro';
 import PostGrid from '../../components/PostGrid.astro';
-import { getTags, getTopics, type Post } from '../../lib/site';
+import { getTags, getTopics } from '../../lib/site';
 
-export async function getStaticPaths() {
-  return (await getTags()).map((t) => ({ params: { tag: t.slug }, props: { name: t.name, posts: t.posts } }));
-}
-
-interface Props {
-  name: string;
-  posts: Post[];
-}
-const { name, posts } = Astro.props;
+const tag = (await getTags()).find((t) => t.slug === Astro.params.tag);
+if (!tag) return new Response(null, { status: 404, statusText: 'Not found' });
+const { name, posts } = tag;
 const topics = await getTopics();
 ---
 <BaseLayout title={`#${name}`} description={`Posts tagged ${name}.`}>

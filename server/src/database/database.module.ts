@@ -10,14 +10,17 @@ import { PostLike, PostStat } from '../engagement/engagement.entities';
 import { Feedback } from '../feedback/feedback.entity';
 import { BlogSetting } from '../settings/blog-setting.entity';
 import { Subscriber } from '../subscribers/subscriber.entity';
+import { Author, Media, Page, Post, Topic } from '../content/content.entities';
 import { Init1800000000000 } from './migrations/1800000000000-Init';
+import { Content1810000000000 } from './migrations/1810000000000-Content';
+import { PostRepository1820000000000 } from './migrations/1820000000000-PostRepository';
 
 /**
  * Every entity, for both drivers. One list (unlike ef-backend's postgres-only array) so an entity can
  * never work on SQLite and fail on Postgres. The TypeORM CLI (data-source.ts) needs it too.
  */
-export const ENTITIES = [AdminUser, BlogSetting, PostStat, PostLike, Subscriber, Feedback, Digest, DigestDelivery];
-export const MIGRATIONS = [Init1800000000000];
+export const ENTITIES = [AdminUser, BlogSetting, PostStat, PostLike, Subscriber, Feedback, Digest, DigestDelivery, Post, Topic, Author, Page, Media];
+export const MIGRATIONS = [Init1800000000000, Content1810000000000, PostRepository1820000000000];
 
 /** SQLite by default; set DATABASE_TYPE=postgres (+ DATABASE_*) to use Postgres. Schema changes are migrations. */
 type DbEnv = Pick<

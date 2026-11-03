@@ -1,10 +1,11 @@
-import type { APIContext } from 'astro';
+import { siteUrl } from '../lib/content';
 import { getSettings } from '../lib/site';
 import { abs, getSiteUrls } from '../lib/seo';
 
 const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
 
-export async function GET({ site }: APIContext) {
+export async function GET() {
+  const site = siteUrl;
   const urls = await getSiteUrls(await getSettings());
   const body = [
     '<?xml version="1.0" encoding="UTF-8"?>',

@@ -2114,6 +2114,1700 @@
         ]
       }
     },
+    "/api/admin/content/posts": {
+      "get": {
+        "operationId": "ContentController_listPosts",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "maximum": 200,
+              "default": 50,
+              "type": "number"
+            }
+          },
+          {
+            "name": "q",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "draft",
+                "published",
+                "scheduled"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PostListDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in"
+          },
+          "403": {
+            "description": "Signed in, but the role may not do this"
+          }
+        },
+        "security": [
+          {
+            "sp_admin": []
+          }
+        ],
+        "tags": [
+          "content"
+        ]
+      },
+      "post": {
+        "operationId": "ContentController_createPost",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PostInputDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PostDetailDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in"
+          },
+          "403": {
+            "description": "Signed in, but the role may not do this"
+          }
+        },
+        "security": [
+          {
+            "sp_admin": []
+          }
+        ],
+        "tags": [
+          "content"
+        ]
+      }
+    },
+    "/api/admin/content/posts/{id}": {
+      "get": {
+        "operationId": "ContentController_getPost",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PostDetailDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in"
+          },
+          "403": {
+            "description": "Signed in, but the role may not do this"
+          }
+        },
+        "security": [
+          {
+            "sp_admin": []
+          }
+        ],
+        "tags": [
+          "content"
+        ]
+      },
+      "put": {
+        "operationId": "ContentController_updatePost",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PostInputDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PostDetailDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in"
+          },
+          "403": {
+            "description": "Signed in, but the role may not do this"
+          }
+        },
+        "security": [
+          {
+            "sp_admin": []
+          }
+        ],
+        "tags": [
+          "content"
+        ]
+      },
+      "delete": {
+        "operationId": "ContentController_removePost",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OkDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in"
+          },
+          "403": {
+            "description": "Signed in, but the role may not do this"
+          }
+        },
+        "security": [
+          {
+            "sp_admin": []
+          }
+        ],
+        "tags": [
+          "content"
+        ]
+      }
+    },
+    "/api/admin/content/posts/{id}/publish": {
+      "post": {
+        "operationId": "ContentController_publish",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PostDetailDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in"
+          },
+          "403": {
+            "description": "Signed in, but the role may not do this"
+          }
+        },
+        "security": [
+          {
+            "sp_admin": []
+          }
+        ],
+        "tags": [
+          "content"
+        ]
+      }
+    },
+    "/api/admin/content/posts/{id}/unpublish": {
+      "post": {
+        "operationId": "ContentController_unpublish",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PostDetailDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in"
+          },
+          "403": {
+            "description": "Signed in, but the role may not do this"
+          }
+        },
+        "security": [
+          {
+            "sp_admin": []
+          }
+        ],
+        "tags": [
+          "content"
+        ]
+      }
+    },
+    "/api/admin/content/posts/{id}/preview-link": {
+      "post": {
+        "operationId": "ContentController_previewLink",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PreviewLinkDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in"
+          },
+          "403": {
+            "description": "Signed in, but the role may not do this"
+          }
+        },
+        "security": [
+          {
+            "sp_admin": []
+          }
+        ],
+        "tags": [
+          "content"
+        ]
+      }
+    },
+    "/api/admin/content/posts/{id}/export": {
+      "get": {
+        "operationId": "ContentController_exportPost",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The post as .md (no images) or .zip (index.md + assets/)",
+            "content": {
+              "application/zip": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "text/markdown": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in"
+          },
+          "403": {
+            "description": "Signed in, but the role may not do this"
+          }
+        },
+        "security": [
+          {
+            "sp_admin": []
+          }
+        ],
+        "tags": [
+          "content"
+        ]
+      }
+    },
+    "/api/admin/content/validate-body": {
+      "post": {
+        "operationId": "ContentController_validate",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ValidateBodyDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ValidateBodyResultDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in"
+          },
+          "403": {
+            "description": "Signed in, but the role may not do this"
+          }
+        },
+        "security": [
+          {
+            "sp_admin": []
+          }
+        ],
+        "tags": [
+          "content"
+        ]
+      }
+    },
+    "/api/admin/content/fetch-code": {
+      "post": {
+        "operationId": "ContentController_fetchCode",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FetchCodeDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FetchedCodeDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in"
+          },
+          "403": {
+            "description": "Signed in, but the role may not do this"
+          }
+        },
+        "security": [
+          {
+            "sp_admin": []
+          }
+        ],
+        "tags": [
+          "content"
+        ]
+      }
+    },
+    "/api/admin/content/topics": {
+      "get": {
+        "operationId": "ContentController_listTopics",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TopicDto"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in"
+          },
+          "403": {
+            "description": "Signed in, but the role may not do this"
+          }
+        },
+        "security": [
+          {
+            "sp_admin": []
+          }
+        ],
+        "tags": [
+          "content"
+        ]
+      },
+      "post": {
+        "operationId": "ContentController_createTopic",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TopicInputDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Topic"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in"
+          },
+          "403": {
+            "description": "Signed in, but the role may not do this"
+          }
+        },
+        "security": [
+          {
+            "sp_admin": []
+          }
+        ],
+        "tags": [
+          "content"
+        ]
+      }
+    },
+    "/api/admin/content/topics/{id}": {
+      "put": {
+        "operationId": "ContentController_updateTopic",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TopicInputDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Topic"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in"
+          },
+          "403": {
+            "description": "Signed in, but the role may not do this"
+          }
+        },
+        "security": [
+          {
+            "sp_admin": []
+          }
+        ],
+        "tags": [
+          "content"
+        ]
+      },
+      "delete": {
+        "operationId": "ContentController_removeTopic",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OkDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in"
+          },
+          "403": {
+            "description": "Signed in, but the role may not do this"
+          }
+        },
+        "security": [
+          {
+            "sp_admin": []
+          }
+        ],
+        "tags": [
+          "content"
+        ]
+      }
+    },
+    "/api/admin/content/authors": {
+      "get": {
+        "operationId": "ContentController_listAuthors",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/AuthorDto"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in"
+          },
+          "403": {
+            "description": "Signed in, but the role may not do this"
+          }
+        },
+        "security": [
+          {
+            "sp_admin": []
+          }
+        ],
+        "tags": [
+          "content"
+        ]
+      },
+      "post": {
+        "operationId": "ContentController_createAuthor",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AuthorInputDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Author"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in"
+          },
+          "403": {
+            "description": "Signed in, but the role may not do this"
+          }
+        },
+        "security": [
+          {
+            "sp_admin": []
+          }
+        ],
+        "tags": [
+          "content"
+        ]
+      }
+    },
+    "/api/admin/content/authors/{id}": {
+      "put": {
+        "operationId": "ContentController_updateAuthor",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AuthorInputDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Author"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in"
+          },
+          "403": {
+            "description": "Signed in, but the role may not do this"
+          }
+        },
+        "security": [
+          {
+            "sp_admin": []
+          }
+        ],
+        "tags": [
+          "content"
+        ]
+      },
+      "delete": {
+        "operationId": "ContentController_removeAuthor",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OkDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in"
+          },
+          "403": {
+            "description": "Signed in, but the role may not do this"
+          }
+        },
+        "security": [
+          {
+            "sp_admin": []
+          }
+        ],
+        "tags": [
+          "content"
+        ]
+      }
+    },
+    "/api/admin/content/pages": {
+      "get": {
+        "operationId": "ContentController_listPages",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/PageDto"
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in"
+          },
+          "403": {
+            "description": "Signed in, but the role may not do this"
+          }
+        },
+        "security": [
+          {
+            "sp_admin": []
+          }
+        ],
+        "tags": [
+          "content"
+        ]
+      },
+      "post": {
+        "operationId": "ContentController_createPage",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PageInputDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PageDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in"
+          },
+          "403": {
+            "description": "Signed in, but the role may not do this"
+          }
+        },
+        "security": [
+          {
+            "sp_admin": []
+          }
+        ],
+        "tags": [
+          "content"
+        ]
+      }
+    },
+    "/api/admin/content/pages/{id}": {
+      "get": {
+        "operationId": "ContentController_getPage",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PageDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in"
+          },
+          "403": {
+            "description": "Signed in, but the role may not do this"
+          }
+        },
+        "security": [
+          {
+            "sp_admin": []
+          }
+        ],
+        "tags": [
+          "content"
+        ]
+      },
+      "put": {
+        "operationId": "ContentController_updatePage",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PageInputDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PageDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in"
+          },
+          "403": {
+            "description": "Signed in, but the role may not do this"
+          }
+        },
+        "security": [
+          {
+            "sp_admin": []
+          }
+        ],
+        "tags": [
+          "content"
+        ]
+      },
+      "delete": {
+        "operationId": "ContentController_removePage",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OkDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in"
+          },
+          "403": {
+            "description": "Signed in, but the role may not do this"
+          }
+        },
+        "security": [
+          {
+            "sp_admin": []
+          }
+        ],
+        "tags": [
+          "content"
+        ]
+      }
+    },
+    "/api/admin/content/site": {
+      "get": {
+        "operationId": "ContentController_getSite",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SiteSettingsDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in"
+          },
+          "403": {
+            "description": "Signed in, but the role may not do this"
+          }
+        },
+        "security": [
+          {
+            "sp_admin": []
+          }
+        ],
+        "tags": [
+          "content"
+        ]
+      },
+      "put": {
+        "operationId": "ContentController_saveSite",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SiteSettingsDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SiteSettingsDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in"
+          },
+          "403": {
+            "description": "Signed in, but the role may not do this"
+          }
+        },
+        "security": [
+          {
+            "sp_admin": []
+          }
+        ],
+        "tags": [
+          "content"
+        ]
+      }
+    },
+    "/api/admin/content/home": {
+      "get": {
+        "operationId": "ContentController_getHome",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HomeDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in"
+          },
+          "403": {
+            "description": "Signed in, but the role may not do this"
+          }
+        },
+        "security": [
+          {
+            "sp_admin": []
+          }
+        ],
+        "tags": [
+          "content"
+        ]
+      },
+      "put": {
+        "operationId": "ContentController_saveHome",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/HomeDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HomeDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in"
+          },
+          "403": {
+            "description": "Signed in, but the role may not do this"
+          }
+        },
+        "security": [
+          {
+            "sp_admin": []
+          }
+        ],
+        "tags": [
+          "content"
+        ]
+      }
+    },
+    "/api/admin/content/media": {
+      "get": {
+        "operationId": "ContentController_listMedia",
+        "parameters": [
+          {
+            "name": "page",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 1,
+              "type": "number"
+            }
+          },
+          {
+            "name": "pageSize",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "maximum": 200,
+              "default": 50,
+              "type": "number"
+            }
+          },
+          {
+            "name": "q",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaListDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in"
+          },
+          "403": {
+            "description": "Signed in, but the role may not do this"
+          }
+        },
+        "security": [
+          {
+            "sp_admin": []
+          }
+        ],
+        "tags": [
+          "content"
+        ]
+      },
+      "post": {
+        "operationId": "ContentController_upload",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/MediaUploadDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaItemDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in"
+          },
+          "403": {
+            "description": "Signed in, but the role may not do this"
+          }
+        },
+        "security": [
+          {
+            "sp_admin": []
+          }
+        ],
+        "tags": [
+          "content"
+        ]
+      }
+    },
+    "/api/admin/content/media/{id}": {
+      "put": {
+        "operationId": "ContentController_updateMedia",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MediaAltDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaItemDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in"
+          },
+          "403": {
+            "description": "Signed in, but the role may not do this"
+          }
+        },
+        "security": [
+          {
+            "sp_admin": []
+          }
+        ],
+        "tags": [
+          "content"
+        ]
+      },
+      "delete": {
+        "operationId": "ContentController_removeMedia",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/OkDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in"
+          },
+          "403": {
+            "description": "Signed in, but the role may not do this"
+          }
+        },
+        "security": [
+          {
+            "sp_admin": []
+          }
+        ],
+        "tags": [
+          "content"
+        ]
+      }
+    },
+    "/api/admin/content/media/{id}/usage": {
+      "get": {
+        "operationId": "ContentController_mediaUsage",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaUsageDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in"
+          },
+          "403": {
+            "description": "Signed in, but the role may not do this"
+          }
+        },
+        "security": [
+          {
+            "sp_admin": []
+          }
+        ],
+        "tags": [
+          "content"
+        ]
+      }
+    },
+    "/api/admin/content/export": {
+      "get": {
+        "operationId": "ContentController_exportAll",
+        "parameters": [
+          {
+            "name": "include",
+            "required": false,
+            "in": "query",
+            "description": "Comma-separated: posts, topics, authors, pages, settings (default all)",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": "all",
+              "type": "string",
+              "enum": [
+                "all",
+                "published"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A .zip of Markdown files, YAML and images",
+            "content": {
+              "application/zip": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in"
+          },
+          "403": {
+            "description": "Signed in, but the role may not do this"
+          }
+        },
+        "security": [
+          {
+            "sp_admin": []
+          }
+        ],
+        "tags": [
+          "content"
+        ]
+      }
+    },
+    "/api/admin/content/import": {
+      "post": {
+        "operationId": "ContentController_import",
+        "parameters": [
+          {
+            "name": "dryRun",
+            "required": false,
+            "in": "query",
+            "description": "Only check and report; change nothing",
+            "schema": {
+              "default": true,
+              "type": "boolean"
+            }
+          },
+          {
+            "name": "onConflict",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": "skip",
+              "type": "string",
+              "enum": [
+                "skip",
+                "overwrite"
+              ]
+            }
+          },
+          {
+            "name": "asDraft",
+            "required": false,
+            "in": "query",
+            "description": "Import every post as a draft",
+            "schema": {
+              "default": false,
+              "type": "boolean"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/ContentImportUploadDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContentImportResultDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in"
+          },
+          "403": {
+            "description": "Signed in, but the role may not do this"
+          }
+        },
+        "security": [
+          {
+            "sp_admin": []
+          }
+        ],
+        "tags": [
+          "content"
+        ]
+      }
+    },
+    "/api/public/content/version": {
+      "get": {
+        "operationId": "PublicContentController_version",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContentVersionDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "public"
+        ]
+      }
+    },
+    "/api/public/content/snapshot": {
+      "get": {
+        "operationId": "PublicContentController_snapshot",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContentSnapshotDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "public"
+        ]
+      }
+    },
+    "/api/public/content/preview/{slug}": {
+      "get": {
+        "operationId": "PublicContentController_preview",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "token",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PreviewDto"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "public"
+        ]
+      }
+    },
+    "/api/public/media/{id}": {
+      "get": {
+        "operationId": "PublicMediaController_original",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The uploaded image",
+            "content": {
+              "image/*": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "public"
+        ]
+      }
+    },
+    "/api/public/media/{id}/{file}": {
+      "get": {
+        "operationId": "PublicMediaController_variant",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "file",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "A resized copy, e.g. 1280.webp (widths 320, 640, 960, 1280, 1920)",
+            "content": {
+              "image/webp": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "image/jpeg": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "public"
+        ]
+      }
+    },
     "/api/admin/dashboard": {
       "get": {
         "operationId": "DashboardController_get",
@@ -3409,6 +5103,1520 @@
           "page",
           "pageSize",
           "data"
+        ]
+      },
+      "PostSummaryDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "draft",
+              "published",
+              "scheduled"
+            ],
+            "description": "scheduled = published with a future date"
+          },
+          "publishedDate": {
+            "type": "number",
+            "nullable": true
+          },
+          "author": {
+            "type": "string"
+          },
+          "topics": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "coverId": {
+            "type": "string",
+            "nullable": true
+          },
+          "featured": {
+            "type": "boolean"
+          },
+          "slugLocked": {
+            "type": "boolean"
+          },
+          "url": {
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "updatedBy": {
+            "type": "string"
+          },
+          "likes": {
+            "type": "number"
+          },
+          "shares": {
+            "type": "number"
+          },
+          "messages": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "slug",
+          "title",
+          "status",
+          "publishedDate",
+          "author",
+          "topics",
+          "tags",
+          "coverId",
+          "featured",
+          "slugLocked",
+          "url",
+          "updatedAt",
+          "updatedBy",
+          "likes",
+          "shares",
+          "messages"
+        ]
+      },
+      "PostListDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PostSummaryDto"
+            }
+          },
+          "total": {
+            "type": "number"
+          },
+          "page": {
+            "type": "number"
+          },
+          "pageSize": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "data",
+          "total",
+          "page",
+          "pageSize"
+        ]
+      },
+      "PostInputDto": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "slug": {
+            "type": "string",
+            "description": "Defaults to the title, slugified. Locked once the post has been published."
+          },
+          "excerpt": {
+            "type": "string"
+          },
+          "body": {
+            "type": "string",
+            "description": "Markdoc"
+          },
+          "publishedDate": {
+            "type": "string",
+            "nullable": true,
+            "description": "ISO date or date-time; required to publish"
+          },
+          "updatedDate": {
+            "type": "string",
+            "nullable": true
+          },
+          "author": {
+            "type": "string",
+            "description": "Author slug"
+          },
+          "topics": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "coverId": {
+            "type": "string",
+            "nullable": true,
+            "description": "Media id"
+          },
+          "coverAlt": {
+            "type": "string"
+          },
+          "series": {
+            "type": "string"
+          },
+          "featured": {
+            "type": "boolean"
+          },
+          "canonicalUrl": {
+            "type": "string",
+            "description": "Empty, or the original URL when the post was first published elsewhere"
+          },
+          "repositoryUrl": {
+            "type": "string",
+            "description": "Empty, or an https link to the code behind the post (e.g. a GitHub repository)"
+          }
+        },
+        "required": [
+          "title",
+          "excerpt",
+          "body",
+          "publishedDate",
+          "updatedDate",
+          "author",
+          "topics",
+          "tags",
+          "coverId",
+          "coverAlt",
+          "series",
+          "featured",
+          "canonicalUrl",
+          "repositoryUrl"
+        ]
+      },
+      "Media": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "fileName": {
+            "type": "string"
+          },
+          "mime": {
+            "type": "string"
+          },
+          "width": {
+            "type": "number"
+          },
+          "height": {
+            "type": "number"
+          },
+          "bytes": {
+            "type": "number"
+          },
+          "alt": {
+            "type": "string"
+          },
+          "createdBy": {
+            "type": "string"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "fileName",
+          "mime",
+          "width",
+          "height",
+          "bytes",
+          "alt",
+          "createdBy",
+          "createdAt"
+        ]
+      },
+      "PostDetailDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "excerpt": {
+            "type": "string"
+          },
+          "body": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "draft",
+              "published"
+            ]
+          },
+          "publishedDate": {
+            "type": "number",
+            "nullable": true
+          },
+          "updatedDate": {
+            "type": "number",
+            "nullable": true
+          },
+          "firstPublishedAt": {
+            "type": "number",
+            "nullable": true
+          },
+          "authorSlug": {
+            "type": "string"
+          },
+          "topics": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "coverId": {
+            "type": "string",
+            "nullable": true
+          },
+          "coverAlt": {
+            "type": "string"
+          },
+          "series": {
+            "type": "string"
+          },
+          "featured": {
+            "type": "boolean"
+          },
+          "canonicalUrl": {
+            "type": "string"
+          },
+          "repositoryUrl": {
+            "type": "string",
+            "description": "Empty, or an https link to the code behind the post (e.g. a GitHub repository)"
+          },
+          "updatedBy": {
+            "type": "string"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "slugLocked": {
+            "type": "boolean"
+          },
+          "url": {
+            "type": "string"
+          },
+          "cover": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/Media"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "slug",
+          "title",
+          "excerpt",
+          "body",
+          "status",
+          "publishedDate",
+          "updatedDate",
+          "firstPublishedAt",
+          "authorSlug",
+          "topics",
+          "tags",
+          "coverId",
+          "coverAlt",
+          "series",
+          "featured",
+          "canonicalUrl",
+          "repositoryUrl",
+          "updatedBy",
+          "createdAt",
+          "updatedAt",
+          "slugLocked",
+          "url",
+          "cover"
+        ]
+      },
+      "PreviewLinkDto": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string"
+          },
+          "expiresAt": {
+            "type": "number",
+            "description": "Epoch ms"
+          }
+        },
+        "required": [
+          "url",
+          "expiresAt"
+        ]
+      },
+      "ValidateBodyDto": {
+        "type": "object",
+        "properties": {
+          "body": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "body"
+        ]
+      },
+      "BodyProblemDto": {
+        "type": "object",
+        "properties": {
+          "line": {
+            "type": "number",
+            "nullable": true
+          },
+          "message": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "line",
+          "message"
+        ]
+      },
+      "ValidateBodyResultDto": {
+        "type": "object",
+        "properties": {
+          "problems": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/BodyProblemDto"
+            }
+          }
+        },
+        "required": [
+          "problems"
+        ]
+      },
+      "FetchCodeDto": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "description": "https URL of a file: a GitHub/GitLab/Bitbucket file page (with optional #L10-L20) or a raw file"
+          }
+        },
+        "required": [
+          "url"
+        ]
+      },
+      "FetchedCodeDto": {
+        "type": "object",
+        "properties": {
+          "content": {
+            "type": "string"
+          },
+          "language": {
+            "type": "string",
+            "description": "Guessed from the file extension; empty when unknown"
+          },
+          "title": {
+            "type": "string",
+            "description": "File name, for the code block title"
+          },
+          "source": {
+            "type": "string",
+            "description": "The link to show as \"View source\""
+          },
+          "fromLine": {
+            "type": "number",
+            "nullable": true
+          },
+          "toLine": {
+            "type": "number",
+            "nullable": true
+          }
+        },
+        "required": [
+          "content",
+          "language",
+          "title",
+          "source",
+          "fromLine",
+          "toLine"
+        ]
+      },
+      "TopicDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "icon": {
+            "type": "string"
+          },
+          "accent": {
+            "type": "string"
+          },
+          "sortOrder": {
+            "type": "number"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "posts": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "slug",
+          "name",
+          "description",
+          "icon",
+          "accent",
+          "sortOrder",
+          "createdAt",
+          "updatedAt",
+          "posts"
+        ]
+      },
+      "TopicInputDto": {
+        "type": "object",
+        "properties": {
+          "slug": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "icon": {
+            "type": "string",
+            "enum": [
+              "book",
+              "code",
+              "terminal",
+              "rocket",
+              "database",
+              "cloud",
+              "cpu",
+              "layers",
+              "globe",
+              "pen",
+              "lightbulb",
+              "shield",
+              "sparkles",
+              "users",
+              "camera",
+              "calendar",
+              "clock",
+              "zap"
+            ]
+          },
+          "accent": {
+            "type": "string",
+            "enum": [
+              "teal",
+              "sky",
+              "blue",
+              "amber",
+              "orange",
+              "rose",
+              "slate"
+            ]
+          },
+          "sortOrder": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "slug",
+          "name",
+          "description",
+          "icon",
+          "accent",
+          "sortOrder"
+        ]
+      },
+      "Topic": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "icon": {
+            "type": "string"
+          },
+          "accent": {
+            "type": "string"
+          },
+          "sortOrder": {
+            "type": "number"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "slug",
+          "name",
+          "description",
+          "icon",
+          "accent",
+          "sortOrder",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "SocialLink": {
+        "type": "object",
+        "properties": {
+          "network": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "network",
+          "url"
+        ]
+      },
+      "AuthorDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string"
+          },
+          "bio": {
+            "type": "string"
+          },
+          "avatarId": {
+            "type": "string",
+            "nullable": true
+          },
+          "links": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SocialLink"
+            }
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "posts": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "slug",
+          "name",
+          "role",
+          "bio",
+          "avatarId",
+          "links",
+          "createdAt",
+          "updatedAt",
+          "posts"
+        ]
+      },
+      "SocialLinkInput": {
+        "type": "object",
+        "properties": {
+          "network": {
+            "type": "string",
+            "enum": [
+              "github",
+              "x",
+              "linkedin",
+              "mastodon",
+              "bluesky",
+              "youtube",
+              "website"
+            ]
+          },
+          "url": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "network",
+          "url"
+        ]
+      },
+      "AuthorInputDto": {
+        "type": "object",
+        "properties": {
+          "slug": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string"
+          },
+          "bio": {
+            "type": "string"
+          },
+          "avatarId": {
+            "type": "string",
+            "nullable": true
+          },
+          "links": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SocialLinkInput"
+            }
+          }
+        },
+        "required": [
+          "slug",
+          "name",
+          "role",
+          "bio",
+          "avatarId",
+          "links"
+        ]
+      },
+      "Author": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string"
+          },
+          "bio": {
+            "type": "string"
+          },
+          "avatarId": {
+            "type": "string",
+            "nullable": true
+          },
+          "links": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SocialLink"
+            }
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "slug",
+          "name",
+          "role",
+          "bio",
+          "avatarId",
+          "links",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "PageDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "number"
+          },
+          "slug": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "body": {
+            "type": "string"
+          },
+          "updatedDate": {
+            "type": "number",
+            "nullable": true
+          },
+          "showInHeader": {
+            "type": "boolean"
+          },
+          "showInFooter": {
+            "type": "boolean"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "updatedAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "url": {
+            "type": "string",
+            "description": "The page on the site"
+          }
+        },
+        "required": [
+          "id",
+          "slug",
+          "title",
+          "description",
+          "body",
+          "updatedDate",
+          "showInHeader",
+          "showInFooter",
+          "createdAt",
+          "updatedAt",
+          "url"
+        ]
+      },
+      "PageInputDto": {
+        "type": "object",
+        "properties": {
+          "slug": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "body": {
+            "type": "string",
+            "description": "Markdoc"
+          },
+          "updatedDate": {
+            "type": "string",
+            "nullable": true
+          },
+          "showInHeader": {
+            "type": "boolean"
+          },
+          "showInFooter": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "slug",
+          "title",
+          "description",
+          "body",
+          "updatedDate",
+          "showInHeader",
+          "showInFooter"
+        ]
+      },
+      "NavLinkDto": {
+        "type": "object",
+        "properties": {
+          "label": {
+            "type": "string"
+          },
+          "href": {
+            "type": "string",
+            "description": "/about or https://…"
+          }
+        },
+        "required": [
+          "label",
+          "href"
+        ]
+      },
+      "SiteSettingsDto": {
+        "type": "object",
+        "properties": {
+          "siteName": {
+            "type": "string"
+          },
+          "tagline": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string",
+            "description": "Meta description of the home page"
+          },
+          "publisher": {
+            "type": "string",
+            "description": "Organisation named as publisher in structured data"
+          },
+          "email": {
+            "type": "string"
+          },
+          "social": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SocialLinkInput"
+            }
+          },
+          "nav": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/NavLinkDto"
+            }
+          },
+          "footerLinks": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/NavLinkDto"
+            }
+          },
+          "shareNetworks": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "x",
+                "linkedin",
+                "facebook",
+                "reddit",
+                "hackernews",
+                "bluesky",
+                "mastodon",
+                "whatsapp",
+                "email"
+              ]
+            }
+          },
+          "subscribeTitle": {
+            "type": "string"
+          },
+          "subscribeText": {
+            "type": "string"
+          },
+          "postsPerPage": {
+            "type": "number"
+          },
+          "indexNowKey": {
+            "type": "string",
+            "description": "IndexNow key: 8–128 letters, digits or dashes, or empty"
+          }
+        },
+        "required": [
+          "siteName",
+          "tagline",
+          "description",
+          "publisher",
+          "email",
+          "social",
+          "nav",
+          "footerLinks",
+          "shareNetworks",
+          "subscribeTitle",
+          "subscribeText",
+          "postsPerPage",
+          "indexNowKey"
+        ]
+      },
+      "HomeDto": {
+        "type": "object",
+        "properties": {
+          "eyebrow": {
+            "type": "string"
+          },
+          "heroTitle": {
+            "type": "string"
+          },
+          "heroSubtitle": {
+            "type": "string"
+          },
+          "latestTitle": {
+            "type": "string"
+          },
+          "topicsTitle": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "eyebrow",
+          "heroTitle",
+          "heroSubtitle",
+          "latestTitle",
+          "topicsTitle"
+        ]
+      },
+      "MediaItemDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "fileName": {
+            "type": "string"
+          },
+          "mime": {
+            "type": "string"
+          },
+          "width": {
+            "type": "number"
+          },
+          "height": {
+            "type": "number"
+          },
+          "bytes": {
+            "type": "number"
+          },
+          "alt": {
+            "type": "string"
+          },
+          "createdBy": {
+            "type": "string"
+          },
+          "createdAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "url": {
+            "type": "string",
+            "description": "Root-relative URL of the original"
+          }
+        },
+        "required": [
+          "id",
+          "fileName",
+          "mime",
+          "width",
+          "height",
+          "bytes",
+          "alt",
+          "createdBy",
+          "createdAt",
+          "url"
+        ]
+      },
+      "MediaListDto": {
+        "type": "object",
+        "properties": {
+          "data": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MediaItemDto"
+            }
+          },
+          "total": {
+            "type": "number"
+          },
+          "page": {
+            "type": "number"
+          },
+          "pageSize": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "data",
+          "total",
+          "page",
+          "pageSize"
+        ]
+      },
+      "MediaUploadDto": {
+        "type": "object",
+        "properties": {
+          "file": {
+            "type": "string",
+            "format": "binary"
+          },
+          "alt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "file"
+        ]
+      },
+      "MediaAltDto": {
+        "type": "object",
+        "properties": {
+          "alt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "alt"
+        ]
+      },
+      "MediaUsageDto": {
+        "type": "object",
+        "properties": {
+          "usedBy": {
+            "description": "post:<slug>, author:<slug>, page:<slug>",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "usedBy"
+        ]
+      },
+      "ContentImportUploadDto": {
+        "type": "object",
+        "properties": {
+          "file": {
+            "type": "string",
+            "format": "binary",
+            "description": ".zip export or a single .md"
+          }
+        },
+        "required": [
+          "file"
+        ]
+      },
+      "ContentImportItemDto": {
+        "type": "object",
+        "properties": {
+          "kind": {
+            "type": "string",
+            "enum": [
+              "topic",
+              "author",
+              "post",
+              "page",
+              "site",
+              "home"
+            ]
+          },
+          "slug": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string",
+            "description": "Path inside the archive"
+          },
+          "action": {
+            "type": "string",
+            "enum": [
+              "create",
+              "update",
+              "skip",
+              "error"
+            ]
+          },
+          "messages": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "kind",
+          "slug",
+          "source",
+          "action",
+          "messages"
+        ]
+      },
+      "ContentImportResultDto": {
+        "type": "object",
+        "properties": {
+          "dryRun": {
+            "type": "boolean"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ContentImportItemDto"
+            }
+          }
+        },
+        "required": [
+          "dryRun",
+          "items"
+        ]
+      },
+      "ContentVersionDto": {
+        "type": "object",
+        "properties": {
+          "version": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "version"
+        ]
+      },
+      "PublicImageDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "width": {
+            "type": "number"
+          },
+          "height": {
+            "type": "number"
+          },
+          "alt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "width",
+          "height",
+          "alt"
+        ]
+      },
+      "PublicPostDto": {
+        "type": "object",
+        "properties": {
+          "slug": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "excerpt": {
+            "type": "string"
+          },
+          "body": {
+            "type": "string",
+            "description": "Markdoc"
+          },
+          "publishedDate": {
+            "type": "string"
+          },
+          "updatedDate": {
+            "type": "string",
+            "nullable": true
+          },
+          "author": {
+            "type": "string"
+          },
+          "topics": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "cover": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PublicImageDto"
+              }
+            ]
+          },
+          "coverAlt": {
+            "type": "string"
+          },
+          "series": {
+            "type": "string"
+          },
+          "featured": {
+            "type": "boolean"
+          },
+          "canonicalUrl": {
+            "type": "string",
+            "nullable": true
+          },
+          "repositoryUrl": {
+            "type": "string",
+            "nullable": true,
+            "description": "Link to the code behind the post"
+          },
+          "draft": {
+            "type": "boolean",
+            "description": "Only true in a preview"
+          },
+          "revision": {
+            "type": "string",
+            "description": "Changes on every edit (render cache key)"
+          }
+        },
+        "required": [
+          "slug",
+          "title",
+          "excerpt",
+          "body",
+          "publishedDate",
+          "updatedDate",
+          "author",
+          "topics",
+          "tags",
+          "cover",
+          "coverAlt",
+          "series",
+          "featured",
+          "canonicalUrl",
+          "repositoryUrl",
+          "draft",
+          "revision"
+        ]
+      },
+      "PublicTopicDto": {
+        "type": "object",
+        "properties": {
+          "slug": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "icon": {
+            "type": "string"
+          },
+          "accent": {
+            "type": "string"
+          },
+          "order": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "slug",
+          "name",
+          "description",
+          "icon",
+          "accent",
+          "order"
+        ]
+      },
+      "PublicAuthorDto": {
+        "type": "object",
+        "properties": {
+          "slug": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string"
+          },
+          "bio": {
+            "type": "string"
+          },
+          "avatar": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PublicImageDto"
+              }
+            ]
+          },
+          "links": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SocialLink"
+            }
+          }
+        },
+        "required": [
+          "slug",
+          "name",
+          "role",
+          "bio",
+          "avatar",
+          "links"
+        ]
+      },
+      "PublicPageDto": {
+        "type": "object",
+        "properties": {
+          "slug": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
+          },
+          "body": {
+            "type": "string"
+          },
+          "updatedDate": {
+            "type": "string",
+            "nullable": true
+          },
+          "showInHeader": {
+            "type": "boolean"
+          },
+          "showInFooter": {
+            "type": "boolean"
+          },
+          "revision": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "slug",
+          "title",
+          "description",
+          "body",
+          "updatedDate",
+          "showInHeader",
+          "showInFooter",
+          "revision"
+        ]
+      },
+      "ContentSnapshotDto": {
+        "type": "object",
+        "properties": {
+          "version": {
+            "type": "string",
+            "description": "Same value as GET /api/public/content/version while nothing has changed"
+          },
+          "posts": {
+            "description": "Published posts whose date has come, newest first",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PublicPostDto"
+            }
+          },
+          "topics": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PublicTopicDto"
+            }
+          },
+          "authors": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PublicAuthorDto"
+            }
+          },
+          "pages": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PublicPageDto"
+            }
+          },
+          "site": {
+            "$ref": "#/components/schemas/SiteSettingsDto"
+          },
+          "home": {
+            "$ref": "#/components/schemas/HomeDto"
+          }
+        },
+        "required": [
+          "version",
+          "posts",
+          "topics",
+          "authors",
+          "pages",
+          "site",
+          "home"
+        ]
+      },
+      "PreviewDto": {
+        "type": "object",
+        "properties": {
+          "post": {
+            "$ref": "#/components/schemas/PublicPostDto"
+          }
+        },
+        "required": [
+          "post"
         ]
       },
       "CountDto": {

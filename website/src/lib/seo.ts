@@ -1,7 +1,6 @@
 // Shared building blocks for search-engine and AI-agent indexing: the canonical URL list
 // (sitemap, llms.txt, IndexNow), Markdown renditions of content, and schema.org JSON-LD.
-import { getCollection } from 'astro:content';
-import { getAuthors, getPosts, getTags, topicsWithPosts, type Author, type Post, type Settings, type Topic } from './site';
+import { getAuthors, getPages, getPosts, getTags, topicsWithPosts, type Author, type Post, type Settings, type Topic } from './site';
 
 export const abs = (path: string, site: URL | undefined) => new URL(path, site).toString();
 
@@ -24,12 +23,11 @@ export const pageCount = (items: number, perPage: number) => Math.max(1, Math.ce
 
 /**
  * Every indexable page (drafts, 404 and the noindex utility pages excluded). `lastmod` comes only from
- * content dates, never from the build time. The build fails (src/integrations/sitemap-guard.ts) if this
- * list and the built pages disagree.
+ * content dates. A new hand-written page under src/pages/ must be added here (or render with noindex).
  */
 export async function getSiteUrls(settings: Settings): Promise<SiteUrl[]> {
   const posts = await getPosts();
-  const pages = await getCollection('pages');
+  const pages = await getPages();
   const topics = await topicsWithPosts();
   const tags = await getTags();
   const authors = await getAuthors();
@@ -55,7 +53,7 @@ export async function getSiteUrls(settings: Settings): Promise<SiteUrl[]> {
 
 /**
  * Clean the stored Markdoc body for plain-Markdown consumers: drop Markdoc tags (keeping a video's
- * link), turn images into a text note (their paths are build-internal), make site links absolute.
+ * link), turn images into a text note, make site links absolute.
  */
 export function cleanBody(body: string | undefined, site: URL | undefined) {
   return (body ?? '')

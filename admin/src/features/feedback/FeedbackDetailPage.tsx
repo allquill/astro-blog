@@ -82,7 +82,7 @@ export function FeedbackDetailPage() {
                   {FEEDBACK_STATUSES.map((s) => <option key={s} value={s}>{s}</option>)}
                 </select>
                 {isAdmin && (
-                  <button type="button" className="btn-ghost text-rose-600" onClick={() => confirm('Delete this feedback for good?') && remove.mutate()}>
+                  <button type="button" className="btn-danger-ghost" onClick={() => confirm('Delete this feedback for good?') && remove.mutate()}>
                     <Trash2 className="size-4" /> Delete
                   </button>
                 )}

@@ -1,16 +1,18 @@
 ---
-import { Image } from 'astro:assets';
-import type { ImageMetadata } from 'astro';
+// Images inside post and page bodies. Uploaded images (/api/public/media/<id>) get responsive WebP
+// copies from the API; any other URL is shown as it is.
+import { mediaIdOf, mediaUrl, srcset } from '../lib/media';
 
 interface Props {
-  src: ImageMetadata | string;
+  src: string;
   alt?: string;
   title?: string;
 }
 const { src, alt = '', title } = Astro.props;
+const id = mediaIdOf(src);
 ---
-{typeof src === 'string' ? (
-  <img src={src} alt={alt} title={title} loading="lazy" decoding="async" />
+{id ? (
+  <img src={mediaUrl(id, 1280)} srcset={srcset(id, undefined, [640, 960, 1280, 1920])} sizes="(min-width: 768px) 768px, 100vw" alt={alt} title={title} loading="lazy" decoding="async" />
 ) : (
-  <Image src={src} alt={alt} title={title} widths={[640, 960, 1280, 1600]} sizes="(min-width: 768px) 768px, 100vw" format="webp" quality={80} />
+  <img src={src} alt={alt} title={title} loading="lazy" decoding="async" />
 )}

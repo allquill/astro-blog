@@ -13,11 +13,11 @@ export const NETWORK_LABEL: Record<string, string> = {
   native: 'Device share sheet',
 };
 
-/**
- * Keystatic runs next to the website in development only (`astro dev`), or wherever you host it in
- * GitHub mode (VITE_KEYSTATIC_URL). Unset outside development = no "Edit" links.
- */
-export const KEYSTATIC_URL: string | null =
-  (import.meta.env.VITE_KEYSTATIC_URL as string | undefined) || (import.meta.env.DEV ? 'http://localhost:4322/keystatic' : null);
+import type { Tone } from '@/shared/ui';
 
-export const editPostUrl = (slug: string) => (KEYSTATIC_URL ? `${KEYSTATIC_URL.replace(/\/$/, '')}/collection/posts/item/${encodeURIComponent(slug)}` : null);
+/** Post statuses as the admin shows them (scheduled = published with a future date). */
+export const STATUS_TONE: Record<string, Tone> = { draft: 'amber', published: 'emerald', scheduled: 'sky' };
+export const STATUS_LABEL: Record<string, string> = { draft: 'Draft', published: 'Published', scheduled: 'Scheduled' };
+
+/** Download URL of one post (.md, or .zip when it has images). A plain link: the browser saves the file. */
+export const postExportUrl = (id: number) => `/api/admin/content/posts/${id}/export`;

@@ -1,39 +1,38 @@
 // @ts-check
 import { defineConfig, envField } from 'astro/config';
-import react from '@astrojs/react';
-import markdoc from '@astrojs/markdoc';
-import keystatic from '@keystatic/astro';
+import node from '@astrojs/node';
 import tailwindcss from '@tailwindcss/vite';
-import sitemapGuard from './src/integrations/sitemap-guard';
-import { loadEnv } from 'vite';
 
-// The Keystatic admin (/keystatic) needs on-demand routes, so it is only mounted by `astro dev`.
-// `astro build` stays fully static — the production image never contains the CMS.
-const isDev = process.argv.includes('dev');
-
-// This file runs before Astro loads .env files, so read them here the same way Astro/Vite do for
-// astro:env: .env, .env.local, .env.<mode>, .env.<mode>.local — and let real environment variables win.
-const env = { ...loadEnv(isDev ? 'development' : 'production', process.cwd(), ''), ...process.env };
-
+// The site is rendered on request (Node, @astrojs/node) from the content the API serves
+// (/api/public/content, see src/lib/content.ts): publishing in the admin needs no build. A build is
+// only needed when the site's code changes.
 export default defineConfig({
   server: { port: 4322 },
-  site: env.SITE_URL || 'https://blog.acme.example',
-  output: 'static',
+  output: 'server',
+  adapter: node({ mode: 'standalone' }),
+  // Uploaded images are resized by the API (/api/public/media/<id>/<width>.webp), not by Astro.
+  image: { service: { entrypoint: 'astro/assets/services/noop' } },
   env: {
+    // Read at runtime (access "secret" is how astro:env reads process.env on each start; none of these
+    // is actually secret). Change them in docker/.env and restart; no rebuild.
     schema: {
-      // GA4 measurement ID, baked in at build time. Unset = no analytics code at all.
-      GA_MEASUREMENT_ID: envField.string({ context: 'server', access: 'public', optional: true, startsWith: 'G-' }),
+      // Public URL of the site: canonical/OG links, the sitemap, feeds. The API's PUBLIC_SITE_URL.
+      SITE_URL: envField.string({ context: 'server', access: 'secret', optional: true, url: true }),
+      // Where the site's server reaches the API. Docker: http://server:3002.
+      API_INTERNAL_URL: envField.string({ context: 'server', access: 'secret', default: 'http://127.0.0.1:3002', url: true }),
+      // How often (ms) the site asks the API whether content changed. Publishing shows within this.
+      CONTENT_POLL_MS: envField.number({ context: 'server', access: 'secret', default: 5000, int: true, gt: 0 }),
+      // GA4 measurement ID. Unset = no analytics code at all.
+      GA_MEASUREMENT_ID: envField.string({ context: 'server', access: 'secret', optional: true, startsWith: 'G-' }),
     },
   },
-  integrations: [react(), markdoc(), sitemapGuard(), ...(isDev ? [keystatic()] : [])],
   vite: {
     plugins: [tailwindcss()],
     // In development the API runs as a separate service (server/, port 3002). changeOrigin: false keeps
-    // the browser's Host header. /api/keystatic/* is Keystatic's own dev API, served by Astro, so it is
-    // excluded (a key starting with ^ is a RegExp).
+    // the browser's Host header (the API's same-origin checks compare it).
     server: {
       proxy: {
-        '^/api/(?!keystatic(/|$))': { target: 'http://127.0.0.1:3002', changeOrigin: false },
+        '/api/': { target: 'http://127.0.0.1:3002', changeOrigin: false },
       },
     },
   },

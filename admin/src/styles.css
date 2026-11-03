@@ -27,11 +27,35 @@
   }
 }
 
+/* Form controls. Every control is one of these; size or shape tweaks become a utility here, not ad-hoc
+   padding at the call site. Inputs, selects and buttons share one 36px height (h-9). */
 @utility input {
-  @apply block w-full rounded-lg border-0 bg-white px-3 py-2 text-sm text-slate-900 ring-1 ring-slate-300 placeholder:text-slate-400 focus:ring-2 focus:ring-brand-600 focus:outline-none disabled:opacity-60 dark:bg-white/5 dark:text-white dark:ring-white/15;
+  @apply block min-h-9 w-full rounded-lg border-0 bg-white px-3 py-2 text-sm leading-5 text-slate-900 ring-1 ring-slate-300 placeholder:text-slate-400 focus:ring-2 focus:ring-brand-600 focus:outline-none disabled:opacity-60 dark:bg-white/5 dark:text-white dark:ring-white/15 dark:[color-scheme:dark];
+  /* Our own chevron instead of the native one, which sits against the right edge. */
+  &:where(select) {
+    @apply appearance-none bg-no-repeat pr-9;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    background-position: right 0.625rem center;
+    background-size: 1rem;
+    @variant dark {
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2394a3b8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+    }
+  }
+}
+/* Compact control for table rows. */
+@utility input-sm {
+  @apply input min-h-7 py-1 text-xs;
+  &:where(select) {
+    @apply pr-8;
+    background-position: right 0.5rem center;
+    background-size: 0.875rem;
+  }
+}
+@utility input-file {
+  @apply block w-full text-sm text-slate-600 dark:text-slate-300 file:mr-3 file:cursor-pointer file:rounded-lg file:border-0 file:bg-white file:px-3 file:py-2 file:text-sm file:font-medium file:text-slate-700 file:ring-1 file:ring-slate-300 file:ring-inset hover:file:bg-slate-50 dark:file:bg-white/5 dark:file:text-slate-200 dark:file:ring-white/15 dark:hover:file:bg-white/10;
 }
 @utility btn {
-  @apply inline-flex items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-sm font-medium whitespace-nowrap transition disabled:cursor-not-allowed disabled:opacity-50;
+  @apply inline-flex min-h-9 items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-sm leading-5 font-medium whitespace-nowrap transition disabled:cursor-not-allowed disabled:opacity-50;
 }
 @utility btn-primary {
   @apply btn bg-brand-700 text-white hover:bg-brand-800;
@@ -44,6 +68,16 @@
 }
 @utility btn-ghost {
   @apply btn text-slate-600 hover:bg-slate-100 dark:text-slate-300 dark:hover:bg-white/10;
+}
+/* Square icon-only button (row actions, dialog close, back link). */
+@utility btn-icon {
+  @apply btn-ghost size-8 min-h-0 p-0;
+}
+@utility btn-danger-ghost {
+  @apply btn-ghost text-rose-600 hover:bg-rose-50 dark:text-rose-400 dark:hover:bg-rose-950/40;
+}
+@utility btn-icon-danger {
+  @apply btn-danger-ghost size-8 min-h-0 p-0;
 }
 @utility card {
   @apply rounded-xl bg-white ring-1 ring-slate-200 dark:bg-slate-900 dark:ring-white/10;

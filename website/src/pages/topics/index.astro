@@ -1,4 +1,5 @@
 ---
+import { siteUrl } from '../../lib/content';
 import BaseLayout from '../../layouts/BaseLayout.astro';
 import PageHero from '../../components/PageHero.astro';
 import Icon from '../../components/Icon.astro';
@@ -8,7 +9,7 @@ import { breadcrumbLd } from '../../lib/seo';
 const topics = await topicsWithPosts();
 const tags = await getTags();
 ---
-<BaseLayout title="Topics" description="Every topic and tag on the blog." jsonLd={[breadcrumbLd([{ name: 'Home', path: '/' }, { name: 'Topics', path: '/topics/' }], Astro.site)]}>
+<BaseLayout title="Topics" description="Every topic and tag on the blog." jsonLd={[breadcrumbLd([{ name: 'Home', path: '/' }, { name: 'Topics', path: '/topics/' }], siteUrl)]}>
   <PageHero eyebrow="Browse" title="Topics" subtitle="Pick a subject, or follow it by e-mail or RSS." />
   <section class="container-page pt-4 pb-16">
     <div class="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">

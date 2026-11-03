@@ -8,3 +8,18 @@ export const asNumber: ValueTransformer = {
   to: (v: number | null) => v,
   from: (v: string | number | null) => (v === null || v === undefined ? null : Number(v)),
 };
+
+/** A JSON value kept in a `text` column (both drivers; no jsonb), parsed on read. */
+export function jsonText<T>(fallback: T): ValueTransformer {
+  return {
+    to: (v: T | null | undefined) => JSON.stringify(v ?? fallback),
+    from: (v: string | null) => {
+      if (!v) return fallback;
+      try {
+        return JSON.parse(v) as T;
+      } catch {
+        return fallback;
+      }
+    },
+  };
+}

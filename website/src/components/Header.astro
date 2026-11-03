@@ -1,12 +1,11 @@
 ---
-import { getCollection } from 'astro:content';
-import { getSettings } from '../lib/site';
+import { getPages, getSettings } from '../lib/site';
 import Logo from './Logo.astro';
 import ThemeToggle from './ThemeToggle.astro';
 import Icon from './Icon.astro';
 
 const settings = await getSettings();
-const pages = (await getCollection('pages')).filter((p) => p.data.showInHeader).sort((a, b) => a.data.title.localeCompare(b.data.title));
+const pages = (await getPages()).filter((p) => p.data.showInHeader);
 const path = Astro.url.pathname.replace(/\/$/, '');
 const links = [
   { label: 'Blog', href: '/blog/' },

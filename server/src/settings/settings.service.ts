@@ -27,8 +27,12 @@ export class SettingsService {
   }
 
   async get(): Promise<SettingsDto> {
-    const saved = Object.fromEntries((await this.rows.find()).map((r) => [r.key, JSON.parse(r.value) as unknown]));
-    return { ...this.defaults(), ...saved } as SettingsDto;
+    // Only this service's keys: the same table also holds the site's settings (content/site-content.service.ts).
+    const defaults = this.defaults();
+    const saved = Object.fromEntries(
+      (await this.rows.find()).filter((r) => r.key in defaults).map((r) => [r.key, JSON.parse(r.value) as unknown]),
+    );
+    return { ...defaults, ...saved } as SettingsDto;
   }
 
   async update(patch: Partial<SettingsDto>): Promise<SettingsDto> {

@@ -6,11 +6,9 @@
  *   pnpm run indexnow https://www.example.com            # submit every URL in the sitemap
  *   pnpm run indexnow https://www.example.com --dry-run  # print what would be sent
  *
- * The key comes from src/content/settings.yaml (`indexNowKey`) and must already be served by the
- * live site at /<key>.txt — that file is how the search engines verify the ping is yours.
+ * The key is the site's IndexNow key (admin → Site settings), read from the live site's content API,
+ * and the site serves it at /<key>.txt — that file is how the search engines verify the ping is yours.
  */
-import { readFileSync } from 'node:fs';
-import { load } from 'js-yaml';
 
 const args = process.argv.slice(2);
 const dryRun = args.includes('--dry-run');
@@ -29,13 +27,16 @@ try {
   fail(`not a URL: ${siteArg}`);
 }
 
-const { indexNowKey: key } = load(readFileSync(new URL('../src/content/settings.yaml', import.meta.url), 'utf8')) ?? {};
-if (!key) fail('no indexNowKey in src/content/settings.yaml (set it in Keystatic → Site settings)');
+const contentUrl = new URL('/api/public/content/snapshot', site).toString();
+const contentRes = await fetch(contentUrl).catch((e) => fail(`cannot reach ${contentUrl}: ${e.message}`));
+if (!contentRes.ok) fail(`${contentUrl} returned HTTP ${contentRes.status}`);
+const key = (await contentRes.json())?.site?.indexNowKey;
+if (!key) fail('no IndexNow key: set it in the admin → Site settings');
 
 const keyLocation = new URL(`/${key}.txt`, site).toString();
 const keyRes = await fetch(keyLocation).catch((e) => fail(`cannot reach ${keyLocation}: ${e.message}`));
 if (!keyRes.ok || (await keyRes.text()).trim() !== key) {
-  fail(`${keyLocation} does not serve the key (HTTP ${keyRes.status}). Deploy the current build first.`);
+  fail(`${keyLocation} does not serve the key (HTTP ${keyRes.status}). Is the site up to date?`);
 }
 
 const sitemapUrl = new URL('/sitemap.xml', site).toString();
@@ -46,7 +47,7 @@ if (urlList.length === 0) fail(`no <loc> entries in ${sitemapUrl}`);
 
 const foreign = urlList.filter((u) => new URL(u).host !== site.host);
 if (foreign.length) {
-  fail(`the sitemap lists URLs on another host (${new URL(foreign[0]).host}). Was the image built with SITE_URL=${site.origin}?`);
+  fail(`the sitemap lists URLs on another host (${new URL(foreign[0]).host}). Is PUBLIC_SITE_URL set to ${site.origin}?`);
 }
 
 const payload = { host: site.host, key, keyLocation, urlList: urlList.slice(0, 10000) };

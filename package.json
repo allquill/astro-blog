@@ -2,7 +2,7 @@
   "name": "astro-blog",
   "private": true,
   "version": "0.0.1",
-  "description": "Blog platform: static site with Keystatic CMS (website/: Astro + Keystatic), admin app (admin/: React + Vite) and API (server/: NestJS) for likes, shares, mailing list and feedback. This root only orchestrates the three independent pnpm projects.",
+  "description": "Blog platform: website (website/: Astro, rendered on request), admin app (admin/: React + Vite) where posts, topics, authors and pages are written, and API (server/: NestJS) that stores the content and handles likes, shares, the mailing list and feedback. This root only orchestrates the three independent pnpm projects.",
   "engines": {
     "node": ">=22"
   },
@@ -26,12 +26,14 @@
     "docker:build": "pnpm run docker:build:api && pnpm run docker:build:admin && pnpm run docker:build:web",
     "docker:build:api": "docker build -t astro-blog-api --build-context docs=./docs ./server",
     "docker:build:admin": "docker build -t astro-blog-admin ./admin",
-    "docker:build:web": "docker build -t astro-blog-web ./website",
+    "docker:build:web": "docker build --target edge -t astro-blog-web ./website && docker build --target ssr -t astro-blog-web-ssr ./website",
     "compose:up": "docker compose -f docker/docker-compose.yml pull --ignore-buildable && docker compose -f docker/docker-compose.yml up -d",
     "compose:build": "docker compose -f docker/docker-compose-build.yml up -d --build",
     "compose:down": "docker compose -f docker/docker-compose.yml down",
     "compose:logs": "docker compose -f docker/docker-compose.yml logs -f",
-    "indexnow": "pnpm --dir website run indexnow"
+    "indexnow": "pnpm --dir website run indexnow",
+    "content:import": "pnpm --dir server run build && pnpm --dir server run content:import",
+    "content:export": "pnpm --dir server run build && pnpm --dir server run content:export"
   },
   "devDependencies": {
     "concurrently": "^10.0.5"

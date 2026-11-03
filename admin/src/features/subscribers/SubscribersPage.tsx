@@ -50,7 +50,7 @@ function ImportForm({ onDone }: { onDone: () => void }) {
         <input
           type="file"
           accept=".csv,text/csv"
-          className="block text-sm"
+          className="input-file"
           onChange={(e) => {
             const file = e.target.files?.[0];
             if (file) void file.text().then(setCsv);
@@ -161,7 +161,7 @@ export function SubscribersPage() {
                   </td>
                   <td className="td">
                     <select
-                      className="input w-auto py-1 text-xs"
+                      className="input-sm w-auto"
                       value={s.status}
                       disabled={update.isPending}
                       aria-label={`Status of ${s.email}`}
@@ -182,7 +182,7 @@ export function SubscribersPage() {
                       {isAdmin && (
                         <button
                           type="button"
-                          className="btn-ghost p-1.5 text-rose-600"
+                          className="btn-icon-danger"
                           aria-label={`Delete ${s.email}`}
                           onClick={() => confirm(`Delete ${s.email} for good? To stop e-mails but keep the record, set the status to unsubscribed instead.`) && remove.mutate(s.id)}
                         >

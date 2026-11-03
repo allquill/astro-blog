@@ -1,4 +1,4 @@
-# Astro Blog — BUILDS the three images from this checkout, then runs them.
+# Astro Blog — BUILDS the four images from this checkout, then runs them.
 #
 # Every service is the one in docker-compose.yml (ports, networks, healthchecks, volumes, profiles: see
 # the notes there); this file only adds how to build the images and names them locally, so a build never
@@ -10,7 +10,7 @@
 #     docker compose -f docker-compose-build.yml --profile mail up -d --build
 # or from the project root: pnpm run compose:build
 #
-# SITE_URL and GA_MEASUREMENT_ID from .env are baked into the website image here, at build time.
+# The website's two images (edge nginx and the ssr Node server) come from one Dockerfile, two targets.
 name: astro-blog
 
 services:
@@ -19,9 +19,14 @@ services:
     image: astro-blog-web:${AB_BUILD_TAG:-local}
     build:
       context: ../website
-      args:
-        SITE_URL: ${SITE_URL:-}
-        GA_MEASUREMENT_ID: ${GA_MEASUREMENT_ID:-}
+      target: edge
+
+  web:
+    extends: { file: docker-compose.yml, service: web }
+    image: astro-blog-web-ssr:${AB_BUILD_TAG:-local}
+    build:
+      context: ../website
+      target: ssr
 
   admin:
     extends: { file: docker-compose.yml, service: admin }

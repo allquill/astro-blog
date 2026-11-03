@@ -10,9 +10,15 @@ import { DigestsPage } from '@/features/digests/DigestsPage';
 import { DocsRedirect } from '@/features/docs/DocsPage';
 import { FeedbackDetailPage } from '@/features/feedback/FeedbackDetailPage';
 import { FeedbackPage } from '@/features/feedback/FeedbackPage';
+import { AuthorsPage } from '@/features/authors/AuthorsPage';
+import { MediaPage } from '@/features/media/MediaPage';
+import { PageEditorPage, PagesPage } from '@/features/pages/PagesPage';
+import { PostEditorPage } from '@/features/posts/PostEditorPage';
 import { PostsPage } from '@/features/posts/PostsPage';
 import { SettingsPage } from '@/features/settings/SettingsPage';
+import { SitePage } from '@/features/site/SitePage';
 import { SubscribersPage } from '@/features/subscribers/SubscribersPage';
+import { TopicsPage } from '@/features/topics/TopicsPage';
 import { UsersPage } from '@/features/users/UsersPage';
 
 /** Every route of the app, as data. Add a screen here — never a stray <Route>. */
@@ -24,6 +30,14 @@ const routes: RouteObject[] = [
     children: [
       { index: true, element: <DashboardPage /> },
       { path: 'posts', element: <PostsPage /> },
+      // 'new' or a post id
+      { path: 'posts/:id', element: <PostEditorPage /> },
+      { path: 'topics', element: <TopicsPage /> },
+      { path: 'authors', element: <AuthorsPage /> },
+      { path: 'pages', element: <PagesPage /> },
+      { path: 'pages/:id', element: <PageEditorPage /> },
+      { path: 'media', element: <MediaPage /> },
+      { path: 'site', element: <SitePage /> },
       { path: 'subscribers', element: <SubscribersPage /> },
       { path: 'feedback', element: <FeedbackPage /> },
       { path: 'feedback/:id', element: <FeedbackDetailPage /> },

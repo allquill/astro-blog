@@ -1,5 +1,5 @@
 ---
-import { Image } from 'astro:assets';
+import MediaImage from './MediaImage.astro';
 import Icon from './Icon.astro';
 import { accentOf, formatDate, readingTime, topicsOf, type Post, type Topic } from '../lib/site';
 
@@ -25,13 +25,11 @@ const href = `/blog/${post.id}/`;
 >
   <a href={href} tabindex="-1" aria-hidden="true" class:list={['relative block shrink-0 overflow-hidden', featured ? 'aspect-[16/9] lg:aspect-auto lg:w-3/5' : 'aspect-[16/9]']}>
     {cover ? (
-      <Image
-        src={cover}
+      <MediaImage
+        image={cover}
         alt=""
-        widths={featured ? [640, 960, 1280] : [400, 640, 800]}
+        widths={featured ? [640, 960, 1280] : [320, 640, 960]}
         sizes={featured ? '(min-width: 1024px) 720px, 100vw' : '(min-width: 1024px) 400px, (min-width: 640px) 50vw, 100vw'}
-        format="webp"
-        quality={75}
         class="h-full w-full object-cover transition duration-500 group-hover:scale-[1.02]"
       />
     ) : (

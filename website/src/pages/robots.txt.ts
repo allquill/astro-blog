@@ -1,4 +1,4 @@
-import type { APIContext } from 'astro';
+import { siteUrl } from '../lib/content';
 import { abs } from '../lib/seo';
 
 // Everything is public content: all crawlers are welcome, including AI search/answer
@@ -18,7 +18,8 @@ const AI_BOTS = [
 /** Personal pages (links from e-mails) and the API. */
 const PRIVATE = ['/subscribe/manage/', '/subscribe/confirm/', '/api/'];
 
-export function GET({ site }: APIContext) {
+export function GET() {
+  const site = siteUrl;
   const body = [
     'User-agent: *',
     'Allow: /',

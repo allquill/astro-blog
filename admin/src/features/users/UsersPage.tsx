@@ -131,7 +131,7 @@ export function UsersPage() {
                           </button>
                         )}
                         {!self && (
-                          <button type="button" className="btn-ghost p-1.5 text-rose-600" aria-label={`Delete ${u.username}`} onClick={() => confirm(`Delete ${u.username}? They can no longer sign in.`) && remove.mutate(u.id)}>
+                          <button type="button" className="btn-icon-danger" aria-label={`Delete ${u.username}`} onClick={() => confirm(`Delete ${u.username}? They can no longer sign in.`) && remove.mutate(u.id)}>
                             <Trash2 className="size-4" />
                           </button>
                         )}

@@ -4,7 +4,7 @@
     "moduleResolution": "node16",
     "target": "ES2023",
     "lib": ["ES2023"],
-    "types": ["node"],
+    "types": ["node", "multer"],
     "declaration": false,
     "removeComments": false,
     "emitDecoratorMetadata": true,

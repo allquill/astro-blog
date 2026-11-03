@@ -1,6 +1,6 @@
 ---
-// Google Analytics 4 via gtag.js — no Google Tag Manager container. Emitted only when the build
-// has a GA_MEASUREMENT_ID and this is a production build, so `astro dev` never reports traffic.
+// Google Analytics 4 via gtag.js — no Google Tag Manager container. Emitted only when the server has
+// a GA_MEASUREMENT_ID (read at runtime) and runs a production build, so `astro dev` never reports traffic.
 // Consent Mode v2: analytics storage is denied until the visitor accepts in ConsentBanner.astro.
 import { GA_MEASUREMENT_ID } from 'astro:env/server';
 

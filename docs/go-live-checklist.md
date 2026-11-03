@@ -2,12 +2,13 @@
 
 ## Before the first deploy
 
-- [ ] **Site settings** in Keystatic: blog name, tagline, description, publisher, contact e-mail,
-  social profiles, share buttons, subscribe text.
-- [ ] **Content:** replace the sample posts, topics, authors and images (`website/src/content/`,
-  `src/assets/`, `public/images/gallery/`, `public/logo.png`, `public/favicon.svg`).
-- [ ] **Pages:** rewrite about, privacy and terms. Privacy matters most: you store subscriber e-mails and
-  feedback (see [Engagement → Privacy notes](engagement.md#privacy-notes)).
+- [ ] **Site settings** in the admin (**Site**): blog name, tagline, description, publisher, contact
+  e-mail, social profiles, share buttons, subscribe text, home page texts.
+- [ ] **Content:** write your posts, topics and authors in the admin, or import them (**Posts →
+  Import**). Don't import `seed/content.zip` in production, or delete the samples afterwards. The logo
+  and favicon are still files: `website/public/logo.png` and `public/favicon.svg` (a rebuild).
+- [ ] **Pages:** create about, privacy and terms (**Pages**). Privacy matters most: you store
+  subscriber e-mails and feedback (see [Engagement → Privacy notes](engagement.md#privacy-notes)).
 - [ ] `docker/.env` (from `docker/env.example`):
   - `JWT_SECRET_KEY` from `openssl rand -hex 32`
   - `ADMIN_PASSWORD`
@@ -15,20 +16,22 @@
   - SMTP settings, `MAIL_FROM`, `NOTIFY_TO`, `BLOG_NAME`
 - [ ] **Mail delivery:** SPF, DKIM and DMARC for the `MAIL_FROM` domain, or confirm e-mails go to spam.
   Subscribe yourself and check the headers, including `List-Unsubscribe`.
-- [ ] **Build argument:** `SITE_URL`, so the feed, and with it every e-mail link, points at the real
-  domain. In CI it is the `SITE_URL` repository variable (not `docker/.env`). Use the same domain as
-  `PUBLIC_SITE_URL`.
+- [ ] **`PUBLIC_SITE_URL`** is the real public address: canonical links, the sitemap, feeds and every
+  e-mail link come from it.
 - [ ] **Hostnames:** the admin on its own hostname, ideally behind Cloudflare Access or a VPN as well as
   its login. `CLIENT_IP_HEADER=cf-connecting-ip` behind Cloudflare.
-- [ ] **Backups:** `docker/volumes/server/` (or the Postgres database). Test a restore.
+- [ ] **Backups:** `docker/volumes/server/` (the SQLite database and `media/`), or the Postgres
+  database plus `media/`. They hold all the content. Test a restore. A periodic **Export all** is a
+  second, portable copy.
 
 ## After the first deploy
 
 - [ ] **First login:** log in to the admin, then remove `ADMIN_PASSWORD` from `docker/.env`.
-- [ ] **The dashboard shows posts.** If it warns that the site feed can't be read, check
-  `SITE_FEED_URL`.
-- [ ] **Staff:** invite them (*Users*). The `staff` role can manage subscribers, feedback and draft
-  e-mails; only admins send to the list, import and change settings.
+- [ ] **Publish a test post** and check it appears on the site within seconds (if not, check that
+  `web` reaches `server`: `docker compose logs web`). Then unpublish or delete it.
+- [ ] **Staff:** invite them (*Users*). The `staff` role can write and publish content and manage
+  subscribers, feedback and draft e-mails; only admins delete content, send to the list, import and
+  change settings.
 - [ ] **Settings:** notification e-mails, welcome and thank-you e-mails, signature, and the
   **mailing-list footer** with your postal address.
 - [ ] **Test the whole flow** from a phone:

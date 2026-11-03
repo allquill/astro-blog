@@ -75,11 +75,16 @@ export class EnvironmentVariables {
   BLOG_NAME: string = 'Acme Dev Blog';
 
   /**
-   * The site's JSON feed (posts and topics), built by the website. The API checks like/share/feedback
-   * slugs against it and builds digests from it. Empty = <PUBLIC_SITE_URL>/feed.json.
+   * Folder for uploaded images (covers, avatars, images in posts) and their resized copies. Relative to
+   * the server's working directory; the Docker image sets /data/media (the same volume as the database).
    */
-  @IsOptional() @IsString()
-  SITE_FEED_URL: string = '';
+  @IsNotEmpty() @IsString()
+  MEDIA_DIR: string = './data/media';
+
+  /** Largest image upload, in bytes (default 10 MB). The admin's nginx allows a little more. */
+  @Transform(({ value }) => (value === undefined || value === '' ? 10 * 1024 * 1024 : Number(value)))
+  @IsInt() @Min(100_000) @Max(50 * 1024 * 1024)
+  MEDIA_MAX_BYTES: number = 10 * 1024 * 1024;
 
   /** How many digest e-mails are sent per batch, and the pause between batches (ms). */
   @Transform(({ value }) => (value === undefined || value === '' ? 20 : Number(value)))
@@ -118,7 +123,10 @@ export class EnvironmentVariables {
   COOKIE_SECURE: boolean = true;
 
   // ---------------------------------------------------------------------------- other
-  /** Public site URL, used for post, confirm and unsubscribe links in e-mails. */
+  /**
+   * Public site URL: post links in e-mails and the feed, absolute image URLs, and confirm, manage and
+   * unsubscribe links. The website reads the same setting at runtime.
+   */
   @IsUrl({ require_tld: false, require_protocol: true }, { message: 'PUBLIC_SITE_URL must be a URL like https://www.example.com' })
   PUBLIC_SITE_URL: string = 'http://localhost:4322';
 
@@ -151,7 +159,6 @@ export function validate(config: Record<string, unknown>) {
   if (env.ADMIN_PASSWORD === '') env.ADMIN_PASSWORD = undefined;
   // Defaults that depend on other settings (@Transform doesn't run for keys that aren't set).
   env.SWAGGER_ENABLED ??= env.NODE_ENV !== 'production';
-  env.SITE_FEED_URL ||= new URL('/feed.json', env.PUBLIC_SITE_URL).toString();
   const errors = validateSync(env, { skipMissingProperties: false, whitelist: false });
   const problems = errors.flatMap((e) => Object.values(e.constraints ?? {}).map((m) => `  - ${e.property}: ${m}`));
   if (env.DATABASE_TYPE === 'postgres') {

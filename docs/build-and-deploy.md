@@ -4,13 +4,16 @@
 
 | Image | From | What it is |
 |---|---|---|
-| `astro-blog-web` | `website/` | The static Astro site served by nginx. Proxies `/api/` to `server` |
+| `astro-blog-web` | `website/` (target `edge`, the default) | nginx, the site's front door (service `website`): serves the built assets, proxies `/api/` to `server` and every page to `web`, and caches pages for 10 s and images for a week |
+| `astro-blog-web-ssr` | `website/` (target `ssr`) | The Astro server (service `web`, Node, port 4321): renders every page from the API's content |
 | `astro-blog-admin` | `admin/` | The admin SPA served by nginx. Proxies `/api/` to `server` |
-| `astro-blog-api` | `server/` | The NestJS API. Keeps its SQLite database in `/data`. Also carries `docs/` for the admin's Docs page, through the named build context `docs` (compose `additional_contexts`, CI `build-contexts`) |
+| `astro-blog-api` | `server/` | The NestJS API: the content and uploaded images, and everything else. Keeps its SQLite database and `media/` in `/data`. Also carries `docs/` for the admin's Docs page, through the named build context `docs` (compose `additional_contexts`, CI `build-contexts`), and `seed/content.zip` |
 
-The API is never published on the host. Both nginx containers reach it as `server:3002` on the compose
-network, so the admin cookie and the Origin check work without any CORS setup. The API in turn reads
-the site's post list from `http://website/feed.json` (`SITE_FEED_URL`).
+The API is never published on the host. Both nginx containers and `web` reach it as `server:3002` on
+the compose network, so the admin cookie and the Origin check work without any CORS setup.
+
+**Nothing about the content is in an image.** Publishing, editing and deleting posts, topics, authors,
+pages and site settings never needs a build, a deploy or a restart.
 
 ### Networks
 
@@ -18,8 +21,8 @@ Three compose networks keep everything except the two nginx containers private:
 
 | Network | Members | What it allows |
 |---|---|---|
-| `frontend` | website, admin, cloudflared, mailpit | Host ports and the Cloudflare tunnel. The API and the database are not on it |
-| `backend` (internal, no internet) | website, admin, server, postgres, mailpit | `/api` from nginx to `server:3002`, the API to Postgres and Mailpit, and the API reading `http://website/feed.json` |
+| `frontend` | website, admin, cloudflared, mailpit | Host ports and the Cloudflare tunnel. `web`, the API and the database are not on it |
+| `backend` (internal, no internet) | website, web, admin, server, postgres, mailpit | Pages from nginx to `web:4321`, `/api` to `server:3002`, `web` reading the content from the API, the API to Postgres and Mailpit |
 | `egress` | server | The API's outbound connections (the SMTP provider). Nothing connects in |
 
 - **Published on the host:** only the website (`WEBSITE_PORT`), the admin (`ADMIN_PORT`) and, with
@@ -32,38 +35,29 @@ Three compose networks keep everything except the two nginx containers private:
   (`egress` for the API, `frontend` otherwise). Define it in `docker-compose.yml`; the build file
   inherits its networks through `extends`, but repeats the three network definitions at the bottom.
 
-### Website build arguments
+### Website settings
 
-These are baked into the website image at build time:
+The `web` container reads these when it starts (no rebuild; `docker compose up -d web` after a change):
 
-- `SITE_URL`: canonical and OG URLs, the sitemap, `llms.txt`, and the post links in `feed.json`, which
-  is where the links in new-post e-mails come from. **Set it** for any real deployment.
+- `SITE_URL`: the public URL for canonical and OG links, the sitemap, feeds and `llms.txt`. Both
+  compose files set it from **`PUBLIC_SITE_URL`** in `docker/.env`, the same value the API uses for
+  links in e-mails, so the two always agree.
 - `GA_MEASUREMENT_ID`: Google Analytics 4. When unset, the site contains no analytics code. Setting
   up GA4 so tracking works is in [Analytics](analytics.md).
+- `CONTENT_POLL_MS` (default 5000): how often the site asks the API whether content changed.
+- `API_INTERNAL_URL`: set by the compose files to `http://server:3002`.
 
-**Content is part of the image.** A new or edited post is published by rebuilding and redeploying the
-website image (CI does the build on push).
+### Links in e-mails or pages point at the wrong host
 
-### Links in e-mails point at blog.acme.example
+Every absolute link comes from **`PUBLIC_SITE_URL`** in `docker/.env` (`server/.env` locally): post
+links in new-post e-mails, confirm/manage/unsubscribe links, and (through `SITE_URL` on `web`) the
+canonical, share and feed links. Set it to the site's public address and recreate the containers:
 
-The **Read the post** link in a new-post e-mail is the post's `url` from the site's `feed.json`, which
-the API copies unchanged. The site builds that URL from Astro's `site` setting
-(`website/astro.config.mjs`), which is `SITE_URL` or, when it is unset, the placeholder
-`https://blog.acme.example`. It is fixed at **build time**, so set it where the site is built:
+```bash
+cd docker && docker compose up -d server web
+```
 
-| Where the site is built | What to set |
-|---|---|
-| `pnpm run dev` | Nothing: `website/.env.development` sets `SITE_URL=http://localhost:4322`. Leave `SITE_FEED_URL` in `server/.env` empty, so the API reads that dev site's feed. |
-| `docker-compose-build.yml` | `SITE_URL=https://www.example.com` in `docker/.env`, then rebuild the website image. |
-| CI (images pulled by `docker-compose.yml`) | The repository variable `SITE_URL` (`publish.yaml`) or `SITE_URL_DEVELOP` (`develop.yaml`, `manual.yaml`), or the `site_url` input when you run a workflow by hand. Then build again and pull. `SITE_URL` in `docker/.env` has **no effect** on a pulled image. |
-| A plain `docker build` | `--build-arg SITE_URL=https://www.example.com` |
-
-- **Set the API's `PUBLIC_SITE_URL` to the same domain.** It makes the confirm, manage and unsubscribe
-  links (see [Public hostnames](#public-hostnames)). If the two differ, the post link and the
-  unsubscribe link in the same e-mail point at different sites.
-- The API caches the feed for 5 minutes. After deploying the rebuilt site, restart the API or wait
-  before sending a test.
-- E-mails already sent keep their old link, because the post is snapshotted when an e-mail is sent.
+E-mails already sent keep their old links, because the post is snapshotted when an e-mail is sent.
 
 ## Docker Compose
 
@@ -84,11 +78,18 @@ pnpm run compose:up                  # prebuilt images; or pnpm run compose:buil
 ```
 
 `docker/env.example` holds both the compose settings (images, ports, data folder, tunnel token) and the
-API's settings, which the `server` container receives from `docker/.env`. `SITE_URL` and
-`GA_MEASUREMENT_ID` only matter to the build file: prebuilt images carry the values CI built them with.
+API's settings, which the `server` container receives from `docker/.env`. The site's settings
+(`PUBLIC_SITE_URL`, `GA_MEASUREMENT_ID`, `CONTENT_POLL_MS`) are passed to `web` by the compose files.
+
+A new installation is empty. Load the sample content, or your own export, with
+`docker compose exec server node dist/cli/content.js import seed/content.zip` (or an absolute path
+under `/data`), or from the admin (**Posts → Import**).
 
 - Site: http://127.0.0.1:8093 (`WEBSITE_PORT`). Admin: http://127.0.0.1:8094 (`ADMIN_PORT`).
-- **Data** lives in `docker/volumes/server/` (`DOCKER_VOLUME_FOLDER`): `astro-blog.db`. Back it up.
+- **Data** lives in `docker/volumes/server/` (`DOCKER_VOLUME_FOLDER`): `astro-blog.db` and `media/`
+  (uploaded images and their resized copies in `media/cache/`, which can be deleted). That is all of
+  the blog's content: back both up together. On Postgres, back up the database and `media/`. An
+  export (**Posts → Export all**) is a portable copy too.
 - **Optional services** are profiles, added to either file's `up` command: `--profile mail`,
   `--profile postgres`, `--profile cloudflare`.
 - **E-mail testing:** set `SMTP_HOST=mailpit` and `SMTP_PORT=1025`, then start with `--profile mail`.
@@ -109,23 +110,25 @@ Publish the site and the admin on separate hostnames, for example `www.example.c
 `admin.example.com`, through cloudflared or a reverse proxy pointing at the two ports. Then set these in
 `docker/.env`:
 
-- `PUBLIC_SITE_URL=https://www.example.com`: confirm, manage and unsubscribe links in e-mails
+- `PUBLIC_SITE_URL=https://www.example.com`: the site's own address: every link in pages, feeds and
+  e-mails
 - `ADMIN_URL=https://admin.example.com`: *Open in admin* and invite links
 - `CLIENT_IP_HEADER=cf-connecting-ip` behind Cloudflare, so rate limiting sees real client IPs
 
 ## CI/CD
 
-The `.github/workflows/` files match ef-website's:
+The `.github/workflows/` files are modelled on ef-website's:
 
 | Workflow | Trigger | Result |
 |---|---|---|
-| `develop.yaml` | push to `develop` | The three images, tagged `:develop` |
+| `develop.yaml` | push to `develop` | The four images, tagged `:develop` |
 | `publish.yaml` | push to `main` | Runs `check:web`, `check:api` and `check:admin`, bumps the version locally, pushes the images tagged `:<version>` and `:latest`, and only then pushes the bump commit and tag and creates the GitHub Release |
-| `manual.yaml` | manual, any branch | The three images, tagged `:manual` |
+| `manual.yaml` | manual, any branch | The four images, tagged `:manual` |
 
 **Secrets:** `DOCKER_REGISTRY`, `DOCKERHUB_USERNAME`, `DOCKERHUB_TOKEN`.
 
-**Variables:** `SITE_URL`, `SITE_URL_DEVELOP`, `GA_MEASUREMENT_ID` and `GA_MEASUREMENT_ID_DEVELOP`.
+**Variables:** none. The images carry no site URL, analytics ID or content; each environment's
+`docker/.env` provides them.
 
 **Version bumps:** patch by default. A commit starting with `feat:` or containing `[minor]` bumps the
 minor version; `[major]` or `BREAKING CHANGE` bumps the major version.

@@ -1,0 +1,29 @@
+---
+// A responsive <img> for an uploaded image: WebP copies at the widths the API makes, sized by `sizes`.
+import type { MediaImage } from '../lib/content';
+import { fitWidth, mediaUrl, srcset } from '../lib/media';
+
+interface Props {
+  image: MediaImage;
+  alt?: string;
+  widths?: number[];
+  sizes: string;
+  loading?: 'lazy' | 'eager';
+  class?: string;
+  title?: string;
+}
+const { image, alt = image.alt, widths, sizes, loading = 'lazy', class: className, title } = Astro.props;
+const fallback = fitWidth(image, 960);
+---
+<img
+  src={mediaUrl(image.id, fallback)}
+  srcset={srcset(image.id, image.width, widths)}
+  sizes={sizes}
+  alt={alt}
+  title={title}
+  width={image.width || undefined}
+  height={image.height || undefined}
+  loading={loading}
+  decoding="async"
+  class={className}
+/>

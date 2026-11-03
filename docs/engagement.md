@@ -1,21 +1,21 @@
 # Engagement
 
-Everything readers do beyond reading: likes, shares, feedback and the mailing list. The site is static,
-so each feature is a small script talking to `/api/public/*`. Each one either still works as a plain
+Everything readers do beyond reading: likes, shares, feedback and the mailing list. Each feature is a
+small script in the page talking to `/api/public/*`. Each one either still works as a plain
 form post without JavaScript, or hides itself when the API is unreachable.
 
 ## Which posts exist
 
-The API has no copy of the content. It reads the website's **`/feed.json`** (JSON Feed 1.1 with a
-`_blog` extension that carries each post's slug and topic ids, plus the topic list) from `SITE_FEED_URL`
-and caches it for 5 minutes. It uses the feed to:
+The content is in the API's own database (`server/src/content/`). A post "exists" for readers when it
+is **published and its date has come**. `SiteFeedService` (`server/src/feed/site-feed.service.ts`)
+gives the rest of the API that list, and is used to:
 
-- refuse likes, shares and feedback for slugs that aren't on the site
+- refuse likes, shares and feedback for slugs that aren't published posts
 - show post titles in the admin
 - build new-post e-mails, with a snapshot taken when sending starts
 
-If the feed has never been readable (for example when the website isn't up yet in development), any
-well-formed slug is accepted and a warning is logged. The admin shows a banner in that state.
+Post links are `PUBLIC_SITE_URL/blog/<slug>/`, and images in e-mails and feeds are absolute JPEG URLs
+on the same host.
 
 ## Likes
 
@@ -28,7 +28,7 @@ well-formed slug is accepted and a warning is logged. The admin shows a banner i
 
 - Share buttons are plain links to each network's share page, so they work without JavaScript. With
   JavaScript there is also **Share…** (the device share sheet, where available) and **Copy link**.
-- Which networks appear: Keystatic → Site settings → Share buttons.
+- Which networks appear: admin → Site → Share buttons.
 - Each click is counted per network (`POST /api/public/posts/:slug/share`) and sent to GA4 as `share`.
   This counts **clicks**, not completed shares.
 
@@ -68,9 +68,8 @@ well-formed slug is accepted and a warning is logged. The admin shows a banner i
 
 ## New-post e-mails
 
-1. Publish the post and let the site rebuild, so it appears in `feed.json`. The e-mail's post link is
-   the feed's URL, so it comes from the site's `SITE_URL` (see
-   [Build and deploy → Links in e-mails](build-and-deploy.md#links-in-e-mails-point-at-blogacmeexample)).
+1. Publish the post. The e-mail links to `PUBLIC_SITE_URL/blog/<slug>/`, so set `PUBLIC_SITE_URL` to
+   the site's real address (see [Build and deploy → Public hostnames](build-and-deploy.md#public-hostnames)).
 2. Admin → **Posts** → **E-mail** (or **New-post e-mails → New e-mail**) creates a draft. Its subject
    defaults to "New post: <title>", and you can add an optional note above the post card.
 3. **Preview** shows the e-mail and the number of recipients: active subscribers who follow none (all
@@ -90,12 +89,12 @@ link and the **mailing-list footer** from Settings (put your postal address ther
 
 ## Analytics (GA4)
 
-Set `GA_MEASUREMENT_ID` at build time. The consent banner defaults to *denied*, using Consent Mode v2.
+Set `GA_MEASUREMENT_ID` for the `web` container (read when it starts). The consent banner defaults to *denied*, using Consent Mode v2.
 Besides page views, the site sends events for shares, likes, sign-ups, feedback, search, scroll depth,
 video plays, code copies and outbound links.
 
-**[Analytics](analytics.md)** covers setting it up so that tracking works: the GA4 property, passing
-the ID to the build, the stream settings to change, key events and custom dimensions, the full list
+**[Analytics](analytics.md)** covers setting it up so that tracking works: the GA4 property, giving
+the ID to the site, the stream settings to change, key events and custom dimensions, the full list
 of events, and how to check it.
 
 The admin dashboard only shows what the API counts (likes, shares, subscribers, feedback). Traffic is

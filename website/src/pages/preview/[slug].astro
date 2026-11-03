@@ -1,0 +1,15 @@
+---
+// A post as it is now, drafts included, from the admin's "Preview" (a signed link that expires after
+// two hours). Never indexed or cached.
+import PostPage from '../../components/PostPage.astro';
+import { previewPost } from '../../lib/content';
+import { toPost } from '../../lib/site';
+
+const token = Astro.url.searchParams.get('token') ?? '';
+const found = token ? await previewPost(Astro.params.slug ?? '', token) : null;
+if (!found) return new Response('This preview link is invalid or has expired. Open the preview again from the admin.', { status: 404, headers: { 'Content-Type': 'text/plain; charset=utf-8' } });
+Astro.response.headers.set('Cache-Control', 'private, no-store');
+Astro.response.headers.set('X-Robots-Tag', 'noindex, nofollow');
+const post = toPost(found);
+---
+<PostPage post={post} preview />

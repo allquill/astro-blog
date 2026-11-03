@@ -3,6 +3,8 @@
 /* tslint:disable */
 /* eslint-disable */
 import type { ConfirmResultDto } from '../models/ConfirmResultDto';
+import type { ContentSnapshotDto } from '../models/ContentSnapshotDto';
+import type { ContentVersionDto } from '../models/ContentVersionDto';
 import type { CreateFeedbackDto } from '../models/CreateFeedbackDto';
 import type { CreateFeedbackResultDto } from '../models/CreateFeedbackResultDto';
 import type { FeedbackMessageDto } from '../models/FeedbackMessageDto';
@@ -10,6 +12,7 @@ import type { ManageSubscriptionDto } from '../models/ManageSubscriptionDto';
 import type { OkDto } from '../models/OkDto';
 import type { PostCountsDto } from '../models/PostCountsDto';
 import type { PostStatsDto } from '../models/PostStatsDto';
+import type { PreviewDto } from '../models/PreviewDto';
 import type { ShareDto } from '../models/ShareDto';
 import type { SubscribeDto } from '../models/SubscribeDto';
 import type { SubscribeResultDto } from '../models/SubscribeResultDto';
@@ -235,6 +238,85 @@ export class PublicService {
             },
             body: requestBody,
             mediaType: 'application/json',
+        });
+    }
+    /**
+     * @returns ContentVersionDto
+     * @throws ApiError
+     */
+    public static publicContentControllerVersion(): CancelablePromise<ContentVersionDto> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/public/content/version',
+        });
+    }
+    /**
+     * @returns ContentSnapshotDto
+     * @throws ApiError
+     */
+    public static publicContentControllerSnapshot(): CancelablePromise<ContentSnapshotDto> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/public/content/snapshot',
+        });
+    }
+    /**
+     * @returns PreviewDto
+     * @throws ApiError
+     */
+    public static publicContentControllerPreview({
+        slug,
+        token,
+    }: {
+        slug: string,
+        token: string,
+    }): CancelablePromise<PreviewDto> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/public/content/preview/{slug}',
+            path: {
+                'slug': slug,
+            },
+            query: {
+                'token': token,
+            },
+        });
+    }
+    /**
+     * @returns binary The uploaded image
+     * @throws ApiError
+     */
+    public static publicMediaControllerOriginal({
+        id,
+    }: {
+        id: string,
+    }): CancelablePromise<Blob> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/public/media/{id}',
+            path: {
+                'id': id,
+            },
+        });
+    }
+    /**
+     * @returns binary A resized copy, e.g. 1280.webp (widths 320, 640, 960, 1280, 1920)
+     * @throws ApiError
+     */
+    public static publicMediaControllerVariant({
+        id,
+        file,
+    }: {
+        id: string,
+        file: string,
+    }): CancelablePromise<Blob> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/public/media/{id}/{file}',
+            path: {
+                'id': id,
+                'file': file,
+            },
         });
     }
 }

@@ -1,7 +1,7 @@
 ---
 import '../styles/global.css';
-import { getImage } from 'astro:assets';
-import type { ImageMetadata } from 'astro';
+import { siteUrl, type MediaImage } from '../lib/content';
+import { fitWidth, mediaUrl } from '../lib/media';
 import { getSettings } from '../lib/site';
 import { publisherLd, websiteLd } from '../lib/seo';
 import Header from '../components/Header.astro';
@@ -14,7 +14,7 @@ interface Props {
   title?: string;
   description?: string;
   /** Share image; defaults to the logo. */
-  ogImage?: ImageMetadata | null;
+  ogImage?: MediaImage | null;
   ogImageAlt?: string;
   ogType?: 'website' | 'article';
   /** Extra Open Graph article metadata for blog posts. */
@@ -42,15 +42,14 @@ const {
   feeds = [],
 } = Astro.props;
 const fullTitle = title ? `${title} · ${settings.siteName}` : settings.siteName;
-const canonical = canonicalUrl ? new URL(canonicalUrl) : new URL(Astro.url.pathname, Astro.site);
+const canonical = canonicalUrl ? new URL(canonicalUrl) : new URL(Astro.url.pathname, siteUrl);
 const ogSource = Astro.props.ogImage;
-const og = ogSource ? await getImage({ src: ogSource, width: 1200, format: 'jpeg', quality: 80 }) : null;
-const ogWidth = og ? Number(og.attributes.width ?? 1200) : 512;
-const ogHeight = og && ogSource ? Math.round((ogWidth / ogSource.width) * ogSource.height) : 512;
-const ogUrl = og ? new URL(og.src, Astro.site).toString() : new URL('/logo.png', Astro.site).toString();
+const ogWidth = ogSource ? fitWidth(ogSource, 1280) : 512;
+const ogHeight = ogSource && ogSource.width ? Math.round((ogWidth / ogSource.width) * ogSource.height) : 512;
+const ogUrl = ogSource ? new URL(mediaUrl(ogSource.id, ogWidth, 'jpg'), siteUrl).toString() : new URL('/logo.png', siteUrl).toString();
 const ogAlt = Astro.props.ogImageAlt ?? (title ? `${title} – ${settings.siteName}` : settings.siteName);
 const robots = noindex ? 'noindex, follow' : 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1';
-const schema = [publisherLd(settings, Astro.site), websiteLd(settings, Astro.site), ...jsonLd];
+const schema = [publisherLd(settings, siteUrl), websiteLd(settings, siteUrl), ...jsonLd];
 ---
 <!doctype html>
 <html lang="en">
@@ -90,7 +89,7 @@ const schema = [publisherLd(settings, Astro.site), websiteLd(settings, Astro.sit
         {article.tags.map((t) => <meta property="article:tag" content={t} />)}
       </>
     )}
-    <meta name="twitter:card" content={og ? 'summary_large_image' : 'summary'} />
+    <meta name="twitter:card" content={ogSource ? 'summary_large_image' : 'summary'} />
     <meta name="twitter:title" content={fullTitle} />
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={ogUrl} />

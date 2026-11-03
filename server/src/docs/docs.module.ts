@@ -14,6 +14,9 @@ const BASE = '/api/admin/docs/';
 /** Sidebar order; any other guide in the folder follows, alphabetically. */
 const ORDER = ['getting-started', 'content-guide', 'engagement', 'analytics', 'development', 'build-and-deploy', 'go-live-checklist'];
 
+/** Guides listed indented under another one in the sidebar, in this order, instead of at the top level. */
+const CHILDREN: Record<string, string[]> = { 'content-guide': ['content-how-to'] };
+
 /** The browser files docsify needs, served from node_modules so the docs work offline and without a CDN. */
 const ASSETS: Record<string, { file: string; type: string }> = {
   'docsify.js': { file: 'docsify/lib/docsify.min.js', type: 'application/javascript' },
@@ -139,13 +142,19 @@ export class DocsController {
     const names = (await readdir(this.dir).catch(() => [] as string[]))
       .filter((f) => /^[a-z0-9][a-z0-9_-]*\.md$/i.test(f))
       .map((f) => f.slice(0, -3));
+    const present = new Set(names);
+    const nested = new Set(Object.values(CHILDREN).flat());
     const rank = (n: string) => (ORDER.includes(n) ? ORDER.indexOf(n) : ORDER.length);
-    names.sort((a, b) => rank(a) - rank(b) || a.localeCompare(b));
+    const top = names.filter((n) => !nested.has(n)).sort((a, b) => rank(a) - rank(b) || a.localeCompare(b));
+    const item = async (n: string, indent: string) => {
+      const text = await readFile(resolve(this.dir, `${n}.md`), 'utf8').catch(() => '');
+      const title = /^#\s+(.+)$/m.exec(text)?.[1]?.trim() ?? n;
+      return `${indent}- [${title.replace(/[[\]]/g, '')}](${n}.md)`;
+    };
     const lines = await Promise.all(
-      names.map(async (n) => {
-        const text = await readFile(resolve(this.dir, `${n}.md`), 'utf8').catch(() => '');
-        const title = /^#\s+(.+)$/m.exec(text)?.[1]?.trim() ?? n;
-        return `- [${title.replace(/[[\]]/g, '')}](${n}.md)`;
+      top.map(async (n) => {
+        const children = (CHILDREN[n] ?? []).filter((c) => present.has(c));
+        return [await item(n, ''), ...(await Promise.all(children.map((c) => item(c, '  '))))].join('\n');
       }),
     );
     return lines.join('\n') + '\n';

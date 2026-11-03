@@ -1,10 +1,11 @@
-import type { APIContext } from 'astro';
+import { siteUrl } from '../lib/content';
 import { authorOf, getPosts, getSettings, getTopics } from '../lib/site';
 import { postToMarkdown } from '../lib/seo';
 
 // Every post as one Markdown document, so an agent can read the whole blog in a single request.
 // Companion to /llms.txt.
-export async function GET({ site }: APIContext) {
+export async function GET() {
+  const site = siteUrl;
   const settings = await getSettings();
   const topics = await getTopics();
   const posts = await getPosts();

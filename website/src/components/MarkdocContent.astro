@@ -1,0 +1,37 @@
+---
+// Renders a Markdoc tree (lib/markdoc.ts): HTML elements as themselves, the site's tags as the
+// components in components/content/. Text is escaped by Astro; Markdoc never passes raw HTML through.
+import Markdoc, { type RenderableTreeNode } from '@markdoc/markdoc';
+import Callout from './content/Callout.astro';
+import CodeBlock from './content/CodeBlock.astro';
+import Gallery from './content/Gallery.astro';
+import LinkCard from './content/LinkCard.astro';
+import Video from './content/Video.astro';
+import MarkdocImage from './MarkdocImage.astro';
+
+interface Props {
+  node: RenderableTreeNode;
+}
+const { node } = Astro.props;
+
+const COMPONENTS = { Callout, CodeBlock, Gallery, LinkCard, Video, MarkdocImage } as unknown as Record<string, any>;
+const VOID = new Set(['area', 'br', 'col', 'embed', 'hr', 'img', 'input', 'source', 'track', 'wbr']);
+// Only plain markup elements; anything else in a tree is dropped rather than rendered.
+const SAFE = /^(a|abbr|b|blockquote|br|code|del|div|em|h[1-6]|hr|i|img|li|ol|p|pre|s|span|strong|sub|sup|table|tbody|td|tfoot|th|thead|tr|ul|article|section|figure|figcaption|mark|kbd|small)$/;
+
+const tag = Markdoc.Tag.isTag(node) ? node : null;
+const Component = tag ? COMPONENTS[tag.name] : undefined;
+const Element = tag && !Component && SAFE.test(tag.name) ? tag.name : null;
+const attrs: Record<string, unknown> = tag ? { ...tag.attributes } : {};
+// Links to other sites open safely.
+if (tag?.name === 'a' && typeof attrs.href === 'string') {
+  if (/^\s*javascript:/i.test(attrs.href)) attrs.href = '#';
+  else if (/^https?:\/\//.test(attrs.href)) attrs.rel = 'noopener';
+}
+---
+{typeof node === 'string' || typeof node === 'number' ? node
+  : Array.isArray(node) ? node.map((n) => <Astro.self node={n} />)
+  : Component ? <Component {...attrs}>{tag!.children.map((n) => <Astro.self node={n} />)}</Component>
+  : Element && VOID.has(Element) ? <Element {...attrs} />
+  : Element ? <Element {...attrs}>{tag!.children.map((n) => <Astro.self node={n} />)}</Element>
+  : null}

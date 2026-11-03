@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { NavLink, Navigate, Outlet, useLocation } from 'react-router';
 import { useQuery } from '@tanstack/react-query';
 import {
-  BookOpen, ExternalLink, FileText, KeyRound, LayoutDashboard, LogOut, Mail, Menu, MessageSquare, Monitor, Moon, Settings, Sun, UserCheck, Users, X,
+  BookOpen, ExternalLink, FileStack, FileText, Globe, Image, KeyRound, LayoutDashboard, LogOut, Mail, Menu, MessageSquare, Monitor, Moon, PenLine, Settings, Sun, Tags, UserCheck, Users, X,
 } from 'lucide-react';
 import { DOCS_URL } from '@/features/docs/DocsPage';
 import { DashboardService } from '@/sdk';
@@ -12,6 +12,11 @@ import { applyTheme, currentTheme, type Theme } from '@/shared/theme';
 const NAV = [
   { to: '/', label: 'Dashboard', icon: LayoutDashboard, end: true },
   { to: '/posts', label: 'Posts', icon: FileText },
+  { to: '/topics', label: 'Topics', icon: Tags },
+  { to: '/authors', label: 'Authors', icon: PenLine },
+  { to: '/pages', label: 'Pages', icon: FileStack },
+  { to: '/media', label: 'Images', icon: Image },
+  { to: '/site', label: 'Site', icon: Globe },
   { to: '/subscribers', label: 'Subscribers', icon: UserCheck },
   { to: '/feedback', label: 'Feedback', icon: MessageSquare, badge: true },
   { to: '/digests', label: 'New-post e-mails', icon: Mail },
@@ -103,7 +108,7 @@ export function Shell() {
         <div className="fixed inset-0 z-40 lg:hidden">
           <div className="absolute inset-0 bg-slate-950/50" onClick={() => setOpen(false)} />
           <aside className="absolute inset-y-0 left-0 w-64 bg-white dark:bg-slate-900">
-            <button type="button" className="btn-ghost absolute top-2 right-2" onClick={() => setOpen(false)} aria-label="Close menu">
+            <button type="button" className="btn-icon absolute top-2 right-2" onClick={() => setOpen(false)} aria-label="Close menu">
               <X className="size-5" />
             </button>
             {sidebar}

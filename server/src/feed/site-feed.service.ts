@@ -1,7 +1,11 @@
-import { Global, Injectable, Logger, Module } from '@nestjs/common';
+import { Global, Injectable, Module } from '@nestjs/common';
+import { InjectRepository, TypeOrmModule } from '@nestjs/typeorm';
+import { In, LessThanOrEqual, type Repository } from 'typeorm';
 import { AppConfig } from '../config/app-config.service';
+import { Author, Post, Topic } from '../content/content.entities';
+import { mediaPath } from '../content/media.service';
 
-/** One post as the website's /feed.json describes it (JSON Feed 1.1 plus a `_blog` extension). */
+/** One published post, as engagement, feedback, the dashboard and new-post e-mails see it. */
 export type FeedPost = {
   slug: string;
   url: string;
@@ -15,109 +19,89 @@ export type FeedPost = {
 };
 export type FeedTopic = { slug: string; name: string; description: string };
 
-type JsonFeed = {
-  title?: string;
-  items?: {
-    id: string;
-    url: string;
-    title: string;
-    summary?: string;
-    image?: string;
-    date_published: string;
-    tags?: string[];
-    authors?: { name: string }[];
-    _blog?: { slug?: string; topics?: string[] };
-  }[];
-  _blog?: { topics?: FeedTopic[] };
-};
-
-const TTL_MS = 5 * 60 * 1000;
 const SLUG = /^[a-z0-9][a-z0-9-]{0,119}$/;
 
 /**
- * The posts and topics the website was built with, read from its /feed.json (SITE_FEED_URL) and cached
- * for a few minutes. Content lives in Keystatic files, not in this database: this is how the API knows
- * which slugs are real (so counters can't be created for arbitrary ones) and what a digest links to.
+ * The published posts and the topics, read from the content tables (content/). It keeps the shape it
+ * had when it read the website's /feed.json, so its users didn't change. Post links are
+ * PUBLIC_SITE_URL + /blog/<slug>/, and images are absolute JPEG URLs (e-mail clients and feed readers).
  */
 @Injectable()
 export class SiteFeedService {
-  private readonly logger = new Logger('SiteFeed');
-  private posts: FeedPost[] | null = null;
-  private topics: FeedTopic[] = [];
-  private loadedAt = 0;
-  private pending: Promise<void> | null = null;
+  constructor(
+    @InjectRepository(Post) private readonly posts: Repository<Post>,
+    @InjectRepository(Topic) private readonly topics: Repository<Topic>,
+    @InjectRepository(Author) private readonly authors: Repository<Author>,
+    private readonly config: AppConfig,
+  ) {}
 
-  constructor(private readonly config: AppConfig) {}
-
-  /** Last successful read, refreshed in the background once it is older than TTL_MS. */
-  private async ensure(force = false) {
-    const stale = Date.now() - this.loadedAt > TTL_MS;
-    if (!force && this.posts && !stale) return;
-    this.pending ??= this.load().finally(() => (this.pending = null));
-    // With a (stale) copy in hand, don't make the request wait on the website.
-    if (!this.posts || force) await this.pending;
+  private abs(path: string) {
+    return new URL(path, this.config.get('PUBLIC_SITE_URL')).toString();
   }
 
-  private async load() {
-    const url = this.config.get('SITE_FEED_URL');
-    try {
-      const res = await fetch(url, { signal: AbortSignal.timeout(5000), headers: { accept: 'application/feed+json, application/json' } });
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const feed = (await res.json()) as JsonFeed;
-      this.posts = (feed.items ?? []).map((i) => ({
-        slug: i._blog?.slug ?? i.id,
-        url: i.url,
-        title: i.title,
-        summary: i.summary ?? '',
-        image: i.image ?? null,
-        publishedAt: i.date_published,
-        author: i.authors?.[0]?.name ?? '',
-        topics: i._blog?.topics ?? [],
-        tags: i.tags ?? [],
-      }));
-      this.topics = feed._blog?.topics ?? [];
-      this.loadedAt = Date.now();
-    } catch (e) {
-      // Keep serving the last copy; try again on the next request after a short back-off.
-      this.loadedAt = Date.now() - TTL_MS + 30_000;
-      this.logger.warn(`Could not read the site feed ${url} (${(e as Error).message})`);
-    }
-  }
-
+  /** The site's public JSON feed (for display; the API no longer reads it). */
   get url() {
-    return this.config.get('SITE_FEED_URL');
+    return this.abs('/feed.json');
   }
 
-  /** True while the feed has never been read (the website isn't up yet, e.g. right after `pnpm run dev`). */
+  /** Content is in this database, so there is always a feed. Kept for the admin's dashboard contract. */
   get unavailable() {
-    return this.posts === null;
+    return false;
   }
 
-  async allPosts(force = false) {
-    await this.ensure(force);
-    return this.posts ?? [];
+  private visible() {
+    return { status: 'published' as const, publishedDate: LessThanOrEqual(Date.now()) };
   }
 
-  async allTopics() {
-    await this.ensure();
-    return this.topics;
+  private async toFeed(rows: Post[]): Promise<FeedPost[]> {
+    const authorSlugs = [...new Set(rows.map((r) => r.authorSlug).filter(Boolean))];
+    const names = new Map(
+      (authorSlugs.length ? await this.authors.find({ where: { slug: In(authorSlugs) }, select: { slug: true, name: true } }) : []).map((a) => [a.slug, a.name]),
+    );
+    return rows.map((p) => ({
+      slug: p.slug,
+      url: this.abs(`/blog/${p.slug}/`),
+      title: p.title,
+      summary: p.excerpt,
+      image: p.coverId ? this.abs(mediaPath(p.coverId, 1280, 'jpg')) : null,
+      publishedAt: new Date(p.publishedDate ?? p.createdAt.getTime()).toISOString(),
+      author: names.get(p.authorSlug) ?? '',
+      topics: p.topics,
+      tags: p.tags,
+    }));
   }
 
-  async post(slug: string) {
-    return (await this.allPosts()).find((p) => p.slug === slug) ?? null;
+  /** Published posts whose date has come, newest first. (`force` is kept for callers; there is no cache.) */
+  async allPosts(_force = false): Promise<FeedPost[]> {
+    const rows = await this.posts.find({
+      where: this.visible(),
+      order: { publishedDate: 'DESC', id: 'DESC' },
+      select: { id: true, slug: true, title: true, excerpt: true, coverId: true, publishedDate: true, createdAt: true, authorSlug: true, topics: true, tags: true },
+    });
+    return this.toFeed(rows);
   }
 
-  /**
-   * Whether engagement may be recorded for a slug. With no feed at all, a well-formed slug is accepted
-   * (logged above) so likes still work in development before the site has been served once.
-   */
+  async allTopics(): Promise<FeedTopic[]> {
+    const rows = await this.topics.find({ order: { sortOrder: 'ASC', name: 'ASC' } });
+    return rows.map((t) => ({ slug: t.slug, name: t.name, description: t.description }));
+  }
+
+  async post(slug: string): Promise<FeedPost | null> {
+    if (!SLUG.test(slug)) return null;
+    const p = await this.posts.findOne({ where: { slug, ...this.visible() } });
+    return p ? (await this.toFeed([p]))[0]! : null;
+  }
+
+  /** Whether engagement may be recorded for a slug: a published post. */
   async isKnown(slug: string) {
-    if (!SLUG.test(slug)) return false;
-    const posts = await this.allPosts();
-    return this.unavailable ? true : posts.some((p) => p.slug === slug);
+    return SLUG.test(slug) && (await this.posts.existsBy({ slug, ...this.visible() }));
   }
 }
 
 @Global()
-@Module({ providers: [SiteFeedService], exports: [SiteFeedService] })
+@Module({
+  imports: [TypeOrmModule.forFeature([Post, Topic, Author])],
+  providers: [SiteFeedService],
+  exports: [SiteFeedService],
+})
 export class SiteFeedModule {}

@@ -1,5 +1,5 @@
 ---
-import { Image } from 'astro:assets';
+import MediaImage from './MediaImage.astro';
 import Icon from './Icon.astro';
 import { SOCIAL_NETWORKS } from '../lib/share';
 import type { Author } from '../lib/site';
@@ -15,7 +15,7 @@ const initials = a.name.split(/\s+/).map((w) => w[0]).slice(0, 2).join('').toUpp
 ---
 <div class="flex items-start gap-4">
   {a.avatar ? (
-    <Image src={a.avatar} alt="" width={64} height={64} format="webp" class="size-16 shrink-0 rounded-full object-cover" />
+    <MediaImage image={a.avatar} alt="" widths={[320]} sizes="64px" class="size-16 shrink-0 rounded-full object-cover" />
   ) : (
     <span class="grid size-16 shrink-0 place-items-center rounded-full bg-brand-500/15 text-lg font-semibold text-brand-700 dark:text-brand-300">{initials}</span>
   )}

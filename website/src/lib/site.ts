@@ -1,38 +1,131 @@
-import { getCollection, getEntry, type CollectionEntry } from 'astro:content';
 import { ACCENTS, type AccentName } from './accents';
+import { snapshot, type ApiAuthor, type ApiPage, type ApiPost, type ApiTopic, type MediaImage } from './content';
+import type { IconName } from './icons';
+import type { ShareNetwork, SocialNetwork } from './share';
 
-export type Post = CollectionEntry<'posts'>;
-export type Topic = CollectionEntry<'topics'>;
-export type Author = CollectionEntry<'authors'>;
-export type Settings = CollectionEntry<'settings'>['data'];
+// The blog's content as pages and components use it: the API's snapshot (lib/content.ts) in the
+// `{ id, data }` shape the site was written against when content was Astro collections, so references
+// are still `{ id }` (e.g. post.data.author.id).
+
+type Ref = { id: string };
+
+export type Post = {
+  id: string;
+  /** Markdoc source. */
+  body: string;
+  /** Changes on every edit (cache key for the rendered body). */
+  revision: string;
+  data: {
+    title: string;
+    excerpt: string;
+    publishedDate: Date;
+    updatedDate?: Date;
+    author: Ref;
+    topics: Ref[];
+    tags: string[];
+    cover: MediaImage | null;
+    coverAlt: string;
+    series: string;
+    featured: boolean;
+    /** Only true in a preview from the admin. */
+    draft: boolean;
+    canonicalUrl: string | null;
+    /** Link to the code behind the post, shown under the title. */
+    repositoryUrl: string | null;
+  };
+};
+export type Topic = { id: string; data: { name: string; description: string; icon: IconName; accent: AccentName; order: number } };
+export type Author = { id: string; data: { name: string; role: string; bio: string; avatar: MediaImage | null; links: { network: SocialNetwork; url: string }[] } };
+export type Page = {
+  id: string;
+  body: string;
+  revision: string;
+  data: { title: string; description: string; updatedDate?: Date; showInHeader: boolean; showInFooter: boolean };
+};
+export type Settings = Omit<Awaited<ReturnType<typeof snapshot>>['site'], 'shareNetworks' | 'social'> & {
+  shareNetworks: ShareNetwork[];
+  social: { network: SocialNetwork; url: string }[];
+};
+
+const date = (v: string | null) => (v ? new Date(v) : undefined);
+
+export const toPost = (p: ApiPost): Post => ({
+  id: p.slug,
+  body: p.body,
+  revision: p.revision,
+  data: {
+    title: p.title,
+    excerpt: p.excerpt,
+    publishedDate: new Date(p.publishedDate),
+    updatedDate: date(p.updatedDate),
+    author: { id: p.author },
+    topics: p.topics.map((id) => ({ id })),
+    tags: p.tags,
+    cover: p.cover,
+    coverAlt: p.coverAlt,
+    series: p.series,
+    featured: p.featured,
+    draft: p.draft,
+    canonicalUrl: p.canonicalUrl,
+    repositoryUrl: p.repositoryUrl ?? null,
+  },
+});
+const toTopic = (t: ApiTopic): Topic => ({
+  id: t.slug,
+  data: { name: t.name, description: t.description, icon: t.icon as IconName, accent: (t.accent in ACCENTS ? t.accent : 'teal') as AccentName, order: t.order },
+});
+const toAuthor = (a: ApiAuthor): Author => ({
+  id: a.slug,
+  data: { name: a.name, role: a.role, bio: a.bio, avatar: a.avatar, links: a.links as Author['data']['links'] },
+});
+const toPage = (p: ApiPage): Page => ({
+  id: p.slug,
+  body: p.body,
+  revision: p.revision,
+  data: { title: p.title, description: p.description, updatedDate: date(p.updatedDate), showInHeader: p.showInHeader, showInFooter: p.showInFooter },
+});
+
+// Converted once per snapshot, not on every call.
+let cached: { version: string; posts: Post[]; topics: Topic[]; authors: Author[]; pages: Page[] } | null = null;
+async function content() {
+  const s = await snapshot();
+  if (cached?.version !== s.version) {
+    cached = { version: s.version, posts: s.posts.map(toPost), topics: s.topics.map(toTopic), authors: s.authors.map(toAuthor), pages: s.pages.map(toPage) };
+  }
+  return cached;
+}
 
 export async function getSettings(): Promise<Settings> {
-  const entry = await getEntry('settings', 'default');
-  if (!entry) throw new Error('src/content/settings.yaml is missing');
-  return entry.data;
+  return (await snapshot()).site as Settings;
 }
 
 export async function getHome() {
-  const entry = await getEntry('home', 'default');
-  if (!entry) throw new Error('src/content/home.yaml is missing');
-  return entry.data;
+  return (await snapshot()).home;
 }
 
-/**
- * Posts, newest first. Drafts are visible under `astro dev` (so authors can preview them) and left
- * out of production builds.
- */
+/** Published posts, newest first (the API leaves drafts and future-dated posts out). */
 export async function getPosts(filter: { topic?: string; tag?: string; author?: string } = {}): Promise<Post[]> {
-  const posts = await getCollection('posts', (p) => !(import.meta.env.PROD && p.data.draft));
+  const { posts } = await content();
   return posts
     .filter((p) => !filter.topic || p.data.topics.some((r) => r.id === filter.topic))
     .filter((p) => !filter.tag || p.data.tags.map(tagSlug).includes(filter.tag))
-    .filter((p) => !filter.author || p.data.author.id === filter.author)
-    .sort((a, b) => b.data.publishedDate.valueOf() - a.data.publishedDate.valueOf());
+    .filter((p) => !filter.author || p.data.author.id === filter.author);
+}
+
+export async function getPost(slug: string) {
+  return (await content()).posts.find((p) => p.id === slug);
 }
 
 export async function getTopics(): Promise<Topic[]> {
-  return (await getCollection('topics')).sort((a, b) => a.data.order - b.data.order || a.data.name.localeCompare(b.data.name));
+  return (await content()).topics;
+}
+
+export async function getPages(): Promise<Page[]> {
+  return (await content()).pages;
+}
+
+export async function getPage(slug: string) {
+  return (await content()).pages.find((p) => p.id === slug);
 }
 
 /** Topics that have at least one (published) post, with those posts. */
@@ -44,13 +137,14 @@ export async function topicsWithPosts() {
 }
 
 export async function getAuthors(): Promise<Author[]> {
-  return (await getCollection('authors')).sort((a, b) => a.data.name.localeCompare(b.data.name));
+  return (await content()).authors;
 }
 
+const unknownAuthor = (id: string): Author => ({ id, data: { name: id || 'Unknown author', role: '', bio: '', avatar: null, links: [] } });
+
+/** The post's author (a placeholder if the author was removed, so the page still renders). */
 export async function authorOf(post: Post): Promise<Author> {
-  const a = await getEntry(post.data.author);
-  if (!a) throw new Error(`Post ${post.id}: unknown author ${post.data.author.id}`);
-  return a;
+  return (await content()).authors.find((a) => a.id === post.data.author.id) ?? unknownAuthor(post.data.author.id);
 }
 
 /** The post's topics, in the order the author listed them. */

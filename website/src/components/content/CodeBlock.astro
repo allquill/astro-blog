@@ -1,10 +1,13 @@
 ---
-// A fenced code block: Shiki highlighting at build time (both themes are emitted and swapped with
-// the .dark class, see global.css), a language/title bar, optional highlighted lines and a copy
-// button. The page still shows the code without JavaScript; only "Copy" needs it.
+// A fenced code block: Shiki highlighting (both themes are emitted and swapped with the .dark class,
+// see global.css), a language/title bar, optional highlighted lines, an optional "View source" link
+// (GitHub, GitLab, any URL) and a copy button. The page still shows the code without JavaScript; only
+// "Copy" needs it.
+import Icon from '../Icon.astro';
 import { Code } from 'astro:components';
 import type { ShikiTransformer } from 'shiki';
 import { bundledLanguages } from 'shiki/langs';
+import { codeHostName, codeUrl } from '../../lib/code-hosts';
 
 interface Props {
   content: string;
@@ -12,8 +15,16 @@ interface Props {
   title?: string;
   /** "2,4-6": lines to highlight (1-based). */
   highlight?: string;
+  /** Where the code comes from, e.g. https://github.com/o/r/blob/main/app.ts#L10-L20. */
+  source?: string;
 }
-const { content, language = '', title = '', highlight = '' } = Astro.props;
+const { content, language = '', title = '', highlight = '', source = '' } = Astro.props;
+
+// Only http(s) links; the label names the host the reader will land on.
+const sourceUrl = codeUrl(source);
+const sourceLabel = sourceUrl ? `View on ${codeHostName(sourceUrl)}` : '';
+const lineRange = sourceUrl ? /^#L(\d+)(?:-L?(\d+))?$/.exec(sourceUrl.hash) : null;
+const firstLine = lineRange ? Number(lineRange[1]) : 1;
 
 const ALIASES: Record<string, string> = { sh: 'bash', shell: 'bash', zsh: 'bash', js: 'javascript', ts: 'typescript', yml: 'yaml', md: 'markdown', text: 'plaintext', txt: 'plaintext', '': 'plaintext' };
 const lang = ALIASES[language] ?? language;
@@ -38,11 +49,17 @@ const transformers: ShikiTransformer[] = lines.size
     ]
   : [];
 const label = title || (language && language !== 'text' ? language : '');
+const bar = label || sourceUrl;
 ---
 <figure class="code-block not-prose group relative my-6 overflow-hidden rounded-xl ring-1 ring-slate-900/10 dark:ring-white/10">
-  {label && (
-    <figcaption class="flex items-center justify-between border-b border-slate-900/10 bg-slate-50 px-4 py-2 font-mono text-xs text-slate-500 dark:border-white/10 dark:bg-white/5 dark:text-slate-400">
-      <span>{label}</span>
+  {bar && (
+    <figcaption class="flex items-center justify-between gap-3 border-b border-slate-900/10 bg-slate-50 py-2 pr-16 pl-4 font-mono text-xs text-slate-500 dark:border-white/10 dark:bg-white/5 dark:text-slate-400">
+      <span class="truncate">{label}{lineRange && <span class="ml-2 text-slate-400 dark:text-slate-500">lines {firstLine}–{lineRange[2] ?? firstLine}</span>}</span>
+      {sourceUrl && (
+        <a href={sourceUrl.toString()} target="_blank" rel="noopener nofollow" class="inline-flex shrink-0 items-center gap-1 font-sans font-medium text-brand-700 hover:underline dark:text-brand-400" data-analytics-event="code_source">
+          <Icon name="link" class="size-3.5" />{sourceLabel}
+        </a>
+      )}
     </figcaption>
   )}
   <Code code={code} lang={known ? (lang as never) : 'plaintext'} themes={{ light: 'github-light', dark: 'github-dark-dimmed' }} defaultColor={false} transformers={transformers} />
@@ -51,7 +68,7 @@ const label = title || (language && language !== 'text' ? language : '');
     data-copy-code
     class:list={[
       'absolute right-2 rounded-md bg-white/90 px-2 py-1 text-xs font-medium text-slate-600 opacity-0 ring-1 ring-slate-900/10 transition group-hover:opacity-100 focus:opacity-100 dark:bg-slate-800/90 dark:text-slate-300 dark:ring-white/10',
-      label ? 'top-1' : 'top-2',
+      bar ? 'top-1' : 'top-2',
     ]}
     hidden
   >Copy</button>

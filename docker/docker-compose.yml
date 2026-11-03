@@ -1,23 +1,24 @@
-# Astro Blog: static website + admin app (both nginx) in front of the NestJS API — PREBUILT images.
+# Astro Blog: website + admin app (both nginx) in front of the NestJS API — PREBUILT images.
 #
-#   website      nginx :80 — the public site; proxies /api to `server`                    → ${WEBSITE_PORT}
-#   admin        nginx :80 — the staff admin app; proxies /api to `server`                → ${ADMIN_PORT}
-#   server       Node: likes, shares, subscribers, feedback, e-mail, the staff docs. Not published on the host;
-#                reached only through the two nginx containers. Settings: ./.env (see below).
+#   website      nginx :80 — the public site's front door: assets, /api to `server`, pages from `web` → ${WEBSITE_PORT}
+#   web          Node :4321 — renders the site's pages on request from the content in `server`
+#   admin        nginx :80 — the staff admin app (editing posts, topics, authors, pages, …); /api to `server` → ${ADMIN_PORT}
+#   server       Node: the content and images, likes, shares, subscribers, feedback, e-mail, the staff docs.
+#                Not published on the host; reached through the nginx containers and `web`. Settings: ./.env.
 #   postgres     (optional, profile "postgres") — set DATABASE_TYPE=postgres + DATABASE_* in ./.env
 #   cloudflared  (optional, profile "cloudflare") — Cloudflare Tunnel; set CLOUDFLARE_TUNNEL_TOKEN in ./.env
 #   mailpit      (optional, profile "mail") local SMTP catcher for testing e-mails: http://localhost:8025
 #
 # Networks — only the website and admin (and mailpit's inbox, when on) are published on the host:
 #   frontend  website, admin, cloudflared, mailpit   host ports and the tunnel; the API is NOT on it
-#   backend   website, admin, server, postgres, mailpit   internal (no internet): /api, the database, SMTP
+#   backend   website, web, admin, server, postgres, mailpit   internal (no internet): /api, pages, the database, SMTP
 #   egress    server                                  outbound only (SMTP provider); nothing reaches in
-# So cloudflared or anything published can reach only the two nginx containers, never the API or
-# the database, and postgres has no internet access at all.
+# So cloudflared or anything published can reach only the two nginx containers, never `web`, the API
+# or the database, and postgres has no internet access at all.
 #
 # Two compose files, same services, same project name (so they share containers and data):
 #   docker-compose.yml        THIS file: runs the images CI pushed to ${AB_REGISTRY}, tag ${AB_TAG}
-#   docker-compose-build.yml  builds the three images from this checkout instead (pnpm run compose:build)
+#   docker-compose-build.yml  builds the four images from this checkout instead (pnpm run compose:build)
 #
 # Run from this folder:
 #     cp env.example .env                     # once; then fill it in
@@ -25,12 +26,12 @@
 #     docker compose --profile postgres --profile cloudflare up -d    # with optional services
 # or from the project root: pnpm run compose:up / compose:down / compose:logs
 #
-# Website build settings (SITE_URL, GA_MEASUREMENT_ID) are baked into the pulled image by CI; changing
-# them in .env has no effect here. CI publishes linux/amd64 images; on Apple silicon Docker runs them
-# under emulation (or set `platform: linux/amd64` per service to silence the warning).
+# Nothing is baked into the images: content lives in the API's database, and the site's URL
+# (PUBLIC_SITE_URL) and GA_MEASUREMENT_ID are read from ./.env at start-up. Publishing a post needs no
+# build or restart. CI publishes linux/amd64 images; on Apple silicon Docker runs them under emulation.
 #
 # Behind a reverse proxy / cloudflared, publish the website and admin on their own hostnames and set
-# PUBLIC_SITE_URL and ADMIN_URL in ./.env to match (they are used for links in e-mails).
+# PUBLIC_SITE_URL and ADMIN_URL in ./.env to match (links in pages, feeds and e-mails).
 name: astro-blog
 
 services:
@@ -41,14 +42,38 @@ services:
     ports:
       - "${BIND_ADDRESS:-127.0.0.1}:${WEBSITE_PORT:-8093}:80"
     healthcheck:
-      test: ["CMD-SHELL", "wget -q --spider http://127.0.0.1/ || exit 1"]
+      test: ["CMD-SHELL", "wget -q --spider http://127.0.0.1/favicon.svg || exit 1"]
       interval: 30s
       timeout: 5s
       retries: 3
       start_period: 10s
     networks: [frontend, backend]
     depends_on:
+      - web
       - server
+
+  web:
+    image: ${AB_REGISTRY:+${AB_REGISTRY}/}astro-blog-web-ssr:${AB_TAG:-latest}
+    platform: linux/amd64
+    restart: unless-stopped
+    environment:
+      # The public URL of the site (canonical/OG links, sitemap, feeds): the same as the API's.
+      SITE_URL: ${PUBLIC_SITE_URL:-http://localhost:8093}
+      API_INTERNAL_URL: http://server:3002
+      # GA4 measurement ID (G-…). Empty = no analytics code.
+      GA_MEASUREMENT_ID: ${GA_MEASUREMENT_ID:-}
+      # How often (ms) the site checks the API for new content.
+      CONTENT_POLL_MS: ${CONTENT_POLL_MS:-5000}
+    # backend only: it is reached by `website` and reaches `server`. No host ports, no internet.
+    networks: [backend]
+    depends_on:
+      - server
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://127.0.0.1:4321/robots.txt >/dev/null || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
 
   admin:
     image: ${AB_REGISTRY:+${AB_REGISTRY}/}astro-blog-admin:${AB_TAG:-latest}
@@ -79,15 +104,14 @@ services:
       # Wiring owned by this file; overrides .env.
       PORT: "3002"
       DATABASE_PATH: /data/astro-blog.db
+      MEDIA_DIR: /data/media
       CLIENT_IP_HEADER: ${CLIENT_IP_HEADER:-x-real-ip}
-      # The API reads the site's post list from the website container (override in .env for a CDN).
-      SITE_FEED_URL: ${SITE_FEED_URL:-http://website/feed.json}
     volumes:
-      # SQLite database, kept on the host in <DOCKER_VOLUME_FOLDER>/server. The default
+      # SQLite database and uploaded images (media/), kept on the host in <DOCKER_VOLUME_FOLDER>/server. The default
       # ./volumes is relative to this folder (docker/volumes). On Linux the folder must be writable by the
       # container's user, uid 1000 (`sudo chown -R 1000:1000 <folder>`). Back it up.
       - ${DOCKER_VOLUME_FOLDER:-./volumes}/server:/data
-    # backend: reached by the nginx containers, reaches postgres / mailpit and the website's feed.json.
+    # backend: reached by the nginx containers and `web`, reaches postgres / mailpit.
     # egress: outbound to the SMTP provider. No host ports.
     networks: [backend, egress]
     depends_on:

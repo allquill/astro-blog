@@ -1,5 +1,6 @@
 ---
 import Icon from '../Icon.astro';
+import { siteUrl } from '../../lib/content';
 
 interface Props {
   url: string;
@@ -7,10 +8,10 @@ interface Props {
   description?: string;
 }
 const { url, title, description } = Astro.props;
-const external = /^https?:\/\//.test(url) && !url.startsWith(Astro.site?.origin ?? '#');
+const external = /^https?:\/\//.test(url) && !url.startsWith(siteUrl.origin);
 let host = '';
 try {
-  host = new URL(url, Astro.site).host;
+  host = new URL(url, siteUrl).host;
 } catch {}
 ---
 <a

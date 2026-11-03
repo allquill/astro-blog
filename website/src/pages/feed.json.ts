@@ -1,20 +1,19 @@
-import type { APIContext } from 'astro';
-import { getImage } from 'astro:assets';
+import { siteUrl } from '../lib/content';
 import { authorOf, getPosts, getSettings, getTopics } from '../lib/site';
 import { abs } from '../lib/seo';
+import { fitWidth, mediaUrl } from '../lib/media';
 
-// JSON Feed 1.1 (https://jsonfeed.org) for feed readers. The API reads it too (SITE_FEED_URL): it is
-// how the server learns which post slugs and topics exist and what a new-post e-mail links to. The
-// `_blog` extension carries the slug and topic ids the API needs; keep it in step with
-// server/src/feed/site-feed.service.ts.
-export async function GET({ site }: APIContext) {
+// JSON Feed 1.1 (https://jsonfeed.org) for feed readers. The `_blog` extension carries each post's
+// slug and topic ids. (The API no longer reads this feed: content lives in its database.)
+export async function GET() {
+  const site = siteUrl;
   const settings = await getSettings();
   const topics = await getTopics();
   const posts = await getPosts();
   const items = await Promise.all(
     posts.map(async (p) => {
       const author = await authorOf(p);
-      const image = p.data.cover ? abs((await getImage({ src: p.data.cover, width: 1200, format: 'jpeg', quality: 80 })).src, site) : undefined;
+      const image = p.data.cover ? abs(mediaUrl(p.data.cover.id, fitWidth(p.data.cover, 1280), 'jpg'), site) : undefined;
       return {
         id: abs(`/blog/${p.id}/`, site),
         url: abs(`/blog/${p.id}/`, site),

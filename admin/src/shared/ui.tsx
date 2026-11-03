@@ -99,7 +99,7 @@ export function Modal({ open, onClose, title, children, wide }: { open: boolean;
         <div className="flex max-h-[85vh] flex-col">
           <div className="flex items-center justify-between border-b border-slate-200 px-5 py-3 dark:border-white/10">
             <h2 className="font-semibold">{title}</h2>
-            <button type="button" className="btn-ghost p-1" onClick={onClose} aria-label="Close">
+            <button type="button" className="btn-icon" onClick={onClose} aria-label="Close">
               <X className="size-4" />
             </button>
           </div>

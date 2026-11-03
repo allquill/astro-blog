@@ -1,17 +1,24 @@
 ---
-// Images from Keystatic's gallery block live in public/images/gallery and are served as-is.
+// A grid of images; uploaded ones (/api/public/media/<id>) are shown as resized copies that link to
+// the original. Other URLs are used as they are.
+import { mediaIdOf, mediaUrl, srcset } from '../../lib/media';
+
 interface Props {
   images: { src?: string; alt?: string; caption?: string }[];
   columns?: '2' | '3';
 }
 const { images, columns = '2' } = Astro.props;
-const items = images.filter((i) => i.src);
+const items = images.filter((i) => i.src).map((i) => {
+  const id = mediaIdOf(i.src!);
+  return { ...i, href: i.src!, thumb: id ? mediaUrl(id, 960) : i.src!, set: id ? srcset(id, undefined, [640, 960, 1280]) : undefined };
+});
+const sizes = columns === '3' ? '(min-width: 640px) 33vw, 100vw' : '(min-width: 640px) 50vw, 100vw';
 ---
 <div class:list={['not-prose my-8 grid gap-3', columns === '3' ? 'sm:grid-cols-3' : 'sm:grid-cols-2']}>
   {items.map((img) => (
     <figure>
-      <a href={img.src} target="_blank" rel="noopener" class="block overflow-hidden rounded-xl ring-1 ring-slate-900/10 dark:ring-white/10">
-        <img src={img.src} alt={img.alt ?? ''} loading="lazy" decoding="async" class="aspect-[4/3] w-full object-cover transition hover:scale-[1.02]" />
+      <a href={img.href} target="_blank" rel="noopener" class="block overflow-hidden rounded-xl ring-1 ring-slate-900/10 dark:ring-white/10">
+        <img src={img.thumb} srcset={img.set} sizes={img.set ? sizes : undefined} alt={img.alt ?? ''} loading="lazy" decoding="async" class="aspect-[4/3] w-full object-cover transition hover:scale-[1.02]" />
       </a>
       {img.caption && <figcaption class="mt-1.5 text-sm text-slate-500 dark:text-slate-400">{img.caption}</figcaption>}
     </figure>

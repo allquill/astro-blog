@@ -1,6 +1,5 @@
 ---
-import { getCollection } from 'astro:content';
-import { getSettings, topicsWithPosts } from '../lib/site';
+import { getPages, getSettings, topicsWithPosts } from '../lib/site';
 import { SOCIAL_NETWORKS } from '../lib/share';
 import Logo from './Logo.astro';
 import Icon from './Icon.astro';
@@ -8,7 +7,7 @@ import { GA_MEASUREMENT_ID } from 'astro:env/server';
 
 const settings = await getSettings();
 const topics = (await topicsWithPosts()).map((t) => t.topic);
-const pages = (await getCollection('pages')).filter((p) => p.data.showInFooter).sort((a, b) => a.data.title.localeCompare(b.data.title));
+const pages = (await getPages()).filter((p) => p.data.showInFooter);
 const year = new Date().getFullYear();
 const analytics = import.meta.env.PROD && Boolean(GA_MEASUREMENT_ID);
 const link = 'text-slate-500 hover:text-slate-900 dark:text-slate-400 dark:hover:text-white';

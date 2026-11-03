@@ -1,15 +1,15 @@
-import type { APIContext } from 'astro';
-import { getCollection } from 'astro:content';
-import { getPosts, getSettings, topicsWithPosts } from '../lib/site';
+import { siteUrl } from '../lib/content';
+import { getPages, getPosts, getSettings, topicsWithPosts } from '../lib/site';
 import { abs, postMarkdownPath } from '../lib/seo';
 
 // https://llmstxt.org — a Markdown map of the site for LLMs and AI agents. Links point at the
 // plain-Markdown twin of each post.
-export async function GET({ site }: APIContext) {
+export async function GET() {
+  const site = siteUrl;
   const settings = await getSettings();
   const posts = await getPosts();
   const topics = await topicsWithPosts();
-  const pages = (await getCollection('pages')).sort((a, b) => a.data.title.localeCompare(b.data.title));
+  const pages = await getPages();
   const one = (s: string) => s.replace(/\s+/g, ' ').trim();
 
   const body = [
