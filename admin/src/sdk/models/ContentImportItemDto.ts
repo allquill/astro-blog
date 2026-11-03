@@ -11,5 +11,9 @@ export type ContentImportItemDto = {
     source: string;
     action: 'create' | 'update' | 'skip' | 'error';
     messages: Array<string>;
+    /**
+     * Items of the same archive this post needs (`topic:<slug>`, `author:<slug>`), not yet in the database
+     */
+    needs: Array<string>;
 };
 

@@ -7,5 +7,9 @@ export type ContentImportUploadDto = {
      * .zip export or a single .md
      */
     file: Blob;
+    /**
+     * JSON array of the archive paths (`source` from a dry run) to import; leave it out to import everything
+     */
+    only?: string;
 };
 

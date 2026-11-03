@@ -6,7 +6,7 @@ import { plainToInstance } from 'class-transformer';
 import { validateSync, type ValidationError } from 'class-validator';
 import { strToU8, unzipSync, zipSync, type Zippable } from 'fflate';
 import sharp from 'sharp';
-import type { Repository } from 'typeorm';
+import { In, type FindOptionsWhere, type Repository } from 'typeorm';
 import { ACCENTS, CONTENT_ICONS, SLUG } from '../content.constants';
 import { AuthorInputDto, HomeDto, PageInputDto, PostInputDto, SiteSettingsDto, TopicInputDto } from '../content.dto';
 import { Author, Media, Page, Post, Topic } from '../content.entities';
@@ -33,9 +33,23 @@ export const IMPORT_LIMITS = { uploadBytes: 50 * 1024 * 1024, unpackedBytes: 200
 
 export type ImportKind = 'topic' | 'author' | 'post' | 'page' | 'site' | 'home';
 export type ImportAction = 'create' | 'update' | 'skip' | 'error';
-export type ImportItem = { kind: ImportKind; slug: string; source: string; action: ImportAction; messages: string[] };
-export type ImportOptions = { dryRun: boolean; onConflict: 'skip' | 'overwrite'; asDraft: boolean; by: string };
-export type ExportOptions = { include: ImportKind[]; status: 'all' | 'published' };
+/** `needs`: the archive items (`topic:<slug>`, `author:<slug>`) a post depends on that aren't in the database yet. */
+export type ImportItem = { kind: ImportKind; slug: string; source: string; action: ImportAction; messages: string[]; needs: string[] };
+/** `only`: the archive paths (`source`) to import; leave it out to import everything. */
+export type ImportOptions = { dryRun: boolean; onConflict: 'skip' | 'overwrite'; asDraft: boolean; by: string; only?: string[] };
+/**
+ * Slug lists narrow a kind to those items (missing = all of it, empty = none). `withDependencies` adds
+ * the topics and authors the exported posts use.
+ */
+export type ExportOptions = {
+  include: ImportKind[];
+  status: 'all' | 'published';
+  posts?: string[];
+  pages?: string[];
+  topics?: string[];
+  authors?: string[];
+  withDependencies?: boolean;
+};
 
 type Files = Map<string, Uint8Array>;
 type Doc = { kind: ImportKind; slug: string; path: string };
@@ -130,15 +144,20 @@ export class TransferService {
   // ==================================================================================== import
 
   async import(files: Files, opts: ImportOptions): Promise<ImportItem[]> {
-    const docs = this.discover(files);
+    let docs = this.discover(files);
     if (!docs.length) throw new BadRequestException('Nothing to import: no posts/, pages/, topics/, authors/, site.yaml or home.yaml found.');
+    if (opts.only) {
+      const only = new Set(opts.only);
+      docs = docs.filter((d) => only.has(d.path));
+      if (!docs.length) throw new BadRequestException('None of the selected items are in this file. Check it again.');
+    }
     const archiveTopics = new Set(docs.filter((d) => d.kind === 'topic').map((d) => d.slug));
     const archiveAuthors = new Set(docs.filter((d) => d.kind === 'author').map((d) => d.slug));
     const uploaded = new Map<string, string>(); // archive path → media id (one upload per file per run)
     const items: ImportItem[] = [];
 
     for (const doc of docs) {
-      const item: ImportItem = { kind: doc.kind, slug: doc.slug, source: doc.path, action: 'create', messages: [] };
+      const item: ImportItem = { kind: doc.kind, slug: doc.slug, source: doc.path, action: 'create', messages: [], needs: [] };
       items.push(item);
       const created: string[] = [];
       try {
@@ -226,8 +245,15 @@ export class TransferService {
     const draft = ctx.opts.asDraft || bool(d.draft, false) || !author;
     const topics = strList(d.topics);
     const problems: string[] = [];
-    if (author && !ctx.archiveAuthors.has(author) && !(await this.authors.existsBy({ slug: author }))) problems.push(`Unknown author "${author}"`);
-    for (const t of topics) if (!ctx.archiveTopics.has(t) && !(await this.topics.existsBy({ slug: t }))) problems.push(`Unknown topic "${t}"`);
+    if (author && !(await this.authors.existsBy({ slug: author }))) {
+      if (ctx.archiveAuthors.has(author)) ctx.item.needs.push(`author:${author}`);
+      else problems.push(`Unknown author "${author}"`);
+    }
+    for (const t of topics) {
+      if (await this.topics.existsBy({ slug: t })) continue;
+      if (ctx.archiveTopics.has(t)) ctx.item.needs.push(`topic:${t}`);
+      else problems.push(`Unknown topic "${t}"`);
+    }
     const bodyProblems = validateBody(body);
     for (const p of bodyProblems) problems.push(`Body${p.line ? ` line ${p.line}` : ''}: ${p.message}`);
     if (problems.length) throw new ItemError(problems.join('; '));
@@ -392,23 +418,40 @@ export class TransferService {
   async exportAll(opts: ExportOptions): Promise<Buffer> {
     const zip: Zippable = {};
     const has = (k: ImportKind) => opts.include.includes(k);
-    if (has('topic')) {
-      for (const t of await this.topics.find()) {
+    const bySlug = <T extends { slug: string }>(slugs: string[] | undefined): FindOptionsWhere<T> => (slugs ? ({ slug: In(slugs) } as FindOptionsWhere<T>) : {});
+    // Posts first, so their topics and authors can be added.
+    let posts: Post[] = [];
+    if (has('post')) {
+      posts = await this.posts.find({
+        where: { ...bySlug<Post>(opts.posts), ...(opts.status === 'published' ? { status: 'published' as const } : {}) },
+        order: { publishedDate: 'DESC' },
+      });
+    }
+    let topicSlugs = opts.topics;
+    let authorSlugs = opts.authors;
+    const exportTopics = has('topic') || (opts.withDependencies && posts.length > 0);
+    const exportAuthors = has('author') || (opts.withDependencies && posts.length > 0);
+    if (opts.withDependencies && posts.length) {
+      const usedTopics = posts.flatMap((p) => p.topics);
+      const usedAuthors = posts.map((p) => p.authorSlug).filter((a): a is string => !!a);
+      // A kind that isn't exported gets only what the posts use; a narrowed one gets those added.
+      topicSlugs = has('topic') ? (topicSlugs ? [...new Set([...topicSlugs, ...usedTopics])] : undefined) : [...new Set(usedTopics)];
+      authorSlugs = has('author') ? (authorSlugs ? [...new Set([...authorSlugs, ...usedAuthors])] : undefined) : [...new Set(usedAuthors)];
+    }
+    if (exportTopics) {
+      for (const t of await this.topics.find({ where: bySlug<Topic>(topicSlugs) })) {
         zip[`topics/${t.slug}.yaml`] = strToU8(toYaml({ name: t.name, description: t.description, icon: t.icon, accent: t.accent, order: t.sortOrder }));
       }
     }
-    if (has('author')) {
-      for (const a of await this.authors.find()) {
+    if (exportAuthors) {
+      for (const a of await this.authors.find({ where: bySlug<Author>(authorSlugs) })) {
         const avatar = a.avatarId ? await this.addAsset(zip, 'authors', a.avatarId) : undefined;
         zip[`authors/${a.slug}.yaml`] = strToU8(toYaml({ name: a.name, role: a.role, bio: a.bio, avatar, links: a.links.length ? a.links : undefined }));
       }
     }
-    if (has('post')) {
-      const posts = await this.posts.find({ where: opts.status === 'published' ? { status: 'published' } : {}, order: { publishedDate: 'DESC' } });
-      for (const p of posts) zip[`posts/${p.slug}/index.md`] = strToU8(await this.postMarkdown(p, zip, `posts/${p.slug}`));
-    }
+    for (const p of posts) zip[`posts/${p.slug}/index.md`] = strToU8(await this.postMarkdown(p, zip, `posts/${p.slug}`));
     if (has('page')) {
-      for (const p of await this.pages.find()) {
+      for (const p of await this.pages.find({ where: bySlug<Page>(opts.pages) })) {
         const body = await this.exportBody(p.body, zip, `pages/${p.slug}`);
         const fm = { title: p.title, description: p.description, updatedDate: yamlDate(p.updatedDate), showInHeader: p.showInHeader, showInFooter: p.showInFooter };
         zip[`pages/${p.slug}/index.md`] = strToU8(toFrontMatter(fm, body));
@@ -420,6 +463,22 @@ export class TransferService {
       'Astro Blog content export. Import it from the admin (Posts → Import) or with `pnpm run content:import -- <file>`.\n',
     );
     return Buffer.from(zipSync(zip, { level: 6 }));
+  }
+
+  /** What there is to export, for choosing items in the admin. */
+  async exportCatalog() {
+    const [posts, pages, topics, authors] = await Promise.all([
+      this.posts.find({ select: { slug: true, title: true, status: true, publishedDate: true }, order: { publishedDate: 'DESC', title: 'ASC' } }),
+      this.pages.find({ select: { slug: true, title: true }, order: { title: 'ASC' } }),
+      this.topics.find({ select: { slug: true, name: true }, order: { sortOrder: 'ASC', name: 'ASC' } }),
+      this.authors.find({ select: { slug: true, name: true }, order: { name: 'ASC' } }),
+    ]);
+    return {
+      posts: posts.map((p) => ({ slug: p.slug, title: p.title, status: p.status })),
+      pages: pages.map((p) => ({ slug: p.slug, title: p.title })),
+      topics: topics.map((t) => ({ slug: t.slug, name: t.name })),
+      authors: authors.map((a) => ({ slug: a.slug, name: a.name })),
+    };
   }
 
   private async postMarkdown(p: Post, zip: Zippable, dir: string) {

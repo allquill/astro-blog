@@ -3574,6 +3574,79 @@
         "tags": [
           "content"
         ]
+      },
+      "post": {
+        "operationId": "ContentController_exportSelected",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExportRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "A .zip of Markdown files, YAML and images",
+            "content": {
+              "application/zip": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in"
+          },
+          "403": {
+            "description": "Signed in, but the role may not do this"
+          }
+        },
+        "security": [
+          {
+            "sp_admin": []
+          }
+        ],
+        "tags": [
+          "content"
+        ]
+      }
+    },
+    "/api/admin/content/export/items": {
+      "get": {
+        "operationId": "ContentController_exportItems",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExportCatalogDto"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Not signed in"
+          },
+          "403": {
+            "description": "Signed in, but the role may not do this"
+          }
+        },
+        "security": [
+          {
+            "sp_admin": []
+          }
+        ],
+        "tags": [
+          "content"
+        ]
       }
     },
     "/api/admin/content/import": {
@@ -6273,6 +6346,154 @@
           "usedBy"
         ]
       },
+      "ExportPostItemDto": {
+        "type": "object",
+        "properties": {
+          "slug": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "draft",
+              "published"
+            ]
+          }
+        },
+        "required": [
+          "slug",
+          "title",
+          "status"
+        ]
+      },
+      "ExportPageItemDto": {
+        "type": "object",
+        "properties": {
+          "slug": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "slug",
+          "title"
+        ]
+      },
+      "ExportNamedItemDto": {
+        "type": "object",
+        "properties": {
+          "slug": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "slug",
+          "name"
+        ]
+      },
+      "ExportCatalogDto": {
+        "type": "object",
+        "properties": {
+          "posts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ExportPostItemDto"
+            }
+          },
+          "pages": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ExportPageItemDto"
+            }
+          },
+          "topics": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ExportNamedItemDto"
+            }
+          },
+          "authors": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ExportNamedItemDto"
+            }
+          }
+        },
+        "required": [
+          "posts",
+          "pages",
+          "topics",
+          "authors"
+        ]
+      },
+      "ExportRequestDto": {
+        "type": "object",
+        "properties": {
+          "include": {
+            "type": "array",
+            "description": "Kinds to export (default all)",
+            "items": {
+              "type": "string",
+              "enum": [
+                "posts",
+                "topics",
+                "authors",
+                "pages",
+                "settings"
+              ]
+            }
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "all",
+              "published"
+            ],
+            "default": "all"
+          },
+          "posts": {
+            "description": "Only these post slugs (leave out for all)",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "pages": {
+            "description": "Only these page slugs (leave out for all)",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "topics": {
+            "description": "Only these topic slugs (leave out for all)",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "authors": {
+            "description": "Only these author slugs (leave out for all)",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "withDependencies": {
+            "type": "boolean",
+            "default": true,
+            "description": "Also export the topics and authors the exported posts use"
+          }
+        }
+      },
       "ContentImportUploadDto": {
         "type": "object",
         "properties": {
@@ -6280,6 +6501,10 @@
             "type": "string",
             "format": "binary",
             "description": ".zip export or a single .md"
+          },
+          "only": {
+            "type": "string",
+            "description": "JSON array of the archive paths (`source` from a dry run) to import; leave it out to import everything"
           }
         },
         "required": [
@@ -6321,6 +6546,13 @@
             "items": {
               "type": "string"
             }
+          },
+          "needs": {
+            "description": "Items of the same archive this post needs (`topic:<slug>`, `author:<slug>`), not yet in the database",
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
           }
         },
         "required": [
@@ -6328,7 +6560,8 @@
           "slug",
           "source",
           "action",
-          "messages"
+          "messages",
+          "needs"
         ]
       },
       "ContentImportResultDto": {

@@ -204,6 +204,30 @@ is still in use can't be deleted.
 The colour also changes the header logo mark, the QR codes and the buttons in e-mails. The admin app
 keeps its own colours. See [Brand colour](content-guide.md#brand-colour) for everything it covers.
 
+## Back up or move some content
+
+To copy a few posts (or pages, topics, authors) to another blog, or to keep a backup of them:
+
+1. Open **Posts** (admins only) and press **Export all**.
+2. Untick the kinds you don't want. Next to **Posts**, press **Choose…** and tick the posts to take.
+   Do the same for pages, topics or authors if you want only some of them.
+3. Leave **Include the topics and authors the exported posts use** ticked, so the posts can be
+   imported on their own.
+4. Press **Download .zip**.
+
+To bring it in (on the same blog or another one):
+
+1. Open **Posts** and press **Import**. Choose the `.zip` (or a single `.md` post).
+2. Tick **Overwrite** if items that already exist should be replaced, and **Import every post as a
+   draft** to review posts before they go live.
+3. Press **Check**. This is a dry run: nothing changes yet. The list shows what would be created,
+   overwritten, skipped or refused, and why.
+4. Untick any rows you don't want. A post's topics and author come along when you tick it, and
+   unticking a topic or author also unticks the posts that need it.
+5. Press **Import N selected**. The result list shows what happened to each item.
+
+See [Import and export](content-guide.md#import-and-export) for the file format and limits.
+
 ## Schedule, update or remove content
 
 - **Schedule**: give the post a future **Date** and publish it. It appears on that day (UTC).

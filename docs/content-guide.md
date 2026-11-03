@@ -116,7 +116,8 @@ Mailing-list e-mails (sender name, signature, footer address) are set under **Se
 
 ## Import and export
 
-**Posts → Export all** (admins) downloads a `.zip`, and **Import** reads the same format back:
+**Posts → Export all** (admins) downloads a `.zip`, and **Import** reads the same format back.
+Both can be narrowed to chosen items. The zip looks like this:
 
 ```
 posts/<slug>/index.md        YAML front matter + Markdoc body
@@ -146,9 +147,22 @@ draft: false
 ---
 ```
 
-- **Import** first runs a **dry run**: it changes nothing and lists, per item, whether it would be
-  created, overwritten, skipped or refused (unknown author or topic, missing image, invalid body).
-  Then **Import** applies it.
+- **Export** takes every post, topic, author and page, or only the ones you choose:
+  - Untick a kind to leave it out, or press **Choose…** next to it and tick items in the list (it can
+    be filtered by title or slug). **Export all** goes back to every item of that kind.
+  - **Include the topics and authors the exported posts use** (on by default) adds what those posts
+    need, even when Topics or Authors are unticked, so the zip imports cleanly into another blog.
+  - **Published posts only** leaves drafts out, chosen or not.
+- **Import** first runs a **dry run** (**Check**): it changes nothing and lists, per item, whether it
+  would be created, overwritten, skipped or refused (unknown author or topic, missing image, invalid
+  body). Then **Import N selected** applies it.
+  - Every row that would be created or overwritten has a tick box, ticked by default. Untick what you
+    don't want, or use the per-kind boxes above the list (Posts, Topics…) and the box in the header.
+  - Dependencies follow: a post that needs a topic or author from the same file shows it under
+    Notes. Ticking the post ticks them, and unticking one of them also unticks the posts that need
+    it (a line under the list says what changed with it). A post imported without a topic or author
+    it needs is refused with "Unknown topic" or "Unknown author".
+  - Changing the file or an option clears the list; press **Check** again.
   - Existing items are skipped unless you tick **Overwrite**.
   - **Import every post as a draft** ignores `draft: false`. A post without an author is always
     imported as a draft.
@@ -158,6 +172,7 @@ draft: false
 - From the command line (paths relative to `server/`):
   - `pnpm run content:import -- <file.zip | file.md | folder> [--overwrite] [--draft] [--dry-run]`
   - `pnpm run content:export -- <out.zip> [--published]`
+  - The command line always imports or exports everything; choosing items is in the admin only.
   - In Docker: `docker compose exec server node dist/cli/content.js import /data/backup.zip`.
 - The sample content is in `server/seed/content.zip`: `pnpm run content:import -- seed/content.zip`.
 - **Moving from the old Keystatic files:** run `pnpm run content:import -- <path to a website/ checkout>`.

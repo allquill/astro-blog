@@ -5,7 +5,7 @@ import {
 import { FileInterceptor } from '@nestjs/platform-express';
 import { ApiBody, ApiConsumes, ApiOkResponse, ApiProduces, ApiProperty, ApiPropertyOptional, ApiTags } from '@nestjs/swagger';
 import { Transform } from 'class-transformer';
-import { IsBoolean, IsIn, IsOptional } from 'class-validator';
+import { ArrayMaxSize, IsArray, IsBoolean, IsIn, IsOptional, IsString, MaxLength } from 'class-validator';
 import type { Response } from 'express';
 import { Staff, type AdminRequest } from '../auth/guards';
 import { OkDto } from '../common/dto';
@@ -27,6 +27,17 @@ const withUrl = (m: Media): MediaItemDto => ({ ...m, url: mediaPath(m.id) });
 const toBool = ({ value }: { value: unknown }) => (value === undefined || value === '' ? undefined : ['true', '1', 'yes', 'on'].includes(String(value).toLowerCase()));
 
 const EXPORT_KINDS = ['posts', 'topics', 'authors', 'pages', 'settings'] as const;
+
+/** Export kinds as the transfer service names them. */
+function exportKinds(wanted: string[]): ImportKind[] {
+  const include: ImportKind[] = [];
+  if (wanted.includes('posts')) include.push('post');
+  if (wanted.includes('topics')) include.push('topic');
+  if (wanted.includes('authors')) include.push('author');
+  if (wanted.includes('pages')) include.push('page');
+  if (wanted.includes('settings')) include.push('site', 'home');
+  return include;
+}
 
 export class ExportQuery {
   @ApiPropertyOptional({ description: `Comma-separated: ${EXPORT_KINDS.join(', ')} (default all)` })
@@ -52,6 +63,74 @@ export class ImportQuery {
 
 export class ContentImportUploadDto {
   @ApiProperty({ type: 'string', format: 'binary', description: '.zip export or a single .md' }) file: unknown;
+
+  @ApiPropertyOptional({ description: 'JSON array of the archive paths (`source` from a dry run) to import; leave it out to import everything' })
+  @IsOptional() @IsString()
+  only?: string;
+}
+
+/** The `only` field of an import: a JSON array of archive paths, or undefined. */
+function parseOnly(raw: string | undefined): string[] | undefined {
+  if (raw === undefined || raw === '') return undefined;
+  let v: unknown;
+  try {
+    v = JSON.parse(raw);
+  } catch {
+    throw new BadRequestException('The selection is not valid.');
+  }
+  if (!Array.isArray(v) || v.length > IMPORT_LIMITS.entries || !v.every((p) => typeof p === 'string' && p.length <= 500)) {
+    throw new BadRequestException('The selection is not valid.');
+  }
+  if (!v.length) throw new BadRequestException('Select at least one item to import.');
+  return v as string[];
+}
+
+const SLUG_LIST = () => [IsOptional(), IsArray(), ArrayMaxSize(5000), IsString({ each: true }), MaxLength(200, { each: true })];
+const apply = (...ds: PropertyDecorator[]): PropertyDecorator => (target, key) => ds.forEach((d) => d(target, key));
+
+export class ExportRequestDto {
+  @ApiPropertyOptional({ type: [String], enum: EXPORT_KINDS, description: 'Kinds to export (default all)' })
+  @IsOptional() @IsArray() @IsIn(EXPORT_KINDS, { each: true })
+  include?: string[];
+
+  @ApiPropertyOptional({ enum: ['all', 'published'], default: 'all' }) @IsOptional() @IsIn(['all', 'published'])
+  status?: 'all' | 'published';
+
+  @ApiPropertyOptional({ type: [String], description: 'Only these post slugs (leave out for all)' }) @apply(...SLUG_LIST())
+  posts?: string[];
+
+  @ApiPropertyOptional({ type: [String], description: 'Only these page slugs (leave out for all)' }) @apply(...SLUG_LIST())
+  pages?: string[];
+
+  @ApiPropertyOptional({ type: [String], description: 'Only these topic slugs (leave out for all)' }) @apply(...SLUG_LIST())
+  topics?: string[];
+
+  @ApiPropertyOptional({ type: [String], description: 'Only these author slugs (leave out for all)' }) @apply(...SLUG_LIST())
+  authors?: string[];
+
+  @ApiPropertyOptional({ default: true, description: 'Also export the topics and authors the exported posts use' })
+  @IsOptional() @IsBoolean()
+  withDependencies?: boolean;
+}
+
+class ExportPostItemDto {
+  @ApiProperty() slug: string;
+  @ApiProperty() title: string;
+  @ApiProperty({ enum: ['draft', 'published'] }) status: string;
+}
+class ExportPageItemDto {
+  @ApiProperty() slug: string;
+  @ApiProperty() title: string;
+}
+class ExportNamedItemDto {
+  @ApiProperty() slug: string;
+  @ApiProperty() name: string;
+}
+export class ExportCatalogDto {
+  @ApiProperty({ type: [ExportPostItemDto] }) posts: ExportPostItemDto[];
+  @ApiProperty({ type: [ExportPageItemDto] }) pages: ExportPageItemDto[];
+  @ApiProperty({ type: [ExportNamedItemDto] }) topics: ExportNamedItemDto[];
+  @ApiProperty({ type: [ExportNamedItemDto] }) authors: ExportNamedItemDto[];
 }
 
 export class ContentImportItemDto {
@@ -60,6 +139,8 @@ export class ContentImportItemDto {
   @ApiProperty({ description: 'Path inside the archive' }) source: string;
   @ApiProperty({ enum: ['create', 'update', 'skip', 'error'] }) action: string;
   @ApiProperty({ type: [String] }) messages: string[];
+  @ApiProperty({ type: [String], description: 'Items of the same archive this post needs (`topic:<slug>`, `author:<slug>`), not yet in the database' })
+  needs: string[];
 }
 
 export class ContentImportResultDto {
@@ -358,13 +439,36 @@ export class ContentController {
     const wanted = (q.include ?? EXPORT_KINDS.join(',')).split(',').map((s) => s.trim()).filter(Boolean);
     const bad = wanted.filter((w) => !(EXPORT_KINDS as readonly string[]).includes(w));
     if (bad.length) throw new BadRequestException(`Unknown include: ${bad.join(', ')}`);
-    const include: ImportKind[] = [];
-    if (wanted.includes('posts')) include.push('post');
-    if (wanted.includes('topics')) include.push('topic');
-    if (wanted.includes('authors')) include.push('author');
-    if (wanted.includes('pages')) include.push('page');
-    if (wanted.includes('settings')) include.push('site', 'home');
-    const data = await this.transfer.exportAll({ include, status: q.status ?? 'all' });
+    return this.sendExport(res, await this.transfer.exportAll({ include: exportKinds(wanted), status: q.status ?? 'all' }));
+  }
+
+  @Get('export/items')
+  @Staff('admin')
+  @ApiOkResponse({ type: ExportCatalogDto })
+  exportItems(): Promise<ExportCatalogDto> {
+    return this.transfer.exportCatalog();
+  }
+
+  /** The same export narrowed to chosen items. A POST, because a long list of slugs doesn't fit a URL. */
+  @Post('export')
+  @HttpCode(200)
+  @Staff('admin')
+  @ApiProduces('application/zip')
+  @ApiOkResponse({ description: 'A .zip of Markdown files, YAML and images', schema: { type: 'string', format: 'binary' } })
+  async exportSelected(@Body() dto: ExportRequestDto, @Res({ passthrough: true }) res: Response) {
+    const data = await this.transfer.exportAll({
+      include: exportKinds(dto.include ?? [...EXPORT_KINDS]),
+      status: dto.status ?? 'all',
+      posts: dto.posts,
+      pages: dto.pages,
+      topics: dto.topics,
+      authors: dto.authors,
+      withDependencies: dto.withDependencies ?? true,
+    });
+    return this.sendExport(res, data);
+  }
+
+  private sendExport(res: Response, data: Buffer) {
     res.setHeader('Content-Type', 'application/zip');
     res.setHeader('Content-Disposition', `attachment; filename="blog-export-${new Date().toISOString().slice(0, 10)}.zip"`);
     return new StreamableFile(data);
@@ -377,11 +481,17 @@ export class ContentController {
   @ApiBody({ type: ContentImportUploadDto })
   @ApiOkResponse({ type: ContentImportResultDto })
   @UseInterceptors(FileInterceptor('file', { limits: { fileSize: IMPORT_LIMITS.uploadBytes, files: 1 } }))
-  async import(@Req() req: AdminRequest, @Query() q: ImportQuery, @UploadedFile() file: Express.Multer.File | undefined): Promise<ContentImportResultDto> {
+  async import(
+    @Req() req: AdminRequest,
+    @Query() q: ImportQuery,
+    @Body() body: ContentImportUploadDto,
+    @UploadedFile() file: Express.Multer.File | undefined,
+  ): Promise<ContentImportResultDto> {
     if (!file) throw new BadRequestException('Choose a .zip or .md file to import.');
     const dryRun = q.dryRun ?? true;
+    const only = parseOnly(body.only);
     const files = this.transfer.readUpload(file.buffer, file.originalname);
-    const items = await this.transfer.import(files, { dryRun, onConflict: q.onConflict ?? 'skip', asDraft: q.asDraft ?? false, by: `import:${by(req)}` });
+    const items = await this.transfer.import(files, { dryRun, onConflict: q.onConflict ?? 'skip', asDraft: q.asDraft ?? false, by: `import:${by(req)}`, only });
     return { dryRun, items };
   }
 }

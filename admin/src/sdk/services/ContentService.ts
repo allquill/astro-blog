@@ -7,6 +7,8 @@ import type { AuthorDto } from '../models/AuthorDto';
 import type { AuthorInputDto } from '../models/AuthorInputDto';
 import type { ContentImportResultDto } from '../models/ContentImportResultDto';
 import type { ContentImportUploadDto } from '../models/ContentImportUploadDto';
+import type { ExportCatalogDto } from '../models/ExportCatalogDto';
+import type { ExportRequestDto } from '../models/ExportRequestDto';
 import type { FetchCodeDto } from '../models/FetchCodeDto';
 import type { FetchedCodeDto } from '../models/FetchedCodeDto';
 import type { HomeDto } from '../models/HomeDto';
@@ -737,6 +739,40 @@ export class ContentService {
                 'include': include,
                 'status': status,
             },
+            errors: {
+                401: `Not signed in`,
+                403: `Signed in, but the role may not do this`,
+            },
+        });
+    }
+    /**
+     * @returns binary A .zip of Markdown files, YAML and images
+     * @throws ApiError
+     */
+    public static contentControllerExportSelected({
+        requestBody,
+    }: {
+        requestBody: ExportRequestDto,
+    }): CancelablePromise<Blob> {
+        return __request(OpenAPI, {
+            method: 'POST',
+            url: '/api/admin/content/export',
+            body: requestBody,
+            mediaType: 'application/json',
+            errors: {
+                401: `Not signed in`,
+                403: `Signed in, but the role may not do this`,
+            },
+        });
+    }
+    /**
+     * @returns ExportCatalogDto
+     * @throws ApiError
+     */
+    public static contentControllerExportItems(): CancelablePromise<ExportCatalogDto> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/admin/content/export/items',
             errors: {
                 401: `Not signed in`,
                 403: `Signed in, but the role may not do this`,

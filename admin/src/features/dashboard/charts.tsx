@@ -62,18 +62,25 @@ export function BarList({ data, title }: { data: Datum[]; title: string }) {
   );
 }
 
+/**
+ * The chart's numbers for screen readers. `sr-only` goes on a wrapper: a table can't be shrunk below
+ * its content height and ignores `overflow`, so an sr-only table still adds its full height of
+ * blank scroll space below the page.
+ */
 function DataTable({ title, data }: { title: string; data: Datum[] }) {
   return (
-    <table className="sr-only">
-      <caption>{title}</caption>
-      <tbody>
-        {data.map((d) => (
-          <tr key={d.key}>
-            <th scope="row">{d.label ?? d.key}</th>
-            <td>{d.count}</td>
-          </tr>
-        ))}
-      </tbody>
-    </table>
+    <div className="sr-only">
+      <table>
+        <caption>{title}</caption>
+        <tbody>
+          {data.map((d) => (
+            <tr key={d.key}>
+              <th scope="row">{d.label ?? d.key}</th>
+              <td>{d.count}</td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
   );
 }
