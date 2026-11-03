@@ -23,12 +23,14 @@
     "@tailwindcss/typography": "^0.5.20",
     "@tailwindcss/vite": "^4.3.3",
     "astro": "^7.3.5",
+    "qrcode": "^1.5.4",
     "shiki": "4.4.3",
     "tailwindcss": "^4.3.3"
   },
   "devDependencies": {
     "@astrojs/check": "^0.9.10",
     "@types/node": "^22.20.4",
+    "@types/qrcode": "^1.5.6",
     "typescript": "^6.0.3",
     "vite": "^8.3.1"
   }

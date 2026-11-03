@@ -6,6 +6,7 @@ import Icon from '../components/Icon.astro';
 import Toc from '../components/Toc.astro';
 import AuthorCard from '../components/AuthorCard.astro';
 import ShareBar from '../components/ShareBar.astro';
+import QrCode from '../components/QrCode.astro';
 import LikeButton from '../components/LikeButton.astro';
 import FeedbackWidget from '../components/FeedbackWidget.astro';
 import SubscribeForm from '../components/SubscribeForm.astro';
@@ -97,6 +98,10 @@ const jsonLd = [
             </a>
           )}
         </div>
+        <!-- In the column the contents list uses below, beside the title (wide screens only). -->
+        <div class="hidden items-end justify-end xl:flex">
+          <QrCode url={url} />
+        </div>
         </div>
       </div>
     </header>
@@ -159,7 +164,11 @@ const jsonLd = [
           </div>
         </div>
         <aside class="hidden xl:block">
-          <div class="sticky top-24"><Toc headings={headings} /></div>
+          <!-- Contents, then sharing; scrolls on its own when the contents list is longer than the screen. -->
+          <div class="sticky top-24 -mx-2 max-h-[calc(100vh-7rem)] space-y-8 overflow-y-auto px-2 pb-4">
+            <Toc headings={headings} />
+            <ShareBar variant="sidebar" slug={post.id} title={d.title} url={url} networks={settings.shareNetworks} />
+          </div>
         </aside>
       </div>
     </div>
