@@ -44,6 +44,27 @@ These are baked into the website image at build time:
 **Content is part of the image.** A new or edited post is published by rebuilding and redeploying the
 website image (CI does the build on push).
 
+### Links in e-mails point at blog.acme.example
+
+The **Read the post** link in a new-post e-mail is the post's `url` from the site's `feed.json`, which
+the API copies unchanged. The site builds that URL from Astro's `site` setting
+(`website/astro.config.mjs`), which is `SITE_URL` or, when it is unset, the placeholder
+`https://blog.acme.example`. It is fixed at **build time**, so set it where the site is built:
+
+| Where the site is built | What to set |
+|---|---|
+| `pnpm run dev` | Nothing: `website/.env.development` sets `SITE_URL=http://localhost:4322`. Leave `SITE_FEED_URL` in `server/.env` empty, so the API reads that dev site's feed. |
+| `docker-compose-build.yml` | `SITE_URL=https://www.example.com` in `docker/.env`, then rebuild the website image. |
+| CI (images pulled by `docker-compose.yml`) | The repository variable `SITE_URL` (`publish.yaml`) or `SITE_URL_DEVELOP` (`develop.yaml`, `manual.yaml`), or the `site_url` input when you run a workflow by hand. Then build again and pull. `SITE_URL` in `docker/.env` has **no effect** on a pulled image. |
+| A plain `docker build` | `--build-arg SITE_URL=https://www.example.com` |
+
+- **Set the API's `PUBLIC_SITE_URL` to the same domain.** It makes the confirm, manage and unsubscribe
+  links (see [Public hostnames](#public-hostnames)). If the two differ, the post link and the
+  unsubscribe link in the same e-mail point at different sites.
+- The API caches the feed for 5 minutes. After deploying the rebuilt site, restart the API or wait
+  before sending a test.
+- E-mails already sent keep their old link, because the post is snapshotted when an e-mail is sent.
+
 ## Docker Compose
 
 Two compose files in `docker/`, with the same services and one project name (`astro-blog`), so they

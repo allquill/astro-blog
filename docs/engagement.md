@@ -68,7 +68,9 @@ well-formed slug is accepted and a warning is logged. The admin shows a banner i
 
 ## New-post e-mails
 
-1. Publish the post and let the site rebuild, so it appears in `feed.json`.
+1. Publish the post and let the site rebuild, so it appears in `feed.json`. The e-mail's post link is
+   the feed's URL, so it comes from the site's `SITE_URL` (see
+   [Build and deploy → Links in e-mails](build-and-deploy.md#links-in-e-mails-point-at-blogacmeexample)).
 2. Admin → **Posts** → **E-mail** (or **New-post e-mails → New e-mail**) creates a draft. Its subject
    defaults to "New post: <title>", and you can add an optional note above the post card.
 3. **Preview** shows the e-mail and the number of recipients: active subscribers who follow none (all

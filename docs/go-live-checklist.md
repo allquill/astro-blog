@@ -16,7 +16,8 @@
 - [ ] **Mail delivery:** SPF, DKIM and DMARC for the `MAIL_FROM` domain, or confirm e-mails go to spam.
   Subscribe yourself and check the headers, including `List-Unsubscribe`.
 - [ ] **Build argument:** `SITE_URL`, so the feed, and with it every e-mail link, points at the real
-  domain.
+  domain. In CI it is the `SITE_URL` repository variable (not `docker/.env`). Use the same domain as
+  `PUBLIC_SITE_URL`.
 - [ ] **Hostnames:** the admin on its own hostname, ideally behind Cloudflare Access or a VPN as well as
   its login. `CLIENT_IP_HEADER=cf-connecting-ip` behind Cloudflare.
 - [ ] **Backups:** `docker/volumes/server/` (or the Postgres database). Test a restore.
