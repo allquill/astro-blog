@@ -14,6 +14,40 @@ export type Accent = (typeof ACCENTS)[number];
 export const SITE_SHARE_NETWORKS = ['x', 'linkedin', 'facebook', 'reddit', 'hackernews', 'bluesky', 'mastodon', 'whatsapp', 'email'] as const;
 export const DEFAULT_SHARE = ['x', 'linkedin', 'reddit', 'hackernews', 'bluesky', 'email'];
 
+/**
+ * The site's brand colour (admin → Site): a Tailwind colour family. Same list in
+ * website/src/lib/brand.ts (the full scales) and admin/src/features/editor/options.ts (swatches).
+ */
+export const BRAND_COLORS = ['red', 'orange', 'amber', 'yellow', 'lime', 'green', 'emerald', 'teal', 'cyan', 'sky', 'blue', 'indigo', 'violet', 'purple', 'fuchsia', 'pink', 'rose', 'slate', 'gray', 'zinc', 'neutral', 'stone'] as const;
+export type BrandColor = (typeof BRAND_COLORS)[number];
+export const DEFAULT_BRAND: BrandColor = 'teal';
+
+/** Each family's 700 (Tailwind 4.3.3, as sRGB hex): the colour of e-mail buttons and quote bars. */
+export const BRAND_700: Record<BrandColor, string> = {
+  red: '#c10007',
+  orange: '#ca3500',
+  amber: '#bb4d00',
+  yellow: '#a65f00',
+  lime: '#497d00',
+  green: '#008236',
+  emerald: '#007a55',
+  teal: '#00786f',
+  cyan: '#007595',
+  sky: '#0069a8',
+  blue: '#1447e6',
+  indigo: '#432dd7',
+  violet: '#7008e7',
+  purple: '#8200db',
+  fuchsia: '#a800b7',
+  pink: '#c6005c',
+  rose: '#c70036',
+  slate: '#314158',
+  gray: '#364153',
+  zinc: '#3f3f46',
+  neutral: '#404040',
+  stone: '#44403b',
+};
+
 export const SOCIAL_NETWORKS = ['github', 'x', 'linkedin', 'mastodon', 'bluesky', 'youtube', 'website'] as const;
 
 /** Post, topic, author and page slugs: they become URLs and the join key of stats, feedback and subscribers. */

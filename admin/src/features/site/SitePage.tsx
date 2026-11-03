@@ -1,12 +1,12 @@
 import { useState, type FormEvent } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Plus, X } from 'lucide-react';
+import { Check, Plus, X } from 'lucide-react';
 import { ContentService, type HomeDto, type SiteSettingsDto } from '@/sdk';
 import { fieldErrors } from '@/shared/api';
 import { useAuth } from '@/shared/auth-context';
 import { Checkbox, ErrorBox, Field, Notice, PageHeader, Spinner } from '@/shared/ui';
 import { SocialLinksEditor } from '../authors/AuthorsPage';
-import { SHARE_NETWORKS } from '../editor/options';
+import { BRAND_COLORS, BRAND_PRESETS, SHARE_NETWORKS } from '../editor/options';
 
 type NavLink = SiteSettingsDto['nav'][number];
 
@@ -21,6 +21,66 @@ function LinksEditor({ value, onChange }: { value: NavLink[]; onChange: (v: NavL
         </div>
       ))}
       <button type="button" className="btn-secondary" onClick={() => onChange([...value, { label: '', href: '' }])}><Plus className="size-4" /> Add link</button>
+    </div>
+  );
+}
+
+type BrandColor = SiteSettingsDto['brandColor'];
+
+function Swatch({ color, selected, onPick, label, size = 'size-8' }: { color: string; selected: boolean; onPick: () => void; label: string; size?: string }) {
+  const [, main] = BRAND_COLORS[color]?.shades ?? ['', '#64748b'];
+  return (
+    <button
+      type="button"
+      onClick={onPick}
+      aria-pressed={selected}
+      aria-label={label}
+      title={label}
+      className={`relative inline-flex ${size} items-center justify-center rounded-full ring-offset-2 transition hover:scale-105 dark:ring-offset-slate-900 ${selected ? 'ring-2 ring-slate-900 dark:ring-white' : 'ring-1 ring-black/10'}`}
+      style={{ background: main }}
+    >
+      {selected && <Check className="size-4 text-white" aria-hidden />}
+    </button>
+  );
+}
+
+/** Brand colour of the site and its e-mails: a suggested theme, or any Tailwind colour family. */
+function BrandColorPicker({ value, onChange }: { value: string; onChange: (v: BrandColor) => void }) {
+  const [light, main, dark] = BRAND_COLORS[value]?.shades ?? BRAND_COLORS.teal.shades;
+  const preset = BRAND_PRESETS.find((p) => p.color === value);
+  return (
+    <div className="space-y-4">
+      <div>
+        <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Themes</p>
+        <div className="mt-2 flex flex-wrap gap-3">
+          {BRAND_PRESETS.map((p) => (
+            <button
+              key={p.id}
+              type="button"
+              aria-pressed={value === p.color}
+              onClick={() => onChange(p.color as BrandColor)}
+              className={`inline-flex items-center gap-2 rounded-full py-1 pr-3 pl-1 text-sm ring-1 transition ${value === p.color ? 'font-medium ring-2 ring-slate-900 dark:ring-white' : 'ring-slate-300 hover:bg-slate-50 dark:ring-white/15 dark:hover:bg-white/5'}`}
+            >
+              <span className="size-6 rounded-full ring-1 ring-black/10" style={{ background: BRAND_COLORS[p.color]!.shades[1] }} aria-hidden />
+              {p.label}
+            </button>
+          ))}
+        </div>
+      </div>
+      <div>
+        <p className="text-xs font-medium text-slate-500 dark:text-slate-400">Or any Tailwind colour</p>
+        <div className="mt-2 flex flex-wrap gap-2">
+          {Object.entries(BRAND_COLORS).map(([k, c]) => (
+            <Swatch key={k} color={k} label={c.label} selected={value === k} onPick={() => onChange(k as BrandColor)} />
+          ))}
+        </div>
+      </div>
+      <div className="flex flex-wrap items-center gap-4 rounded-lg p-3 ring-1 ring-slate-200 dark:ring-white/10" aria-label="Preview">
+        <span className="rounded-full px-4 py-2 text-sm font-semibold text-white" style={{ background: main }}>Subscribe</span>
+        <span className="text-sm font-medium underline" style={{ color: dark }}>A link in a post</span>
+        <span className="rounded-full px-2.5 py-1 text-xs font-medium" style={{ background: light, color: dark }}>Topic</span>
+        <span className="ml-auto text-xs text-slate-500 dark:text-slate-400">{preset ? `${preset.label} theme` : BRAND_COLORS[value]?.label}</span>
+      </div>
     </div>
   );
 }
@@ -59,6 +119,12 @@ function SiteForm({ initial, canSave }: { initial: SiteSettingsDto; canSave: boo
         <Field label="Footer links" error={errs.footerLinks}>
           <LinksEditor value={f.footerLinks} onChange={(v) => set('footerLinks', v)} />
         </Field>
+        <div>
+          <p className="label">Brand colour</p>
+          <p className="mt-1 mb-3 text-xs text-slate-500 dark:text-slate-400">Buttons, links and highlights on the site, its icon and QR codes, and the e-mails. The admin keeps its own colours.</p>
+          <BrandColorPicker value={f.brandColor} onChange={(v) => set('brandColor', v)} />
+          {errs.brandColor && <p className="mt-1 text-xs text-rose-600 dark:text-rose-400">{errs.brandColor}</p>}
+        </div>
         <div>
           <p className="label">Share buttons on posts</p>
           <div className="mt-2 grid gap-1.5 sm:grid-cols-3">

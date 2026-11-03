@@ -6083,6 +6083,34 @@
           "indexNowKey": {
             "type": "string",
             "description": "IndexNow key: 8–128 letters, digits or dashes, or empty"
+          },
+          "brandColor": {
+            "type": "string",
+            "enum": [
+              "red",
+              "orange",
+              "amber",
+              "yellow",
+              "lime",
+              "green",
+              "emerald",
+              "teal",
+              "cyan",
+              "sky",
+              "blue",
+              "indigo",
+              "violet",
+              "purple",
+              "fuchsia",
+              "pink",
+              "rose",
+              "slate",
+              "gray",
+              "zinc",
+              "neutral",
+              "stone"
+            ],
+            "description": "Brand colour of the site and its e-mails: a Tailwind colour family"
           }
         },
         "required": [
@@ -6098,7 +6126,8 @@
           "subscribeTitle",
           "subscribeText",
           "postsPerPage",
-          "indexNowKey"
+          "indexNowKey",
+          "brandColor"
         ]
       },
       "HomeDto": {

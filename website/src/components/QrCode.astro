@@ -3,6 +3,8 @@
 // works with JavaScript off. The card stays white in dark mode because scanners need dark modules on a
 // light ground.
 import { qrSvg } from '../lib/qr';
+import { brandPalette } from '../lib/brand';
+import { getSettings } from '../lib/site';
 
 interface Props {
   url: string;
@@ -10,7 +12,8 @@ interface Props {
   class?: string;
 }
 const { url, label = 'Scan to read on your phone', class: className } = Astro.props;
-const svg = qrSvg(url);
+const { brandColor } = await getSettings();
+const svg = qrSvg(url, brandPalette(brandColor)[700]);
 ---
 <figure class:list={['w-36 text-center', className]}>
   <div class="rounded-2xl bg-white p-2 shadow-lg shadow-brand-600/10 ring-1 ring-slate-200 dark:ring-white/10 [&>svg]:block [&>svg]:h-auto [&>svg]:w-full" role="img" aria-label={`QR code for ${url}`} set:html={svg} />

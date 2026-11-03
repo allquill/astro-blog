@@ -8,7 +8,8 @@
 @theme {
   --font-sans: 'Outfit Variable', ui-sans-serif, system-ui, sans-serif;
 
-  /* Brand teal (#0f766e = brand-700; brand-600 is the main button colour). */
+  /* Brand colour: teal here, as the default. The colour chosen in admin → Site replaces these at runtime
+     (BaseLayout writes lib/brand.ts's scale over --color-brand-*). brand-600 is the main button colour. */
   --color-brand-50: #f0fdfa;
   --color-brand-100: #ccfbf1;
   --color-brand-200: #99f6e4;

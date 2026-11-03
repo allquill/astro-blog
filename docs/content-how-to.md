@@ -191,6 +191,19 @@ is still in use can't be deleted.
    {% linkcard url="/blog/astro-islands/" title="Astro islands, explained" description="Ship HTML by default." /%}
    ```
 
+## Change the site's colours
+
+1. Open **Site** (admins only) and scroll to **Brand colour**.
+2. Click a theme (**Default**, **Purple**, **Blue**, **Pink** or **Green**), or a colour under **Or
+   any Tailwind colour**.
+3. Check the preview under the swatches: a button, a link and a topic badge in that colour.
+4. Press **Save site settings**. The site picks up the colour within a few seconds. The tab icon may
+   take a reload to change.
+5. To go back, choose **Default** and save.
+
+The colour also changes the header logo mark, the QR codes and the buttons in e-mails. The admin app
+keeps its own colours. See [Brand colour](content-guide.md#brand-colour) for everything it covers.
+
 ## Schedule, update or remove content
 
 - **Schedule**: give the post a future **Date** and publish it. It appears on that day (UTC).

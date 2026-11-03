@@ -2,6 +2,7 @@
 // the plain-text alternatives live next to each send in mail.service.ts.
 import { createElement, type CSSProperties, type FunctionComponent, type ReactNode } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
+import { emailBrand } from './brand';
 
 export type Field = { label: string; value: string };
 
@@ -9,10 +10,10 @@ export type Field = { label: string; value: string };
 export const renderEmail = <P extends object>(Email: FunctionComponent<P>, props: P) => renderToStaticMarkup(createElement(Email, props));
 
 const MUTED = '#64748b';
-const BRAND = '#0f766e';
-const button: CSSProperties = {
-  display: 'inline-block', background: BRAND, color: '#fff', textDecoration: 'none', padding: '10px 18px', borderRadius: 999, fontWeight: 600,
-};
+/** Buttons and quote bars are in the site's brand colour (admin → Site), read when an e-mail is rendered. */
+const button = (): CSSProperties => ({
+  display: 'inline-block', background: emailBrand(), color: '#fff', textDecoration: 'none', padding: '10px 18px', borderRadius: 999, fontWeight: 600,
+});
 
 function Body({ lineHeight = 1.6, children }: { lineHeight?: number; children: ReactNode }) {
   return <div style={{ font: `14px/${lineHeight} system-ui,-apple-system,Segoe UI,sans-serif`, color: '#0f172a', maxWidth: 640 }}>{children}</div>;
@@ -35,7 +36,7 @@ function FieldTable({ fields }: { fields: Field[] }) {
 }
 
 function Quote({ children }: { children: ReactNode }) {
-  return <div style={{ borderLeft: `3px solid ${BRAND}`, padding: '4px 12px', margin: '12px 0', whiteSpace: 'pre-wrap' }}>{children}</div>;
+  return <div style={{ borderLeft: `3px solid ${emailBrand()}`, padding: '4px 12px', margin: '12px 0', whiteSpace: 'pre-wrap' }}>{children}</div>;
 }
 
 /** Staff notice: a reader's feedback, or a new subscriber. */
@@ -45,7 +46,7 @@ export function StaffNotice({ headline, fields, body, adminUrl }: { headline: st
       <p>{headline}</p>
       <FieldTable fields={fields} />
       {body && <Quote>{body}</Quote>}
-      <p><a href={adminUrl} style={button}>Open in admin</a></p>
+      <p><a href={adminUrl} style={button()}>Open in admin</a></p>
     </Body>
   );
 }
@@ -65,7 +66,7 @@ export function DigestEmail(p: { blog: string; intro: string; post: DigestPost; 
           <h2 style={{ margin: '0 0 8px', fontSize: 20, lineHeight: 1.3 }}><a href={p.post.url} style={{ color: '#0f172a', textDecoration: 'none' }}>{p.post.title}</a></h2>
           {p.post.author && <p style={{ margin: '0 0 8px', color: MUTED }}>{`by ${p.post.author}`}</p>}
           {p.post.summary && <p style={{ margin: '0 0 16px' }}>{p.post.summary}</p>}
-          <a href={p.post.url} style={button}>Read the post</a>
+          <a href={p.post.url} style={button()}>Read the post</a>
         </div>
       </div>
       <p style={{ whiteSpace: 'pre-wrap' }}>{p.signature}</p>
@@ -90,7 +91,7 @@ export function ListNotice(p: { paragraphs: string[]; button?: { label: string; 
   return (
     <Body>
       {p.paragraphs.map((t, i) => <p key={i} style={{ whiteSpace: 'pre-wrap' }}>{t}</p>)}
-      {p.button && <p><a href={p.button.url} style={button}>{p.button.label}</a></p>}
+      {p.button && <p><a href={p.button.url} style={button()}>{p.button.label}</a></p>}
       <p style={{ whiteSpace: 'pre-wrap' }}>{p.signature}</p>
       <ListFooter manageUrl={p.manageUrl} footer={p.footer} blog={p.blog} />
     </Body>
@@ -115,7 +116,7 @@ export function Invite({ intro, link, action, hours }: { intro: string; link: st
   return (
     <Body>
       <p>{intro}</p>
-      <p><a href={link} style={button}>{action}</a></p>
+      <p><a href={link} style={button()}>{action}</a></p>
       <p style={{ color: MUTED }}>{`The link works once and expires in ${hours} hours. If the button doesn't work, copy this address into your browser:`}<br />{link}</p>
       <p style={{ color: MUTED }}>If you weren't expecting this, you can ignore this e-mail.</p>
     </Body>
@@ -128,7 +129,7 @@ export function Notice(p: { greeting?: string; paragraphs: string[]; button?: { 
     <Body>
       {p.greeting && <p>{p.greeting}</p>}
       {p.paragraphs.map((t, i) => <p key={i} style={{ whiteSpace: 'pre-wrap' }}>{t}</p>)}
-      {p.button && <p><a href={p.button.url} style={button}>{p.button.label}</a></p>}
+      {p.button && <p><a href={p.button.url} style={button()}>{p.button.label}</a></p>}
       {p.footnote && <p style={{ color: MUTED }}>{p.footnote}</p>}
       {p.signature && <p style={{ whiteSpace: 'pre-wrap' }}>{p.signature}</p>}
     </Body>

@@ -3,10 +3,12 @@
 ## Before the first deploy
 
 - [ ] **Site settings** in the admin (**Site**): blog name, tagline, description, publisher, contact
-  e-mail, social profiles, share buttons, subscribe text, home page texts.
+  e-mail, social profiles, share buttons, subscribe text, home page texts and the **brand colour**.
 - [ ] **Content:** write your posts, topics and authors in the admin, or import them (**Posts →
-  Import**). Don't import `seed/content.zip` in production, or delete the samples afterwards. The logo
-  and favicon are still files: `website/public/logo.png` and `public/favicon.svg` (a rebuild).
+  Import**). Don't import `seed/content.zip` in production, or delete the samples afterwards. The tab
+  icon and header mark follow the brand colour, but `website/public/logo.png` (home-screen icon, link
+  preview fallback) and the fallback `public/favicon.svg` are still teal files: replacing them is a
+  rebuild.
 - [ ] **Pages:** create about, privacy and terms (**Pages**). Privacy matters most: you store
   subscriber e-mails and feedback (see [Engagement → Privacy notes](engagement.md#privacy-notes)).
 - [ ] `docker/.env` (from `docker/env.example`):

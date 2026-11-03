@@ -53,6 +53,8 @@ export type ApiSite = {
   subscribeText: string;
   postsPerPage: number;
   indexNowKey: string;
+  /** A Tailwind colour family (lib/brand.ts); missing from an API older than the setting. */
+  brandColor?: string;
 };
 export type ApiHome = { eyebrow: string; heroTitle: string; heroSubtitle: string; latestTitle: string; topicsTitle: string };
 export type Snapshot = {

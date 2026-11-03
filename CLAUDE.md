@@ -50,9 +50,12 @@ content into an empty database.
   `admin/src/features/editor/markdoc.ts` (what the toolbar inserts).
   - Code-block `title`/`highlight`/`source` are fence annotations.
   - Uploaded images are referenced as `/api/public/media/<id>`; the site and the export rewrite them.
-- **Option lists exist three times too:** icons, accents, social and share networks in
-  `server/src/content/content.constants.ts`, `website/src/lib/{icons,accents,share}.ts` and
+- **Option lists exist three times too:** icons, accents, social and share networks and brand colours
+  in `server/src/content/content.constants.ts`, `website/src/lib/{icons,accents,share,brand}.ts` and
   `admin/src/features/editor/options.ts`.
+- **The brand colour is a runtime setting** (`site.brandColor`): use `brand-*` classes or
+  `var(--color-brand-N)`, never `theme(--color-brand-…)` (baked in as teal) or a hard-coded hex. E-mails
+  use `emailBrand()` (`server/src/mail/brand.ts`). See `docs/development.md` → Website.
 - **Import/export** (`server/src/content/transfer/`) is the backup and migration format: a change to a
   content field goes into `importX`, the export and `docs/content-guide.md`. Zip entries go through
   `safePath`; imported images through `MediaService.save`.

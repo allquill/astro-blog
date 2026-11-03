@@ -27,5 +27,9 @@ export type SiteSettingsDto = {
      * IndexNow key: 8–128 letters, digits or dashes, or empty
      */
     indexNowKey: string;
+    /**
+     * Brand colour of the site and its e-mails: a Tailwind colour family
+     */
+    brandColor: 'red' | 'orange' | 'amber' | 'yellow' | 'lime' | 'green' | 'emerald' | 'teal' | 'cyan' | 'sky' | 'blue' | 'indigo' | 'violet' | 'purple' | 'fuchsia' | 'pink' | 'rose' | 'slate' | 'gray' | 'zinc' | 'neutral' | 'stone';
 };
 

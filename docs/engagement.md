@@ -34,8 +34,9 @@ on the same host.
 - A post shows the share buttons twice: in the header under the date, and again at the end of the
   post. Clicks in either bar count the same way.
 - Also on wide screens, the post header shows a **QR code** of the post's URL beside the title, for
-  opening it on a phone. It is brand teal with the site's mark in the middle (error correction level H,
-  so the code still scans with the centre covered). It is drawn on the server as inline SVG
+  opening it on a phone. It is drawn in the site's brand colour (admin → Site → Brand colour; see
+  [Content guide → Brand colour](content-guide.md#brand-colour)) with the site's mark in the middle
+  (error correction level H, so the code still scans with the centre covered). It is drawn on the server as inline SVG
   (`website/src/lib/qr.ts`), so it needs no script or outside service. A scan opens the page like any
   visit and isn't counted as a share.
 

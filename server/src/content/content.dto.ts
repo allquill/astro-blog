@@ -5,7 +5,7 @@ import {
   ValidateIf, ValidateNested,
 } from 'class-validator';
 import { PageQuery } from '../common/dto';
-import { ACCENTS, CONTENT_ICONS, SITE_SHARE_NETWORKS, SLUG, SLUG_MESSAGE, SOCIAL_NETWORKS } from './content.constants';
+import { ACCENTS, CONTENT_ICONS, SITE_SHARE_NETWORKS, SLUG, SLUG_MESSAGE, SOCIAL_NETWORKS, BRAND_COLORS } from './content.constants';
 import { Author, Media, Page, Post, POST_STATUSES, SocialLink, Topic } from './content.entities';
 
 const trim = ({ value }: { value: unknown }) => (typeof value === 'string' ? value.trim() : value);
@@ -262,6 +262,10 @@ export class SiteSettingsDto {
   @ApiProperty({ description: 'IndexNow key: 8–128 letters, digits or dashes, or empty' })
   @Matches(/^([A-Za-z0-9-]{8,128})?$/, { message: 'IndexNow key: 8–128 letters, digits or dashes' })
   indexNowKey: string;
+
+  @ApiProperty({ enum: BRAND_COLORS, description: 'Brand colour of the site and its e-mails: a Tailwind colour family' })
+  @IsIn(BRAND_COLORS, { message: 'Pick one of the brand colours' })
+  brandColor: string;
 }
 
 export class HomeDto {

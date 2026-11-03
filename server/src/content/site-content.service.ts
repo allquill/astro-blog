@@ -1,9 +1,10 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, type OnModuleInit } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import type { Repository } from 'typeorm';
 import { AppConfig } from '../config/app-config.service';
 import { BlogSetting } from '../settings/blog-setting.entity';
-import { DEFAULT_SHARE } from './content.constants';
+import { setEmailBrand } from '../mail/brand';
+import { DEFAULT_BRAND, DEFAULT_SHARE } from './content.constants';
 import type { HomeDto, SiteSettingsDto } from './content.dto';
 
 const SITE_KEY = 'site';
@@ -14,7 +15,7 @@ const HOME_KEY = 'home';
  * value each in `blog_settings`, under the keys `site` and `home`, merged over these defaults.
  */
 @Injectable()
-export class SiteContentService {
+export class SiteContentService implements OnModuleInit {
   constructor(
     @InjectRepository(BlogSetting) private readonly rows: Repository<BlogSetting>,
     private readonly config: AppConfig,
@@ -35,6 +36,7 @@ export class SiteContentService {
       subscribeText: '',
       postsPerPage: 12,
       indexNowKey: '',
+      brandColor: DEFAULT_BRAND,
     };
   }
 
@@ -58,8 +60,15 @@ export class SiteContentService {
     return this.rows.existsBy({ key: which === 'site' ? SITE_KEY : HOME_KEY });
   }
 
-  site() {
-    return this.read(SITE_KEY, this.siteDefaults());
+  /** E-mails take the brand colour from the saved settings (mail/brand.ts). */
+  async onModuleInit() {
+    await this.site();
+  }
+
+  async site() {
+    const site = await this.read(SITE_KEY, this.siteDefaults());
+    setEmailBrand(site.brandColor);
+    return site;
   }
 
   home() {

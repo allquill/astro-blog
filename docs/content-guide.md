@@ -92,7 +92,25 @@ still in use can't be deleted.
 
 **Site** holds the blog name, tagline, description, publisher, contact e-mail, social profiles, extra
 header and footer links, **which share buttons to show**, the subscribe box text, posts per page and
-the IndexNow key, plus the home page's hero texts and section titles.
+the IndexNow key, the **brand colour**, plus the home page's hero texts and section titles.
+
+### Brand colour
+
+**Site → Brand colour** (admins) sets the colour of the site and its e-mails. Pick one of the themes
+(**Default** teal, **Purple**, **Blue**, **Pink**, **Green**) or any Tailwind colour family under **Or
+any Tailwind colour**. A preview shows a button, a link and a topic badge; **Save site settings**
+applies it, and the site shows it within a few seconds.
+
+| Follows the brand colour | Stays as it is |
+|---|---|
+| Buttons, links, highlights, header glows and focus rings on the site | The admin app (always teal) |
+| The browser-tab icon and the header logo mark (`/mark.svg`) | `logo.png` (home-screen icon, default link preview image, logo in structured data) and the fallback `/favicon.svg` |
+| QR codes on posts | Topic colours (each topic's own **Colour**) |
+| Buttons and quote bars in every e-mail the API sends | |
+
+- The colours are Tailwind's own palettes. Light families (yellow, lime, amber) give white button text
+  less contrast, so check the preview.
+- The setting is part of `site.yaml` in an export (`brandColor: purple`), so an import carries it over.
 
 Mailing-list e-mails (sender name, signature, footer address) are set under **Settings**.
 

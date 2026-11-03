@@ -3,6 +3,7 @@ import '../styles/global.css';
 import { siteUrl, type MediaImage } from '../lib/content';
 import { fitWidth, mediaUrl } from '../lib/media';
 import { getSettings } from '../lib/site';
+import { brandCss } from '../lib/brand';
 import { publisherLd, websiteLd } from '../lib/seo';
 import Header from '../components/Header.astro';
 import Footer from '../components/Footer.astro';
@@ -30,6 +31,8 @@ interface Props {
   feeds?: { title: string; href: string }[];
 }
 const settings = await getSettings();
+/** The brand colour family (admin → Site); `?c=` on the icon makes browsers fetch it again after a change. */
+const brand = settings.brandColor ?? 'teal';
 const {
   title,
   description = settings.description,
@@ -60,7 +63,8 @@ const schema = [publisherLd(settings, siteUrl), websiteLd(settings, siteUrl), ..
     <meta name="description" content={description} />
     <meta name="robots" content={robots} />
     <link rel="canonical" href={canonical} />
-    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="icon" href={`/mark.svg?c=${brand}`} type="image/svg+xml" />
+    <style is:inline set:html={brandCss(brand)} />
     <link rel="apple-touch-icon" href="/logo.png" />
     <link rel="sitemap" type="application/xml" href="/sitemap.xml" />
     <link rel="alternate" type="application/rss+xml" title={settings.siteName} href="/rss.xml" />

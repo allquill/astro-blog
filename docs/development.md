@@ -30,6 +30,9 @@ one shows up there.
 - **E-mails** are React components in `mail/templates.tsx`, rendered to static HTML with inline styles.
   The plain-text versions sit next to each send in `mail/mail.service.ts`. Send after saving and never
   make a public request wait on SMTP (see `attempt()` in the subscribers and feedback services).
+  Buttons and quote bars take the brand colour from `emailBrand()` (`mail/brand.ts`), which
+  `SiteContentService` sets when the API starts and whenever site settings are read or saved. Never
+  hard-code a colour there.
 - **Rate limits** are named in `THROTTLERS` (`common/ip-throttler.guard.ts`): `engage`, `subscribe`,
   `feedback` and `login`. A route opts in with `@Limit('<name>')`, which applies that limit and skips
   the others. Visitors are tracked by a salted hash of the real client IP (`CLIENT_IP_HEADER`).
@@ -154,3 +157,17 @@ undeclared response comes out as `any` and silently loses type safety in the adm
 - `/feed.json`, `/rss.xml` and `/search.json` (the client-side search) come from the same snapshot.
 - **Personal pages** (`/subscribe/confirm/`, `/subscribe/manage/`) are `noindex`, blocked in
   `robots.txt`, and served by nginx with `no-store` and `no-referrer`.
+- **Brand colour** (`site.brandColor`, a Tailwind colour family; `src/lib/brand.ts`):
+  - `BaseLayout` writes the family's 50–950 scale as an inline, unlayered `:root{--color-brand-…}`
+    style, which beats Tailwind's `@layer theme` values in `global.css` (teal, kept as the fallback).
+    Every `brand-*` class therefore follows without a rebuild.
+  - Use `brand-*` utilities or `var(--color-brand-N)`. **Don't use `theme(--color-brand-N/P%)`** in
+    arbitrary values: Tailwind bakes it into a constant, so it stays teal. Write
+    `color-mix(in_oklab,var(--color-brand-N)_P%,transparent)` instead.
+  - The tab icon is the route `src/pages/mark.svg.ts`; the header mark (`Logo.astro`) and the QR code
+    (`lib/qr.ts`) draw `markSvg()` / `markSvgBody()` with the family's 700. `public/favicon.svg` stays as
+    the static fallback the edge healthcheck fetches.
+  - The palettes are hex, converted from Tailwind's `theme.css` (oklch), so they also work in SVG and
+    e-mail. The family list exists three times and changes together: `BRAND_COLORS` / `BRAND_700` in
+    `server/src/content/content.constants.ts`, `PALETTES` in `website/src/lib/brand.ts`, and
+    `BRAND_COLORS` / `BRAND_PRESETS` in `admin/src/features/editor/options.ts`. Then `pnpm run sdk`.
