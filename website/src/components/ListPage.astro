@@ -33,7 +33,7 @@ const pages = pageCount(posts.length, per);
 const slice = posts.slice((page - 1) * per, page * per);
 const pageTitle = page > 1 ? `${title} (page ${page})` : title;
 ---
-<BaseLayout title={pageTitle} description={subtitle} jsonLd={[blogLd(settings, slice, siteUrl, base, title)]} feeds={feeds}>
+<BaseLayout title={pageTitle} description={subtitle && page > 1 ? `${subtitle} (page ${page})` : subtitle} jsonLd={[blogLd(settings, slice, siteUrl, base, title)]} feeds={feeds}>
   <PageHero eyebrow={eyebrow} title={title} subtitle={subtitle} />
   <section class="container-page pt-4 pb-16 sm:pb-20">
     {chips.length > 1 && <TopicChips topics={chips} active={activeTopic} />}

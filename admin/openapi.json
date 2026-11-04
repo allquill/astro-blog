@@ -3881,6 +3881,45 @@
         ]
       }
     },
+    "/api/public/og/{slug}/{file}": {
+      "get": {
+        "operationId": "PublicOgImageController_card",
+        "parameters": [
+          {
+            "name": "slug",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "file",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The share card of a published post",
+            "content": {
+              "image/png": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          }
+        },
+        "tags": [
+          "public"
+        ]
+      }
+    },
     "/api/admin/dashboard": {
       "get": {
         "operationId": "DashboardController_get",
@@ -5357,6 +5396,18 @@
           "repositoryUrl": {
             "type": "string",
             "description": "Empty, or an https link to the code behind the post (e.g. a GitHub repository)"
+          },
+          "seoTitle": {
+            "type": "string",
+            "description": "Empty, or the title for search results and share cards (about 60 characters)"
+          },
+          "seoDescription": {
+            "type": "string",
+            "description": "Empty, or the description for search results and share cards (about 155 characters)"
+          },
+          "noindex": {
+            "type": "boolean",
+            "description": "Keep the post out of search engines and the sitemap"
           }
         },
         "required": [
@@ -5492,6 +5543,17 @@
             "type": "string",
             "description": "Empty, or an https link to the code behind the post (e.g. a GitHub repository)"
           },
+          "seoTitle": {
+            "type": "string",
+            "description": "Empty, or the title for search results and share cards"
+          },
+          "seoDescription": {
+            "type": "string",
+            "description": "Empty, or the description for search results and share cards"
+          },
+          "noindex": {
+            "type": "boolean"
+          },
           "updatedBy": {
             "type": "string"
           },
@@ -5538,6 +5600,9 @@
           "featured",
           "canonicalUrl",
           "repositoryUrl",
+          "seoTitle",
+          "seoDescription",
+          "noindex",
           "updatedBy",
           "createdAt",
           "updatedAt",
@@ -6157,6 +6222,14 @@
             "type": "string",
             "description": "IndexNow key: 8–128 letters, digits or dashes, or empty"
           },
+          "googleSiteVerification": {
+            "type": "string",
+            "description": "Google Search Console verification: the content of its google-site-verification meta tag, or empty"
+          },
+          "bingSiteVerification": {
+            "type": "string",
+            "description": "Bing Webmaster Tools verification: the content of its msvalidate.01 meta tag, or empty"
+          },
           "brandColor": {
             "type": "string",
             "enum": [
@@ -6681,6 +6754,18 @@
             "nullable": true,
             "description": "Link to the code behind the post"
           },
+          "seoTitle": {
+            "type": "string",
+            "description": "Empty, or the title for <title> and share cards"
+          },
+          "seoDescription": {
+            "type": "string",
+            "description": "Empty, or the meta and share description"
+          },
+          "noindex": {
+            "type": "boolean",
+            "description": "Keep out of search engines and the sitemap"
+          },
           "draft": {
             "type": "boolean",
             "description": "Only true in a preview"
@@ -6706,6 +6791,9 @@
           "featured",
           "canonicalUrl",
           "repositoryUrl",
+          "seoTitle",
+          "seoDescription",
+          "noindex",
           "draft",
           "revision"
         ]

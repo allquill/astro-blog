@@ -17,11 +17,22 @@ const toInput = (ms: number | null | undefined) => (ms ? new Date(ms).toISOStrin
 const EMPTY: PostInputDto = {
   title: '', slug: '', excerpt: '', body: '', publishedDate: null, updatedDate: null, author: '', topics: [], tags: [],
   coverId: null, coverAlt: '', series: '', featured: false, canonicalUrl: '', repositoryUrl: '',
+  seoTitle: '', seoDescription: '', noindex: false,
 };
+
+/** Roughly where search engines cut a title and a description off. */
+const SEO_TITLE_FIT = 60;
+const SEO_DESCRIPTION_FIT = 155;
+
+/** "12 / 60", amber once past what search results usually show. */
+function CharCount({ value, fit }: { value: string; fit: number }) {
+  return <span className={value.length > fit ? 'text-amber-600 dark:text-amber-400' : undefined}>{value.length} / {fit}</span>;
+}
 
 const fromPost = (p: PostDetailDto): PostInputDto => ({
   title: p.title, slug: p.slug, excerpt: p.excerpt, body: p.body, publishedDate: toInput(p.publishedDate) || null, updatedDate: toInput(p.updatedDate) || null,
   author: p.authorSlug, topics: p.topics, tags: p.tags, coverId: p.coverId, coverAlt: p.coverAlt, series: p.series, featured: p.featured, canonicalUrl: p.canonicalUrl, repositoryUrl: p.repositoryUrl,
+  seoTitle: p.seoTitle, seoDescription: p.seoDescription, noindex: p.noindex,
 });
 
 const statusOf = (p: PostDetailDto) => (p.status === 'published' && (p.publishedDate ?? 0) > Date.now() ? 'scheduled' : p.status);
@@ -263,6 +274,25 @@ function Editor({ post }: { post: PostDetailDto | null }) {
               <input className="input" type="url" value={f.canonicalUrl} onChange={(e) => set('canonicalUrl', e.target.value)} placeholder="https://…" />
             </Field>
           </div>
+
+          <details className="card group p-4" open={Boolean(f.seoTitle || f.seoDescription || f.noindex)}>
+            <summary className="label cursor-pointer select-none">Search &amp; sharing</summary>
+            <div className="mt-3 space-y-4">
+              <Field label="SEO title" hint={<>Optional. Replaces the title in search results and share cards; the page heading keeps the title. <CharCount value={f.seoTitle ?? ''} fit={SEO_TITLE_FIT} /></>} error={errs.seoTitle}>
+                <input className="input" maxLength={120} value={f.seoTitle ?? ''} onChange={(e) => set('seoTitle', e.target.value)} placeholder={f.title} />
+              </Field>
+              <Field label="Meta description" hint={<>Optional. Replaces the excerpt in search results and share cards. <CharCount value={f.seoDescription ?? ''} fit={SEO_DESCRIPTION_FIT} /></>} error={errs.seoDescription}>
+                <textarea className="input min-h-16" maxLength={300} value={f.seoDescription ?? ''} onChange={(e) => set('seoDescription', e.target.value)} placeholder={f.excerpt} />
+              </Field>
+              <Checkbox checked={f.noindex ?? false} onChange={(v) => set('noindex', v)} label="Hide from search engines (and the sitemap)" />
+              <div className="rounded-lg bg-slate-50 p-3 text-sm ring-1 ring-slate-200 dark:bg-white/5 dark:ring-white/10" aria-label="Search result preview">
+                <p className="truncate text-xs text-slate-500">{post?.url ?? `/blog/${f.slug || 'slug'}/`}</p>
+                <p className="truncate text-base text-blue-700 dark:text-blue-400">{f.seoTitle || f.title || 'Post title'}</p>
+                <p className="line-clamp-2 text-slate-600 dark:text-slate-300">{f.seoDescription || f.excerpt || 'The excerpt or meta description shows here.'}</p>
+                {f.noindex && <p className="mt-1 text-xs text-amber-600 dark:text-amber-400">Hidden: search engines are asked not to list this post.</p>}
+              </div>
+            </div>
+          </details>
 
           {post && (
             <div className="card space-y-2 p-4">

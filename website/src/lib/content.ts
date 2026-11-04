@@ -24,6 +24,10 @@ export type ApiPost = {
   canonicalUrl: string | null;
   /** Missing from an API older than the repository-link migration. */
   repositoryUrl?: string | null;
+  /** Search-engine overrides; missing from an API older than the post-SEO migration. */
+  seoTitle?: string;
+  seoDescription?: string;
+  noindex?: boolean;
   draft: boolean;
   revision: string;
 };
@@ -55,6 +59,9 @@ export type ApiSite = {
   indexNowKey: string;
   /** A Tailwind colour family (lib/brand.ts); missing from an API older than the setting. */
   brandColor?: string;
+  /** Search Console / Bing Webmaster verification tokens; missing from an older API. */
+  googleSiteVerification?: string;
+  bingSiteVerification?: string;
 };
 export type ApiHome = { eyebrow: string; heroTitle: string; heroSubtitle: string; latestTitle: string; topicsTitle: string };
 export type Snapshot = {

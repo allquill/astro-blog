@@ -6,6 +6,8 @@ import { ContentUnavailableError } from './lib/content';
 //    EDGE_CACHE_SECONDS (X-Accel-Expires, which it strips), so a publish shows within seconds.
 //    A page that sets its own Cache-Control (the preview) is never cached.
 //  - Before the API has answered once, the site says so with a 503 instead of an error page.
+//  - Every page URL ends in a slash: /blog/x answers 301 → /blog/x/, so each page has one URL (and
+//    the canonical in BaseLayout matches it). Files (/sitemap.xml, /blog/x.md, …) are left alone.
 
 const EDGE_CACHE_SECONDS = 10;
 
@@ -13,7 +15,19 @@ const UNAVAILABLE = `<!doctype html><html lang="en"><head><meta charset="utf-8">
 <style>body{font:16px/1.5 system-ui,sans-serif;margin:0;display:grid;place-items:center;min-height:100vh;background:#fff;color:#0f172a}@media (prefers-color-scheme:dark){body{background:#06100f;color:#e2e8f0}}main{max-width:28rem;padding:2rem}</style>
 </head><body><main><h1>Back in a moment</h1><p>The blog is starting up or briefly unavailable. Please try again in a minute.</p></main></body></html>`;
 
-export const onRequest = defineMiddleware(async (_context, next) => {
+/** The slash-terminated form of a page path, or null when the path is already canonical or a file. */
+function withSlash(path: string) {
+  if (path.endsWith('/') || path.startsWith('/api/') || path.startsWith('/_')) return null;
+  const last = path.slice(path.lastIndexOf('/') + 1);
+  return last.includes('.') ? null : `${path}/`;
+}
+
+export const onRequest = defineMiddleware(async (context, next) => {
+  const { request, url } = context;
+  if (request.method === 'GET' || request.method === 'HEAD') {
+    const target = withSlash(url.pathname);
+    if (target) return new Response(null, { status: 301, headers: { Location: target + url.search, 'Cache-Control': 'public, max-age=3600' } });
+  }
   let response: Response;
   try {
     response = await next();

@@ -26,6 +26,7 @@ export function GET() {
     ...PRIVATE.map((p) => `Disallow: ${p}`),
     '',
     ...AI_BOTS.flatMap((bot) => [`User-agent: ${bot}`, 'Allow: /', ...PRIVATE.map((p) => `Disallow: ${p}`), '']),
+    `Sitemap: ${abs('/sitemap-index.xml', site)}`,
     `Sitemap: ${abs('/sitemap.xml', site)}`,
     '',
   ].join('\n');

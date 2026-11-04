@@ -154,6 +154,16 @@ undeclared response comes out as `any` and silently loses type safety in the adm
   browsers always revalidate. Resized images are immutable and cached for a week.
 - **The sitemap** is `getSiteUrls()` (`src/lib/seo.ts`). Add new indexable routes there, or render
   them with `noindex`.
+  - `/sitemap-index.xml` lists `/sitemap-posts.xml` (posts with their cover and body images) and
+    `/sitemap-pages.xml` (everything else); `/sitemap.xml` keeps all of them in one file.
+  - Posts marked **Hide from search engines** or with a canonical URL on another site are left out
+    (`isIndexable()`).
+- **One URL per page:** `src/middleware.ts` redirects (301) a page path without a trailing slash to the
+  slash form. Paths whose last segment has a dot (`/sitemap.xml`, `/blog/<slug>.md`) are left alone.
+- **Share cards** for posts without a cover are drawn by the API (`server/src/content/og-image.service.ts`,
+  SVG rasterised by sharp) at `/api/public/og/<slug>/<key>.png`. The key is a hash of what the card shows
+  (`ogCardPath()`), so the response is cached for a year and nginx caches it like media. The API image
+  installs `font-dejavu` for it, because Alpine has no fonts.
 - `/feed.json`, `/rss.xml` and `/search.json` (the client-side search) come from the same snapshot.
 - **Personal pages** (`/subscribe/confirm/`, `/subscribe/manage/`) are `noindex`, blocked in
   `robots.txt`, and served by nginx with `no-store` and `no-referrer`.

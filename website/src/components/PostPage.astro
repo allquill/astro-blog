@@ -17,7 +17,7 @@ import { renderMarkdoc } from '../lib/markdoc';
 import { fitWidth, mediaUrl } from '../lib/media';
 import { codeHostIcon, codeHostName, codeUrl } from '../lib/code-hosts';
 import { accentOf, authorOf, formatDate, getPosts, getSettings, getTopics, readingTime, seriesOf, tagSlug, topicsOf, type Post } from '../lib/site';
-import { abs, blogPostingLd, breadcrumbLd, postMarkdownPath, postModified, videoEmbeds } from '../lib/seo';
+import { abs, blogPostingLd, breadcrumbLd, ogCardPath, postMarkdownPath, postModified, videoEmbeds } from '../lib/seo';
 
 interface Props {
   post: Post;
@@ -46,21 +46,24 @@ const url = abs(`/blog/${post.id}/`, siteUrl);
 const coverUrl = d.cover ? abs(mediaUrl(d.cover.id, fitWidth(d.cover, 1280), 'jpg'), siteUrl) : undefined;
 const modified = postModified(post);
 const repo = codeUrl(d.repositoryUrl);
+// Posts without a cover share a card the API draws from the title (the revision in the path busts caches).
+const ogImageUrl = d.cover || preview ? undefined : { url: ogCardPath(post, settings, author.data.name), width: 1200, height: 630 };
 const jsonLd = [
   blogPostingLd(post, author, related, siteUrl, coverUrl, videoEmbeds(post.body)),
   breadcrumbLd([{ name: 'Home', path: '/' }, { name: 'Blog', path: '/blog/' }, { name: d.title, path: `/blog/${post.id}/` }], siteUrl),
 ];
 ---
 <BaseLayout
-  title={d.title}
-  description={d.excerpt}
+  title={d.seoTitle || d.title}
+  description={d.seoDescription || d.excerpt}
   ogImage={d.cover}
+  ogImageUrl={ogImageUrl}
   ogImageAlt={d.coverAlt || d.title}
   ogType="article"
   article={{ publishedTime: d.publishedDate, modifiedTime: d.updatedDate, author: author.data.name, section: related[0]?.data.name, tags: d.tags }}
   jsonLd={jsonLd}
   markdownPath={postMarkdownPath(post)}
-  noindex={d.draft || preview}
+  noindex={d.draft || preview || d.noindex}
   canonicalUrl={d.canonicalUrl}
 >
   <article>

@@ -86,6 +86,17 @@ export class PostInputDto {
   @Transform(trim) @ValidateIf((_, v) => v !== '')
   @IsUrl({ require_protocol: true, protocols: ['https'] }, { message: 'Use a full https:// link' }) @MaxLength(500)
   repositoryUrl: string;
+
+  @ApiPropertyOptional({ description: 'Empty, or the title for search results and share cards (about 60 characters)' })
+  @IsOptional() @Transform(trim) @IsString() @MaxLength(120)
+  seoTitle?: string;
+
+  @ApiPropertyOptional({ description: 'Empty, or the description for search results and share cards (about 155 characters)' })
+  @IsOptional() @Transform(trim) @IsString() @MaxLength(300)
+  seoDescription?: string;
+
+  @ApiPropertyOptional({ description: 'Keep the post out of search engines and the sitemap' }) @IsOptional() @IsBoolean()
+  noindex?: boolean;
 }
 
 export class PostListQuery extends PageQuery {
@@ -263,6 +274,15 @@ export class SiteSettingsDto {
   @Matches(/^([A-Za-z0-9-]{8,128})?$/, { message: 'IndexNow key: 8–128 letters, digits or dashes' })
   indexNowKey: string;
 
+  // Public by nature (each search engine reads it from the home page's <meta>), so fine in the snapshot.
+  @ApiPropertyOptional({ description: 'Google Search Console verification: the content of its google-site-verification meta tag, or empty' })
+  @IsOptional() @Transform(trim) @Matches(/^([A-Za-z0-9_-]{8,100})?$/, { message: 'Paste only the content="…" value (letters, digits, - and _)' })
+  googleSiteVerification?: string;
+
+  @ApiPropertyOptional({ description: 'Bing Webmaster Tools verification: the content of its msvalidate.01 meta tag, or empty' })
+  @IsOptional() @Transform(trim) @Matches(/^([A-Za-z0-9_-]{8,100})?$/, { message: 'Paste only the content="…" value (letters, digits, - and _)' })
+  bingSiteVerification?: string;
+
   @ApiProperty({ enum: BRAND_COLORS, description: 'Brand colour of the site and its e-mails: a Tailwind colour family' })
   @IsIn(BRAND_COLORS, { message: 'Pick one of the brand colours' })
   brandColor: string;
@@ -359,6 +379,9 @@ export class PublicPostDto {
   @ApiProperty() featured: boolean;
   @ApiProperty({ nullable: true, type: String }) canonicalUrl: string | null;
   @ApiProperty({ nullable: true, type: String, description: 'Link to the code behind the post' }) repositoryUrl: string | null;
+  @ApiProperty({ description: 'Empty, or the title for <title> and share cards' }) seoTitle: string;
+  @ApiProperty({ description: 'Empty, or the meta and share description' }) seoDescription: string;
+  @ApiProperty({ description: 'Keep out of search engines and the sitemap' }) noindex: boolean;
   @ApiProperty({ description: 'Only true in a preview' }) draft: boolean;
   @ApiProperty({ description: 'Changes on every edit (render cache key)' }) revision: string;
 }

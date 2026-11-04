@@ -77,6 +77,20 @@ export class Post {
   @Column({ name: 'repository_url', type: 'varchar', length: 500, default: '' })
   repositoryUrl: string;
 
+  /** Replaces the title in <title> and share cards; empty = the title. The page heading keeps the title. */
+  @ApiProperty({ description: 'Empty, or the title for search results and share cards' })
+  @Column({ name: 'seo_title', type: 'varchar', length: 120, default: '' })
+  seoTitle: string;
+
+  /** Replaces the excerpt as the meta and share description; empty = the excerpt. */
+  @ApiProperty({ description: 'Empty, or the description for search results and share cards' })
+  @Column({ name: 'seo_description', type: 'varchar', length: 300, default: '' })
+  seoDescription: string;
+
+  /** Keeps the post out of search engines (meta robots noindex) and the sitemap. It stays on the blog. */
+  @ApiProperty() @Column({ type: 'boolean', default: false })
+  noindex: boolean;
+
   @ApiProperty() @Column({ name: 'updated_by', type: 'varchar', length: 120, default: '' })
   updatedBy: string;
 

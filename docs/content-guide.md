@@ -36,8 +36,14 @@ a published post changes on the site only when you press **Save changes** (Ctrl/
 | Series | Posts with the same series name list each other, oldest first |
 | Featured | The large card on the home page (else the newest post) |
 | Repository link | Optional https link to the code behind the post (a GitHub, GitLab, Bitbucket or Codeberg repository, or any https page). Shown as a **View the code on GitHub** button under the title |
-| Canonical URL | Only when the post first appeared elsewhere |
+| Canonical URL | Only when the post first appeared elsewhere. Such a post points search engines at the original and is left out of the sitemap |
 | Excerpt | Cards, search results, meta description and the new-post e-mail |
+| SEO title | Optional (**Search & sharing**). Replaces the title in the browser tab, search results and share cards; the page heading keeps the title. Aim for about 60 characters |
+| Meta description | Optional (**Search & sharing**). Replaces the excerpt as the search and share description. Aim for about 155 characters |
+| Hide from search engines | Optional (**Search & sharing**). The post stays on the blog but gets `noindex` and is left out of the sitemap |
+
+- **Share image:** the cover. A post without one gets a generated 1200×630 card (its SEO title or title
+  on the brand colour, with the blog name and the author), redrawn whenever one of those changes.
 
 - **Preview** opens the saved post on the site, drafts included, through a signed link that works for
   two hours and is never indexed.
@@ -92,7 +98,10 @@ still in use can't be deleted.
 
 **Site** holds the blog name, tagline, description, publisher, contact e-mail, social profiles, extra
 header and footer links, **which share buttons to show**, the subscribe box text, posts per page and
-the IndexNow key, the **brand colour**, plus the home page's hero texts and section titles.
+the IndexNow key, the **Google Search Console and Bing Webmaster verification codes** (paste only the
+`content="…"` value of the meta tag each one gives you), the **brand colour**, plus the home page's hero
+texts and section titles. Setting up Google and Bing is described in
+[SEO and search engines](seo.md).
 
 ### Brand colour
 
@@ -113,6 +122,84 @@ applies it, and the site shows it within a few seconds.
 - The setting is part of `site.yaml` in an export (`brandColor: purple`), so an import carries it over.
 
 Mailing-list e-mails (sender name, signature, footer address) are set under **Settings**.
+
+## Writing for search
+
+The site handles the technical side (sitemaps, canonical links, structured data, share cards; see
+[SEO and search engines](seo.md)). What decides whether people find and click a post is the content
+itself. These habits help most.
+
+### Posts
+
+- **Write for one clear question or task.** Decide what someone would type into a search box to find
+  the post, and make sure the post answers it fully. One topic per post beats a post that covers five.
+- **Title:** specific and plain, with the main words near the start (*"Cache pnpm installs in GitHub
+  Actions"* rather than *"Speeding things up"*). The browser tab and search results show it as
+  `<title> · <blog name>`. When the title is long or playful, put a clearer one in **SEO title**.
+  Search results cut off at about 60 characters, blog name included.
+- **Slug:** short, lowercase, words joined by dashes, with the main keywords (`github-actions-caching`).
+  Drop filler words and dates. It is **locked once published**, so get it right first.
+- **Excerpt:** one or two sentences that say what the reader gets, written for a person. It is the
+  meta description unless you set **Meta description** (about 155 characters; longer is cut off).
+  Search engines may still show their own snippet; a good excerpt makes that less likely.
+- **Headings:** the title is the page's only top-level heading, so start the body at `##`, with `###`
+  below it. Don't skip levels. `##` and `###` headings also build the table of contents. Make them
+  describe their section (*"Restore the cache"*, not *"Step 2"*).
+- **Opening paragraph:** say what the post covers and for whom in the first two or three sentences.
+  Readers and search engines both decide there.
+- **Links:**
+  - Link to your own related posts, topics and pages where they help the reader. Internal links help
+    search engines find and rank posts.
+  - Link to sources and official documentation.
+  - Use descriptive link text (*"the pnpm store docs"*), never *"click here"*.
+- **Images:**
+  - Upload them rather than linking from elsewhere: uploaded images get responsive WebP copies and are
+    listed in the image sitemap.
+  - Give every image alt text that says what it shows (*"Cache hit ratio before and after, 40% to
+    92%"*). Leave out "image of".
+  - A **cover image** gives the post a large share preview and an image in search results. Use at least
+    1280 px wide, landscape, with the subject in the middle (social networks crop to about 1.91:1).
+- **Code and video:** use code blocks (not screenshots of code) so the code can be searched and copied.
+  Embedded YouTube/Vimeo videos are announced to search engines as part of the post, so a short
+  summary in the text around them helps.
+- **Topics and tags:** pick one to three topics and a few precise tags. Each tag gets its own page, so
+  reuse existing tags instead of near-duplicates (`TypeScript`, not also `typescript` and `TS`).
+- **Keep it current:** when you revise a post substantially, set **Updated on**. The post shows the
+  date, and search engines see the change in the sitemap and structured data. Don't bump it for typo
+  fixes.
+- **Author:** a real author with a role, bio, photo and profile links builds trust, and the profile
+  links go into the structured data.
+- **Avoid duplicates:**
+  - Don't publish the same text twice.
+  - For a post that first appeared elsewhere, set **Canonical URL** to the original. It then sends
+    search engines there and is left out of the sitemap.
+  - Use **Hide from search engines** for posts that shouldn't be found by search at all, such as
+    announcements for subscribers only or thin placeholder posts.
+
+### Pages
+
+- Give each page a clear **Title** and a one or two sentence **Description**; the description is its
+  meta description and the subtitle under the title.
+- Slugs should be the obvious word: `about`, `privacy`, `contact`, `uses`.
+- An **About** page with who writes the blog and why is worth having: it is the page search engines
+  and readers use to judge the blog.
+- Keep **Last updated** current on policy pages (privacy, terms).
+- Link important pages from the header or footer (**Link in the header / footer**) so they are found
+  from every page.
+
+### Topics and authors
+
+- A **topic description** is the meta description of its page. Write a real sentence about what
+  the topic covers, not just its name.
+- An **author bio** is the description of the author page. Two or three sentences about who they are
+  and what they write about.
+
+### What not to do
+
+- Don't stuff keywords into titles, excerpts or alt text. Write naturally; repetition hurts.
+- Don't change a published post's subject entirely. Write a new post and link the old one to it.
+- Don't publish many short posts on the same question. One thorough post ranks better than several
+  thin ones.
 
 ## Import and export
 
@@ -143,6 +230,8 @@ coverAlt: Abstract gradient
 series: Fast sites with Astro
 featured: true
 repositoryUrl: https://github.com/ada-park/astro-islands-demo
+seoTitle: Astro islands in plain words      # optional; also seoDescription
+noindex: false                              # optional
 draft: false
 ---
 ```

@@ -39,5 +39,17 @@ export type PostInputDto = {
      * Empty, or an https link to the code behind the post (e.g. a GitHub repository)
      */
     repositoryUrl: string;
+    /**
+     * Empty, or the title for search results and share cards (about 60 characters)
+     */
+    seoTitle?: string;
+    /**
+     * Empty, or the description for search results and share cards (about 155 characters)
+     */
+    seoDescription?: string;
+    /**
+     * Keep the post out of search engines and the sitemap
+     */
+    noindex?: boolean;
 };
 

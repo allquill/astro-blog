@@ -141,6 +141,14 @@ function SiteForm({ initial, canSave }: { initial: SiteSettingsDto; canSave: boo
         <Field label="IndexNow key" hint="Optional: 8–128 letters, digits or dashes. The site serves it at /<key>.txt for `pnpm run indexnow`." error={errs.indexNowKey}>
           <input className="input font-mono text-xs" value={f.indexNowKey} onChange={(e) => set('indexNowKey', e.target.value)} />
         </Field>
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="Google Search Console verification" hint={'Optional. Paste only the content="…" value of its google-site-verification meta tag.'} error={errs.googleSiteVerification}>
+            <input className="input font-mono text-xs" value={f.googleSiteVerification ?? ''} onChange={(e) => set('googleSiteVerification', e.target.value.trim())} />
+          </Field>
+          <Field label="Bing Webmaster verification" hint={'Optional. Paste only the content="…" value of its msvalidate.01 meta tag.'} error={errs.bingSiteVerification}>
+            <input className="input font-mono text-xs" value={f.bingSiteVerification ?? ''} onChange={(e) => set('bingSiteVerification', e.target.value.trim())} />
+          </Field>
+        </div>
       </fieldset>
       <ErrorBox error={Object.keys(errs).length ? null : save.error} />
       {save.isSuccess && <Notice tone="success">Saved. The site shows it within a few seconds.</Notice>}

@@ -9,6 +9,9 @@ import tailwindcss from '@tailwindcss/vite';
 export default defineConfig({
   server: { port: 4322 },
   output: 'server',
+  // Page URLs end in a slash; src/middleware.ts redirects the slashless form (a 301 keeps one URL per
+  // page for search engines). 'ignore' so endpoints such as /sitemap.xml and /blog/<slug>.md still match.
+  trailingSlash: 'ignore',
   adapter: node({ mode: 'standalone' }),
   // Uploaded images are resized by the API (/api/public/media/<id>/<width>.webp), not by Astro.
   image: { service: { entrypoint: 'astro/assets/services/noop' } },

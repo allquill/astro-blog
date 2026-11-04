@@ -1,10 +1,11 @@
-import { Controller, Get, Header, Param, Query, Res, UseFilters } from '@nestjs/common';
+import { Controller, Get, Header, NotFoundException, Param, Query, Res, UseFilters } from '@nestjs/common';
 import { ApiOkResponse, ApiProduces, ApiTags } from '@nestjs/swagger';
 import type { Response } from 'express';
 import { PublicExceptionFilter } from '../common/public-exception.filter';
 import { ContentSnapshotDto, ContentVersionDto, PreviewDto, PreviewQuery } from './content.dto';
 import { ContentService } from './content.service';
 import { MediaService, VARIANT_FORMATS, type VariantFormat } from './media.service';
+import { OgImageService } from './og-image.service';
 
 /**
  * What the website renders from. It fetches the snapshot once, then polls `version` (a few bytes)
@@ -36,6 +37,30 @@ export class PublicContentController {
   @ApiOkResponse({ type: PreviewDto })
   preview(@Param('slug') slug: string, @Query() q: PreviewQuery) {
     return this.content.preview(slug, q.token);
+  }
+}
+
+/**
+ * Generated share cards (1200×630 PNG) for posts without a cover: /api/public/og/<slug>/<key>.png.
+ * The key only busts caches (the website derives it from the post's revision and the site settings);
+ * the card always shows the post as it is now.
+ */
+@ApiTags('public')
+@Controller('api/public/og')
+@UseFilters(PublicExceptionFilter)
+export class PublicOgImageController {
+  constructor(private readonly og: OgImageService) {}
+
+  @Get(':slug/:file')
+  @ApiProduces('image/png')
+  @ApiOkResponse({ description: 'The share card of a published post', schema: { type: 'string', format: 'binary' } })
+  async card(@Param('slug') slug: string, @Param('file') file: string, @Res() res: Response) {
+    if (!/^[\w.-]{1,100}\.png$/.test(file)) throw new NotFoundException();
+    const png = await this.og.postCard(slug);
+    res.setHeader('Content-Type', 'image/png');
+    res.setHeader('Cache-Control', 'public, max-age=31536000, immutable');
+    res.setHeader('X-Content-Type-Options', 'nosniff');
+    res.end(png);
   }
 }
 

@@ -26,6 +26,18 @@ export type PublicPostDto = {
      */
     repositoryUrl: string | null;
     /**
+     * Empty, or the title for <title> and share cards
+     */
+    seoTitle: string;
+    /**
+     * Empty, or the meta and share description
+     */
+    seoDescription: string;
+    /**
+     * Keep out of search engines and the sitemap
+     */
+    noindex: boolean;
+    /**
      * Only true in a preview
      */
     draft: boolean;

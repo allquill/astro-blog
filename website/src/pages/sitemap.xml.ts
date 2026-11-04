@@ -1,21 +1,9 @@
 import { siteUrl } from '../lib/content';
 import { getSettings } from '../lib/site';
-import { abs, getSiteUrls } from '../lib/seo';
+import { getSiteUrls, urlsetResponse } from '../lib/seo';
 
-const esc = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-
+// Every indexable URL in one file. Kept beside the sitemap index (/sitemap-index.xml) because
+// existing Search Console entries and the IndexNow script read it.
 export async function GET() {
-  const site = siteUrl;
-  const urls = await getSiteUrls(await getSettings());
-  const body = [
-    '<?xml version="1.0" encoding="UTF-8"?>',
-    '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">',
-    ...urls.map(
-      (u) =>
-        `  <url><loc>${esc(abs(u.path, site))}</loc>${u.lastmod ? `<lastmod>${u.lastmod.toISOString().slice(0, 10)}</lastmod>` : ''}</url>`,
-    ),
-    '</urlset>',
-    '',
-  ].join('\n');
-  return new Response(body, { headers: { 'Content-Type': 'application/xml; charset=utf-8' } });
+  return urlsetResponse(await getSiteUrls(await getSettings()), siteUrl);
 }

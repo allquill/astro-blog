@@ -204,6 +204,9 @@ export class ContentService {
     post.featured = dto.featured;
     post.canonicalUrl = dto.canonicalUrl;
     post.repositoryUrl = dto.repositoryUrl;
+    post.seoTitle = dto.seoTitle ?? post.seoTitle ?? '';
+    post.seoDescription = dto.seoDescription ?? post.seoDescription ?? '';
+    post.noindex = dto.noindex ?? post.noindex ?? false;
   }
 
   private async checkPublishable(post: Post) {
@@ -404,6 +407,9 @@ export class ContentService {
       featured: p.featured,
       canonicalUrl: p.canonicalUrl || null,
       repositoryUrl: p.repositoryUrl || null,
+      seoTitle: p.seoTitle,
+      seoDescription: p.seoDescription,
+      noindex: p.noindex,
       draft: statusOf(p) !== 'published',
       revision: `${p.id}.${new Date(p.updatedAt).getTime()}`,
     };

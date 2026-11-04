@@ -17,6 +17,8 @@ interface Props {
   /** Share image; defaults to the logo. */
   ogImage?: MediaImage | null;
   ogImageAlt?: string;
+  /** A share image by URL (e.g. the generated card for a post without a cover), used when there is no ogImage. */
+  ogImageUrl?: { url: string; width: number; height: number };
   ogType?: 'website' | 'article';
   /** Extra Open Graph article metadata for blog posts. */
   article?: { publishedTime: Date; modifiedTime?: Date; author: string; section?: string; tags: string[] };
@@ -45,11 +47,17 @@ const {
   feeds = [],
 } = Astro.props;
 const fullTitle = title ? `${title} · ${settings.siteName}` : settings.siteName;
-const canonical = canonicalUrl ? new URL(canonicalUrl) : new URL(Astro.url.pathname, siteUrl);
+// Pages answer on the slash form only (middleware.ts), so the canonical always names it.
+const path = Astro.url.pathname.endsWith('/') ? Astro.url.pathname : `${Astro.url.pathname}/`;
+const canonical = canonicalUrl ? new URL(canonicalUrl) : new URL(path, siteUrl);
 const ogSource = Astro.props.ogImage;
-const ogWidth = ogSource ? fitWidth(ogSource, 1280) : 512;
-const ogHeight = ogSource && ogSource.width ? Math.round((ogWidth / ogSource.width) * ogSource.height) : 512;
-const ogUrl = ogSource ? new URL(mediaUrl(ogSource.id, ogWidth, 'jpg'), siteUrl).toString() : new URL('/logo.png', siteUrl).toString();
+const ogGenerated = ogSource ? undefined : Astro.props.ogImageUrl;
+const ogWidth = ogSource ? fitWidth(ogSource, 1280) : (ogGenerated?.width ?? 512);
+const ogHeight = ogSource && ogSource.width ? Math.round((ogWidth / ogSource.width) * ogSource.height) : (ogGenerated?.height ?? 512);
+const ogUrl = ogSource
+  ? new URL(mediaUrl(ogSource.id, ogWidth, 'jpg'), siteUrl).toString()
+  : new URL(ogGenerated?.url ?? '/logo.png', siteUrl).toString();
+const largeCard = !!(ogSource || ogGenerated);
 const ogAlt = Astro.props.ogImageAlt ?? (title ? `${title} – ${settings.siteName}` : settings.siteName);
 const robots = noindex ? 'noindex, follow' : 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1';
 const schema = [publisherLd(settings, siteUrl), websiteLd(settings, siteUrl), ...jsonLd];
@@ -66,7 +74,9 @@ const schema = [publisherLd(settings, siteUrl), websiteLd(settings, siteUrl), ..
     <link rel="icon" href={`/mark.svg?c=${brand}`} type="image/svg+xml" />
     <style is:inline set:html={brandCss(brand)} />
     <link rel="apple-touch-icon" href="/logo.png" />
-    <link rel="sitemap" type="application/xml" href="/sitemap.xml" />
+    <link rel="sitemap" type="application/xml" href="/sitemap-index.xml" />
+    {settings.googleSiteVerification && <meta name="google-site-verification" content={settings.googleSiteVerification} />}
+    {settings.bingSiteVerification && <meta name="msvalidate.01" content={settings.bingSiteVerification} />}
     <link rel="alternate" type="application/rss+xml" title={settings.siteName} href="/rss.xml" />
     <link rel="alternate" type="application/feed+json" title={settings.siteName} href="/feed.json" />
     {feeds.map((f) => <link rel="alternate" type="application/rss+xml" title={f.title} href={f.href} />)}
@@ -93,7 +103,7 @@ const schema = [publisherLd(settings, siteUrl), websiteLd(settings, siteUrl), ..
         {article.tags.map((t) => <meta property="article:tag" content={t} />)}
       </>
     )}
-    <meta name="twitter:card" content={ogSource ? 'summary_large_image' : 'summary'} />
+    <meta name="twitter:card" content={largeCard ? 'summary_large_image' : 'summary'} />
     <meta name="twitter:title" content={fullTitle} />
     <meta name="twitter:description" content={description} />
     <meta name="twitter:image" content={ogUrl} />

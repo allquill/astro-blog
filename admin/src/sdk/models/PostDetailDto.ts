@@ -25,6 +25,15 @@ export type PostDetailDto = {
      * Empty, or an https link to the code behind the post (e.g. a GitHub repository)
      */
     repositoryUrl: string;
+    /**
+     * Empty, or the title for search results and share cards
+     */
+    seoTitle: string;
+    /**
+     * Empty, or the description for search results and share cards
+     */
+    seoDescription: string;
+    noindex: boolean;
     updatedBy: string;
     createdAt: string;
     updatedAt: string;

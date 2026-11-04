@@ -31,6 +31,8 @@ on screen. For every field and rule, see the [Content guide](content-guide.md).
   - Optional: **Series**, **Featured on the home page**, **Repository link** (see
     [Link the post's code](content-how-to.md#link-the-posts-code)), **Canonical URL** (only if the post first appeared
     elsewhere).
+  - Optional: **Search & sharing** (see
+    [Make a post search-friendly](content-how-to.md#make-a-post-search-friendly)).
 6. Drafts save themselves a few seconds after you stop typing; **Save draft** saves straight away.
 7. Press **Preview** to see the draft on the real site. The link works for two hours and is never
    indexed.
@@ -50,12 +52,39 @@ Pages are the standalone pages such as About, Privacy or Terms, at `/<slug>/`.
 1. Open **Pages** and press **New page**.
 2. Fill in the **Title**, the **Slug** (the URL; a few slugs such as `blog`, `topics` and `api` are
    reserved for the site) and a **Description** (shown under the title and in search results).
+  - Keep the slug the obvious word (`about`, `privacy`), and write the description as one or two
+    real sentences: it is the page's meta description.
 3. Optional: **Last updated** (useful for a privacy policy), and **Link in the header** and/or **Link
    in the footer** to add the page to the site's navigation.
 4. Write the body with the same editor and toolbar as posts.
 5. Press **Save**. **A page goes live as soon as it is saved**; there is no draft. When you change an
    existing page, the editor warns you that saving updates it right away.
 6. Press **Open** to view it on the site.
+
+## Make a post search-friendly
+
+A five-minute pass before you press **Publish**. The reasons behind each step are in
+[Writing for search](content-guide.md#writing-for-search).
+
+1. **Title:** does it say plainly what the post is about, main words first? If it's long or clever,
+   open **Search & sharing** and write a plainer **SEO title** (aim for 60 characters or fewer).
+2. **Slug:** short, with the main keywords, no dates or filler. It can't change after publishing.
+3. **Excerpt:** one or two sentences saying what the reader will get. To show something different in
+   search results, write a **Meta description** (aim for 155 characters or fewer).
+4. **Check the preview** under **Search & sharing**: it shows roughly how the post will look in search
+   results. The counters turn amber when a field is longer than search engines usually show.
+5. **Headings:** sections start with `##` (the toolbar's **Heading** button), sub-sections with
+   `###`, and each heading says what its section is about.
+6. **Images:** a **Cover image** (landscape, 1280 px wide or more) with **Cover alt text**, and alt
+   text on every image in the body. Without a cover, the post shares a generated card with its title.
+7. **Links:** at least one link to a related post or topic on the blog, and descriptive link text.
+8. **Topics and tags:** one to three topics, and existing tags where they fit.
+9. **Leave Hide from search engines unticked**, unless the post really shouldn't appear in search.
+10. After publishing, in Google Search Console paste the post's URL into **URL inspection** and press
+  **Request indexing** (see "Check that it works" in [SEO and search engines](seo.md)). If your site uses
+  IndexNow, ask a developer to run `pnpm run indexnow`.
+
+When you revise an older post substantially, set **Updated on** so search engines see the change.
 
 ## Format text
 

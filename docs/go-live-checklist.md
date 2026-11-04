@@ -41,8 +41,10 @@
   2. Send feedback with an e-mail address, and reply from the admin.
   3. Subscribe, confirm, change topics, and unsubscribe with the mail client's button.
   4. Send a new-post e-mail test, then a real one to a list with only you on it.
-- [ ] **Search:** submit `sitemap.xml` in Google Search Console. Set the IndexNow key in Site settings and
-  run `pnpm run indexnow` after publishing.
+- [ ] **Search:** verify the site in Google Search Console and Bing Webmaster Tools (paste their
+  verification codes in Site settings), then submit `sitemap-index.xml` in both. Step by step in
+  [SEO and search engines](seo.md). Set the IndexNow key in
+  Site settings and run `pnpm run indexnow` after publishing.
 - [ ] **Analytics:** if you use GA4, follow [Analytics](analytics.md): set the CI variable, turn off
   the duplicate Enhanced measurement events, mark `sign_up_confirmed` as a key event, and check
   Realtime with the banner accepted.

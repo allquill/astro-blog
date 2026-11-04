@@ -279,6 +279,9 @@ export class TransferService {
       featured: bool(d.featured),
       canonicalUrl: str(d.canonicalUrl),
       repositoryUrl: str(d.repositoryUrl ?? d.repository),
+      seoTitle: str(d.seoTitle),
+      seoDescription: str(d.seoDescription),
+      noindex: bool(d.noindex),
     });
     if (!draft && !dto.publishedDate) ctx.item.messages.push('No publishedDate: today is used');
     if (!author) ctx.item.messages.push('No author: imported as a draft');
@@ -499,6 +502,9 @@ export class TransferService {
       draft: p.status !== 'published',
       canonicalUrl: p.canonicalUrl,
       repositoryUrl: p.repositoryUrl || undefined,
+      seoTitle: p.seoTitle || undefined,
+      seoDescription: p.seoDescription || undefined,
+      noindex: p.noindex || undefined,
     };
     return toFrontMatter(fm, body);
   }

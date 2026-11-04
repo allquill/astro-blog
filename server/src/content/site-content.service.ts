@@ -36,6 +36,8 @@ export class SiteContentService implements OnModuleInit {
       subscribeText: '',
       postsPerPage: 12,
       indexNowKey: '',
+      googleSiteVerification: '',
+      bingSiteVerification: '',
       brandColor: DEFAULT_BRAND,
     };
   }

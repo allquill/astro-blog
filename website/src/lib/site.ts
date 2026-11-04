@@ -32,6 +32,12 @@ export type Post = {
     canonicalUrl: string | null;
     /** Link to the code behind the post, shown under the title. */
     repositoryUrl: string | null;
+    /** Overrides the title in <title> and share cards (the page heading keeps `title`). */
+    seoTitle: string;
+    /** Overrides the excerpt as the meta and share description. */
+    seoDescription: string;
+    /** Kept out of search engines and the sitemap. */
+    noindex: boolean;
   };
 };
 export type Topic = { id: string; data: { name: string; description: string; icon: IconName; accent: AccentName; order: number } };
@@ -68,6 +74,9 @@ export const toPost = (p: ApiPost): Post => ({
     draft: p.draft,
     canonicalUrl: p.canonicalUrl,
     repositoryUrl: p.repositoryUrl ?? null,
+    seoTitle: p.seoTitle ?? '',
+    seoDescription: p.seoDescription ?? '',
+    noindex: p.noindex ?? false,
   },
 });
 const toTopic = (t: ApiTopic): Topic => ({

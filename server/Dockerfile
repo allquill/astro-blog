@@ -15,6 +15,9 @@ COPY src ./src
 RUN pnpm run build && pnpm prune --prod
 
 FROM node:22-alpine
+# Fonts for the generated share cards (src/content/og-image.service.ts): sharp draws their SVG text
+# through fontconfig, and the base image has no fonts at all.
+RUN apk add --no-cache fontconfig font-dejavu
 ENV NODE_ENV=production \
     PORT=3002 \
     DATABASE_PATH=/data/astro-blog.db \

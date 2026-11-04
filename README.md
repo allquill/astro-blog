@@ -33,8 +33,9 @@ The root `package.json` only orchestrates them. It also holds the release versio
     dry run first
 - **Reading.** Pages include the home page, the blog with pagination, topic, tag and author pages, a post
   page with a table of contents, reading time, series navigation, related posts and newer/older links,
-  plus client-side search. Feeds: RSS for the site and for each topic, JSON Feed, sitemap, `llms.txt`
-  and Markdown twins of posts. There is structured data, and light and dark themes.
+  plus client-side search. Feeds: RSS for the site and for each topic, JSON Feed, a sitemap index (posts
+  with images, and pages), `llms.txt` and Markdown twins of posts. There is structured data, per-post
+  SEO title, description and noindex, generated share cards, and light and dark themes. Setting up Google and Bing: `docs/seo.md`.
 - **Engagement.**
   - **Likes:** one per visitor, counted by a salted hash and never a raw IP.
   - **Share buttons:** X, LinkedIn, Facebook, Reddit, HN, Bluesky, Mastodon, WhatsApp, e-mail, the

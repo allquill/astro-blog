@@ -319,4 +319,24 @@ export class PublicService {
             },
         });
     }
+    /**
+     * @returns binary The share card of a published post
+     * @throws ApiError
+     */
+    public static publicOgImageControllerCard({
+        slug,
+        file,
+    }: {
+        slug: string,
+        file: string,
+    }): CancelablePromise<Blob> {
+        return __request(OpenAPI, {
+            method: 'GET',
+            url: '/api/public/og/{slug}/{file}',
+            path: {
+                'slug': slug,
+                'file': file,
+            },
+        });
+    }
 }

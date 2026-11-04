@@ -12,7 +12,7 @@ import { AppConfig } from '../config/app-config.service';
 const BASE = '/api/admin/docs/';
 
 /** Sidebar order; any other guide in the folder follows, alphabetically. */
-const ORDER = ['getting-started', 'content-guide', 'engagement', 'analytics', 'development', 'build-and-deploy', 'go-live-checklist'];
+const ORDER = ['getting-started', 'content-guide', 'engagement', 'analytics', 'seo', 'development', 'build-and-deploy', 'go-live-checklist'];
 
 /** Guides listed indented under another one in the sidebar, in this order, instead of at the top level. */
 const CHILDREN: Record<string, string[]> = { 'content-guide': ['content-how-to'] };

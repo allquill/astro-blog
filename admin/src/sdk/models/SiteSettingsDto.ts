@@ -28,6 +28,14 @@ export type SiteSettingsDto = {
      */
     indexNowKey: string;
     /**
+     * Google Search Console verification: the content of its google-site-verification meta tag, or empty
+     */
+    googleSiteVerification?: string;
+    /**
+     * Bing Webmaster Tools verification: the content of its msvalidate.01 meta tag, or empty
+     */
+    bingSiteVerification?: string;
+    /**
      * Brand colour of the site and its e-mails: a Tailwind colour family
      */
     brandColor: 'red' | 'orange' | 'amber' | 'yellow' | 'lime' | 'green' | 'emerald' | 'teal' | 'cyan' | 'sky' | 'blue' | 'indigo' | 'violet' | 'purple' | 'fuchsia' | 'pink' | 'rose' | 'slate' | 'gray' | 'zinc' | 'neutral' | 'stone';
